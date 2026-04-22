@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>3W</title>
+  <title>3W - Unified Platfor</title>
 
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -450,6 +450,22 @@
                   <button onclick="switchMainTab('bitcoin')" class="w-full text-left px-4 py-3 hover:bg-amber-50 flex items-center gap-3 transition-colors">
                       <div class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center"><i class="fab fa-bitcoin text-amber-600 text-sm"></i></div>
                       <div><div class="font-bold text-sm text-gray-800">Illegal Bitcoin Mining</div><div class="text-[11px] text-gray-400">Anomaly detection candidates</div></div>
+                  </button>
+              </div>
+          </div>
+
+          <div class="relative" id="opsDropdownWrapper">
+              <button id="tabBtnOps" onclick="toggleOpsDropdown()" class="text-white opacity-70 hover:opacity-100 font-semibold border-b-2 border-transparent hover:border-white pb-1 transition-all whitespace-nowrap text-sm px-3">
+                  Operations
+              </button>
+              <div id="opsDropdown" class="hidden absolute left-1/2 -translate-x-1/2 mt-3 w-64 bg-white rounded-xl shadow-2xl overflow-hidden text-gray-700 border border-gray-100 z-[9999]">
+                  <button onclick="switchMainTab('genset')" class="w-full text-left px-4 py-3 hover:bg-green-50 flex items-center gap-3 border-b border-gray-100 transition-colors">
+                      <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center"><i class="fas fa-bolt text-green-600 text-sm"></i></div>
+                      <div><div class="font-bold text-sm text-gray-800">Genset</div><div class="text-[11px] text-gray-400">Nearest TNB substation finder</div></div>
+                  </button>
+                  <button class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 opacity-50 cursor-not-allowed" disabled>
+                      <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center"><i class="fas fa-battery-three-quarters text-gray-400 text-sm"></i></div>
+                      <div><div class="font-bold text-sm text-gray-500">USP</div><div class="text-[11px] text-gray-400">Coming soon</div></div>
                   </button>
               </div>
           </div>
@@ -1535,6 +1551,89 @@
         <div id="mhMap" style="position:absolute; top:0; left:350px; right:0; bottom:0;"></div>
     </div>
 
+    <!-- ════════════════════════════════════════
+         GENSET — TNB Substation Finder
+    ═════════════════════════════════════════ -->
+    <div id="gensetContainer" style="display:none; position:absolute; top:72px; bottom:0; left:0; right:0; overflow:hidden;">
+
+        <!-- Sidebar -->
+        <div id="gensetSidebar" style="position:absolute; top:0; left:0; bottom:0; width:340px; background:#ffffff; z-index:150; border-right:1px solid #e5e7eb; box-shadow:2px 0 15px rgba(0,0,0,0.08); display:flex; flex-direction:column; overflow-y:auto; font-family:'Inter',sans-serif;">
+
+            <!-- Header -->
+            <div style="background:linear-gradient(135deg,#14532d,#16a34a); color:white; padding:16px; flex-shrink:0;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                    <i class="fas fa-bolt" style="font-size:1.2rem;"></i>
+                    <h2 style="font-size:1.05rem; font-weight:800; margin:0;">Genset — TNB Finder</h2>
+                </div>
+                <p style="font-size:0.68rem; color:#bbf7d0; margin:0;">Select a cell site to find the nearest TNB substation within 2 km via road.</p>
+            </div>
+
+            <!-- Search -->
+            <div style="padding:12px; border-bottom:1px solid #f3f4f6;">
+                <div style="position:relative;">
+                    <i class="fas fa-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.78rem;"></i>
+                    <input id="gensetSearchInput" type="text" placeholder="Search site ID or name…"
+                        style="width:100%; padding:8px 10px 8px 30px; border:1px solid #d1d5db; border-radius:6px; font-size:0.82rem; outline:none; box-sizing:border-box;"
+                        oninput="gensetOnSearch(this.value)" autocomplete="off"/>
+                    <div id="gensetSearchResults" style="position:absolute; top:100%; left:0; right:0; background:white; border-radius:0 0 8px 8px; max-height:200px; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.15); display:none; z-index:201; border:1px solid #e5e7eb;"></div>
+                </div>
+            </div>
+
+            <!-- Selected site info -->
+            <div id="gensetSiteCard" style="display:none; margin:12px; background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:12px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                    <div style="width:10px;height:10px;border-radius:50%;background:#16a34a;flex-shrink:0;"></div>
+                    <span id="gensetSiteName" style="font-size:0.85rem; font-weight:800; color:#14532d;">—</span>
+                </div>
+                <div id="gensetSiteDetails" style="font-size:0.7rem; color:#4b5563; line-height:1.6;"></div>
+                <button onclick="gensetFindTNB()" id="gensetFindBtn"
+                    style="margin-top:10px; width:100%; padding:9px; background:#16a34a; color:white; border:none; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:background 0.15s;"
+                    onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+                    <i class="fas fa-search-location"></i> Find Nearest TNB Substation
+                </button>
+            </div>
+
+            <!-- Results -->
+            <div id="gensetResultPanel" style="display:none; margin:12px; margin-top:0;">
+                <!-- Loading -->
+                <div id="gensetLoading" style="display:none; text-align:center; padding:16px; color:#16a34a; font-size:0.8rem; font-weight:700;">
+                    <i class="fas fa-circle-notch fa-spin" style="margin-right:6px;"></i> Searching via roads…
+                </div>
+                <!-- Found -->
+                <div id="gensetFound" style="display:none; background:#f0fdf4; border:1.5px solid #4ade80; border-radius:10px; padding:12px;">
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                        <i class="fas fa-check-circle" style="color:#16a34a; font-size:1rem;"></i>
+                        <span style="font-size:0.8rem; font-weight:800; color:#14532d;">Substation Found</span>
+                    </div>
+                    <div id="gensetFoundContent" style="font-size:0.72rem; color:#374151; line-height:1.8;"></div>
+                </div>
+                <!-- Not found -->
+                <div id="gensetNotFound" style="display:none; background:#fef2f2; border:1.5px solid #fca5a5; border-radius:10px; padding:12px;">
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                        <i class="fas fa-times-circle" style="color:#dc2626; font-size:1rem;"></i>
+                        <span style="font-size:0.8rem; font-weight:800; color:#991b1b;">No Substation Nearby</span>
+                    </div>
+                    <p style="font-size:0.72rem; color:#6b7280; margin:0;">There are no TNB substations within 2 km via road from this cell site.</p>
+                </div>
+            </div>
+
+            <!-- Legend / hint -->
+            <div style="margin-top:auto; padding:12px; border-top:1px solid #f3f4f6; background:#f9fafb;">
+                <p style="font-size:0.65rem; color:#6b7280; font-weight:600; margin:0 0 4px;">
+                    <i class="fas fa-info-circle" style="color:#16a34a; margin-right:4px;"></i>Substation data sourced from OpenStreetMap. Road routing via OSRM.
+                </p>
+                <div style="display:flex; gap:12px; font-size:0.65rem; color:#6b7280; margin-top:6px;">
+                    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#16a34a;margin-right:4px;vertical-align:middle;"></span>Cell Site</span>
+                    <span><span style="display:inline-block;width:10px;height:10px;background:#f59e0b;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>TNB Substation</span>
+                    <span><span style="display:inline-block;width:20px;height:3px;background:#f59e0b;margin-right:4px;vertical-align:middle;"></span>Road Route</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map -->
+        <div id="gensetMap" style="position:absolute; top:0; left:340px; right:0; bottom:0;"></div>
+    </div>
+
 <div id="plotModalOverlay" class="plot-modal-overlay">
         <div class="plot-modal">
             <div class="plot-modal-header">
@@ -1553,7 +1652,7 @@
     <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-[6000] flex items-center justify-center">
             <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden">
                 <div class="bg-gray-800 text-white p-3 flex justify-between items-center flex-shrink-0">
-                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> 3W Dashboard</h3>
+                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> NetAlytics Dashboard</h3>
                     <button onclick="closeMetabaseDashboard()" class="text-gray-300 hover:text-white text-xl transition-colors">
                         <i class="fas fa-times"></i>
                     </button>
@@ -1849,12 +1948,12 @@
 
     <div id="chatPanel" class="hidden fixed bottom-20 right-8 w-[600px] bg-white shadow-2xl rounded-2xl border border-gray-200 flex-col z-[6000] overflow-hidden">
         <div class="bg-blue-600 p-3 text-white font-bold flex justify-between items-center">
-            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> 3W AI Agent</span>
+            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> NetAlytics AI Agent</span>
             <button onclick="toggleChat()" class="hover:text-blue-200"><i class="fas fa-times"></i></button>
         </div>
         <div id="chatMessages" class="h-[550px] overflow-y-auto p-4 flex flex-col gap-3 bg-gray-50 text-sm">
             <div class="self-start bg-white border border-gray-200 text-gray-800 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl shadow-sm max-w-[95%] w-full">
-                Hello! I am your 3W capacity planning assistant. Ask me to find a site or analyze congestion.
+                Hello! I am your NetAlytics capacity planning assistant. Ask me to find a site or analyze congestion.
             </div>
         </div>
         <form onsubmit="handleChatSubmit(event)" class="p-3 border-t border-gray-200 bg-white flex gap-2">
@@ -2040,6 +2139,7 @@
             const map3dContainer = document.getElementById('map3dContainer');
             const cctvContainer = document.getElementById('cctvContainer');
             const bitcoinContainer = document.getElementById('bitcoinContainer');
+            const gensetContainer = document.getElementById('gensetContainer');
             const pegmanControl = document.getElementById('pegmanControl');
 
             const inactiveClass = 'text-white opacity-70 hover:opacity-100 font-semibold border-b-2 border-transparent hover:border-white pb-1 transition-all whitespace-nowrap text-sm px-3';
@@ -2051,6 +2151,7 @@
             if (map3dContainer) map3dContainer.style.display = 'none';
             if (cctvContainer) cctvContainer.style.display = 'none';
             if (bitcoinContainer) bitcoinContainer.style.display = 'none';
+            if (gensetContainer) gensetContainer.style.display = 'none';
 
             // Reset all tab buttons
             document.getElementById('tabBtnDashboard').className = inactiveClass;
@@ -2058,13 +2159,18 @@
             // Reset tools button
             const toolsBtn = document.getElementById('tabBtnTools');
             toolsBtn.className = toolsBtn.className.replace('border-white', 'border-transparent').replace(/(?<!\-)opacity-100/g, 'opacity-70');
+            // Reset ops button
+            const opsBtn = document.getElementById('tabBtnOps');
+            opsBtn.className = inactiveClass;
 
             // Hide pegman by default; show only on map tab
             if (pegmanControl) pegmanControl.style.visibility = 'hidden';
 
-            // Close tools dropdown
+            // Close dropdowns
             const dd = document.getElementById('toolsDropdown');
             if (dd) dd.classList.add('hidden');
+            const opsdd = document.getElementById('opsDropdown');
+            if (opsdd) opsdd.classList.add('hidden');
 
             if (tab === 'dashboard') {
                 if (dashboardView) dashboardView.style.display = 'block';
@@ -2093,6 +2199,11 @@
                 toolsBtn.classList.remove('opacity-70', 'border-transparent');
                 toolsBtn.classList.add('opacity-100', 'border-white');
                 setTimeout(() => { if (typeof initMinerHunter === 'function') initMinerHunter(); }, 200);
+
+            } else if (tab === 'genset') {
+                if (gensetContainer) gensetContainer.style.display = 'block';
+                opsBtn.className = activeClass;
+                setTimeout(() => { if (typeof initGensetMap === 'function') initGensetMap(); }, 200);
             }
         }
 
@@ -2101,12 +2212,24 @@
             dd.classList.toggle('hidden');
         }
 
+        function toggleOpsDropdown() {
+            const dd = document.getElementById('opsDropdown');
+            dd.classList.toggle('hidden');
+            // close Enterprise if open
+            document.getElementById('toolsDropdown').classList.add('hidden');
+        }
+
         // Close tools dropdown when clicking outside
         document.addEventListener('click', function(e) {
             const wrapper = document.getElementById('toolsDropdownWrapper');
             const dd = document.getElementById('toolsDropdown');
             if (wrapper && dd && !wrapper.contains(e.target)) {
                 dd.classList.add('hidden');
+            }
+            const opsWrapper = document.getElementById('opsDropdownWrapper');
+            const opsdd = document.getElementById('opsDropdown');
+            if (opsWrapper && opsdd && !opsWrapper.contains(e.target)) {
+                opsdd.classList.add('hidden');
             }
         });
 
@@ -6157,6 +6280,274 @@
             setTimeout(waitForMap, 300);
         }
     })();
+
+    // ================================================================
+    // GENSET — TNB Substation Finder
+    // ================================================================
+    let gensetMap         = null;
+    let gensetMapInited   = false;
+    let gensetSitesData   = [];
+    let gensetSiteMarkers = {};
+    let gensetSelectedSite = null;
+    let gensetSelectedMarker = null;
+    let gensetTnbMarkers  = [];
+    let gensetRouteLine   = null;
+    let gensetNearbyCircle = null;
+
+    const GENSET_SITE_ICON = (highlight) => L.divIcon({
+        className: '',
+        html: `<div style="width:12px;height:12px;border-radius:50%;background:${highlight ? '#f59e0b' : '#16a34a'};border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);"></div>`,
+        iconSize: [12, 12], iconAnchor: [6, 6]
+    });
+
+    const GENSET_TNB_ICON = L.divIcon({
+        className: '',
+        html: `<div style="position:relative;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">
+                 <div style="width:20px;height:20px;background:#f59e0b;border:2.5px solid white;border-radius:4px;box-shadow:0 2px 8px rgba(245,158,11,0.7);display:flex;align-items:center;justify-content:center;">
+                   <i class="fas fa-bolt" style="color:white;font-size:9px;"></i>
+                 </div>
+               </div>`,
+        iconSize: [28, 28], iconAnchor: [14, 14]
+    });
+
+    async function initGensetMap() {
+        if (gensetMapInited) return;
+        gensetMapInited = true;
+
+        gensetMap = L.map('gensetMap', { zoomControl: true, preferCanvas: true })
+                     .setView([4.2105, 101.9758], 6);
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            { attribution: 'Tiles &copy; Esri', maxZoom: 19 }).addTo(gensetMap);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+            { attribution: '&copy;OpenStreetMap,&copy;CartoDB', subdomains: 'abcd', maxZoom: 19 }).addTo(gensetMap);
+
+        await gensetLoadSites();
+    }
+
+    async function gensetLoadSites() {
+        try {
+            const res  = await fetch('/api/sites');
+            const data = await res.json();
+            gensetSitesData = data.filter(s => {
+                const lat = parseFloat(s.lat), lng = parseFloat(s.lng);
+                return s.site_id && !isNaN(lat) && !isNaN(lng) && (lat !== 0 || lng !== 0);
+            });
+
+            const clusterGroup = L.markerClusterGroup({
+                maxClusterRadius: 50,
+                iconCreateFunction: c => L.divIcon({
+                    html: `<div style="width:34px;height:34px;border-radius:50%;background:#16a34a;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.25);">${c.getChildCount()}</div>`,
+                    className: '', iconSize: [34, 34]
+                })
+            });
+
+            gensetSitesData.forEach(site => {
+                site.lat = parseFloat(site.lat);
+                site.lng = parseFloat(site.lng);
+                const m = L.marker([site.lat, site.lng], { icon: GENSET_SITE_ICON(false) });
+                m.on('click', () => gensetSelectSite(site, m));
+                clusterGroup.addLayer(m);
+                gensetSiteMarkers[site.site_id] = m;
+            });
+
+            gensetMap.addLayer(clusterGroup);
+        } catch(e) {
+            console.error('Genset: failed to load sites', e);
+        }
+    }
+
+    function gensetSelectSite(site, marker) {
+        // De-highlight previous
+        if (gensetSelectedMarker) gensetSelectedMarker.setIcon(GENSET_SITE_ICON(false));
+        gensetSelectedSite   = site;
+        gensetSelectedMarker = marker;
+        marker.setIcon(GENSET_SITE_ICON(true));
+
+        // Clear previous TNB results
+        gensetClearResults();
+
+        // Show card
+        document.getElementById('gensetSiteName').textContent = site.site_id + (site.site_name ? ' — ' + site.site_name : '');
+        document.getElementById('gensetSiteDetails').innerHTML =
+            `<span style="color:#6b7280;">Lat:</span> <b>${site.lat.toFixed(6)}</b>&emsp;` +
+            `<span style="color:#6b7280;">Lng:</span> <b>${site.lng.toFixed(6)}</b><br>` +
+            (site.region ? `<span style="color:#6b7280;">Region:</span> <b>${site.region}</b>` : '');
+        document.getElementById('gensetSiteCard').style.display = 'block';
+        document.getElementById('gensetResultPanel').style.display = 'none';
+
+        gensetMap.flyTo([site.lat, site.lng], 14, { animate: true, duration: 1.2 });
+    }
+
+    function gensetClearResults() {
+        gensetTnbMarkers.forEach(m => gensetMap.removeLayer(m));
+        gensetTnbMarkers = [];
+        if (gensetRouteLine)    { gensetMap.removeLayer(gensetRouteLine);    gensetRouteLine   = null; }
+        if (gensetNearbyCircle) { gensetMap.removeLayer(gensetNearbyCircle); gensetNearbyCircle = null; }
+        document.getElementById('gensetFound').style.display    = 'none';
+        document.getElementById('gensetNotFound').style.display = 'none';
+        document.getElementById('gensetLoading').style.display  = 'none';
+    }
+
+    async function gensetFindTNB() {
+        if (!gensetSelectedSite) return;
+        const { lat, lng } = gensetSelectedSite;
+
+        gensetClearResults();
+        document.getElementById('gensetResultPanel').style.display = 'block';
+        document.getElementById('gensetLoading').style.display = 'block';
+        document.getElementById('gensetFindBtn').disabled = true;
+
+        // Draw 2 km radius ring
+        gensetNearbyCircle = L.circle([lat, lng], {
+            radius: 2000, color: '#16a34a', weight: 1.5,
+            fillColor: '#16a34a', fillOpacity: 0.06, dashArray: '6,4'
+        }).addTo(gensetMap);
+
+        try {
+            // 1. Query Overpass for power=substation within 2 km
+            const overpassUrl = 'https://overpass-api.de/api/interpreter';
+            const query = `[out:json][timeout:25];
+(
+  node["power"="substation"](around:2000,${lat},${lng});
+  way["power"="substation"](around:2000,${lat},${lng});
+  relation["power"="substation"](around:2000,${lat},${lng});
+);
+out center;`;
+
+            const ovRes  = await fetch(overpassUrl, { method: 'POST', body: query });
+            const ovData = await ovRes.json();
+
+            const substations = (ovData.elements || []).map(el => ({
+                id:   el.id,
+                name: el.tags?.name || el.tags?.['name:en'] || el.tags?.operator || 'TNB Substation',
+                lat:  el.type === 'node' ? el.lat : el.center?.lat,
+                lng:  el.type === 'node' ? el.lon : el.center?.lon,
+                tags: el.tags || {}
+            })).filter(s => s.lat && s.lng);
+
+            if (substations.length === 0) {
+                gensetShowNotFound();
+                return;
+            }
+
+            // 2. For each substation, get road distance via OSRM
+            const routeResults = await Promise.all(substations.map(async sub => {
+                try {
+                    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lng},${lat};${sub.lng},${sub.lat}?overview=full&geometries=geojson`;
+                    const rRes    = await fetch(osrmUrl);
+                    const rData   = await rRes.json();
+                    if (rData.code !== 'Ok' || !rData.routes?.length) return null;
+                    return {
+                        sub,
+                        roadDist: rData.routes[0].distance,        // metres
+                        duration: rData.routes[0].duration,         // seconds
+                        geometry: rData.routes[0].geometry
+                    };
+                } catch { return null; }
+            }));
+
+            // 3. Filter to ≤ 2 km road distance, pick nearest
+            const valid = routeResults
+                .filter(r => r && r.roadDist <= 2000)
+                .sort((a, b) => a.roadDist - b.roadDist);
+
+            // Plot all substations found (within straight-line 2 km) as small markers
+            substations.forEach(sub => {
+                const m = L.marker([sub.lat, sub.lng], { icon: GENSET_TNB_ICON })
+                    .bindPopup(`<b style="color:#d97706;">${sub.name}</b><br>
+                        <span style="font-size:0.75rem;color:#6b7280;">
+                            ${sub.tags.voltage ? 'Voltage: ' + sub.tags.voltage + '<br>' : ''}
+                            ${sub.tags.operator ? 'Operator: ' + sub.tags.operator + '<br>' : ''}
+                            Lat: ${sub.lat.toFixed(6)}, Lng: ${sub.lng.toFixed(6)}
+                        </span>`)
+                    .addTo(gensetMap);
+                gensetTnbMarkers.push(m);
+            });
+
+            if (valid.length === 0) {
+                gensetShowNotFound();
+                return;
+            }
+
+            // 4. Draw route for nearest
+            const best = valid[0];
+            const coords = best.geometry.coordinates.map(c => [c[1], c[0]]);
+            gensetRouteLine = L.polyline(coords, {
+                color: '#f59e0b', weight: 5, opacity: 0.85,
+                lineCap: 'round', lineJoin: 'round'
+            }).addTo(gensetMap);
+
+            // Fit map to route
+            gensetMap.fitBounds(gensetRouteLine.getBounds(), { padding: [60, 60] });
+
+            // 5. Show result card
+            const km   = (best.roadDist / 1000).toFixed(3);
+            const mins = Math.ceil(best.duration / 60);
+            document.getElementById('gensetLoading').style.display = 'none';
+            document.getElementById('gensetFound').style.display   = 'block';
+            document.getElementById('gensetFoundContent').innerHTML = `
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                    <i class="fas fa-bolt" style="color:#d97706;"></i>
+                    <b style="color:#92400e;font-size:0.78rem;">${best.sub.name}</b>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;">
+                    <div style="background:#fef3c7;border-radius:6px;padding:6px;text-align:center;">
+                        <div style="font-size:1rem;font-weight:900;color:#d97706;">${km} km</div>
+                        <div style="font-size:0.6rem;color:#92400e;font-weight:600;text-transform:uppercase;">Road Distance</div>
+                    </div>
+                    <div style="background:#fef3c7;border-radius:6px;padding:6px;text-align:center;">
+                        <div style="font-size:1rem;font-weight:900;color:#d97706;">${mins} min</div>
+                        <div style="font-size:0.6rem;color:#92400e;font-weight:600;text-transform:uppercase;">Drive Time</div>
+                    </div>
+                </div>
+                ${best.sub.tags.voltage ? `<div style="margin-top:6px;font-size:0.68rem;color:#6b7280;"><i class="fas fa-plug" style="margin-right:4px;color:#d97706;"></i>Voltage: <b>${best.sub.tags.voltage}</b></div>` : ''}
+                ${valid.length > 1 ? `<div style="margin-top:4px;font-size:0.68rem;color:#6b7280;"><i class="fas fa-info-circle" style="margin-right:4px;"></i>${valid.length - 1} other substation${valid.length > 2 ? 's' : ''} also within 2 km.</div>` : ''}
+            `;
+
+        } catch(err) {
+            console.error('Genset TNB search error:', err);
+            gensetShowNotFound();
+        } finally {
+            document.getElementById('gensetFindBtn').disabled = false;
+            document.getElementById('gensetLoading').style.display = 'none';
+        }
+    }
+
+    function gensetShowNotFound() {
+        document.getElementById('gensetLoading').style.display  = 'none';
+        document.getElementById('gensetFound').style.display    = 'none';
+        document.getElementById('gensetNotFound').style.display = 'block';
+        document.getElementById('gensetFindBtn').disabled       = false;
+    }
+
+    function gensetOnSearch(val) {
+        const box = document.getElementById('gensetSearchResults');
+        if (!val || val.length < 2) { box.style.display = 'none'; return; }
+        const q = val.toLowerCase();
+        const hits = gensetSitesData.filter(s =>
+            s.site_id.toLowerCase().includes(q) ||
+            (s.site_name && s.site_name.toLowerCase().includes(q))
+        ).slice(0, 10);
+        if (!hits.length) { box.style.display = 'none'; return; }
+        box.innerHTML = hits.map(s =>
+            `<div onclick="gensetSearchSelect('${s.site_id}')"
+                  style="padding:8px 12px;cursor:pointer;font-size:0.82rem;color:#374151;border-bottom:1px solid #f3f4f6;"
+                  onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
+                <b>${s.site_id}</b>${s.site_name ? ' — ' + s.site_name : ''}
+             </div>`
+        ).join('');
+        box.style.display = 'block';
+    }
+
+    function gensetSearchSelect(siteId) {
+        const site = gensetSitesData.find(s => s.site_id === siteId);
+        if (!site) return;
+        document.getElementById('gensetSearchResults').style.display = 'none';
+        document.getElementById('gensetSearchInput').value = site.site_id;
+        const marker = gensetSiteMarkers[site.site_id];
+        gensetSelectSite(site, marker || { setIcon: () => {} });
+    }
 
     </script>
 </body>
