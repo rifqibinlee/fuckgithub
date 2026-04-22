@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>3W - Unified Platform</title>
+  <title>3W - Unified Platfor</title>
 
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -377,6 +377,36 @@
         #annotationBtn.active { background: #dc2626; }
         #notesBtn.active { background: #dc2626; }
         #showAnnotationsBtn.annotations-hidden { background: #6b7280; }
+
+        /* ── TRUE NORTH COMPASS ── */
+        #northCompass {
+            position: absolute;
+            bottom: 90px;
+            right: 12px;
+            z-index: 1000;
+            width: 68px;
+            height: 68px;
+            background: rgba(255,255,255,0.96);
+            border-radius: 50%;
+            box-shadow: 0 2px 14px rgba(0,0,0,0.22), 0 0 0 1.5px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        /* ── GEO TOOLS ── */
+        .geo-pick-btn {
+            font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 4px; border: none; cursor: pointer; transition: background 0.15s;
+        }
+        .geo-result-row {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.72rem; padding: 4px 0; border-bottom: 1px solid #f3f4f6;
+        }
+        .geo-result-row:last-child { border-bottom: none; }
+        .geo-result-label { color: #6b7280; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        .geo-result-value { font-weight: 800; }
+        .geo-label-tip { font-size: 9px; background: #1e40af; color: white; border-radius: 3px; padding: 1px 5px; font-weight: 800; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -912,6 +942,69 @@
 
         <div id="loading" class="hidden text-center text-blue-600 text-sm font-bold mt-4"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading Data...</div>
 
+        <!-- ══ GEO TOOLS ══ -->
+        <div class="control-group" style="border-color:#c4b5fd;">
+            <label class="control-label" style="color:#7c3aed;"><i class="fas fa-drafting-compass mr-1"></i> Geo Tools</label>
+
+            <!-- Pick-mode status banner -->
+            <div id="geoPickStatus" class="hidden text-[10px] font-bold text-blue-700 mb-2 py-1 px-2 bg-blue-50 rounded flex items-center gap-1">
+                <i class="fas fa-crosshairs fa-spin"></i>
+                <span id="geoPickStatusText">Click map to set point</span>
+            </div>
+
+            <!-- Point A -->
+            <div class="mb-2">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[10px] font-bold uppercase flex items-center gap-1" style="color:#2563eb;">
+                        <span class="geo-label-tip">A</span> Point A
+                    </span>
+                    <button class="geo-pick-btn" style="background:#dbeafe;color:#1d4ed8;" onclick="startGeoPickMode('A')">
+                        <i class="fas fa-crosshairs mr-1"></i>Pick
+                    </button>
+                </div>
+                <div class="flex gap-1">
+                    <input id="geoLatA" type="number" placeholder="Lat" step="0.000001" class="light-input text-xs" oninput="runGeoCalc()">
+                    <input id="geoLngA" type="number" placeholder="Lng" step="0.000001" class="light-input text-xs" oninput="runGeoCalc()">
+                </div>
+            </div>
+
+            <!-- Point B -->
+            <div class="mb-2">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[10px] font-bold uppercase flex items-center gap-1" style="color:#dc2626;">
+                        <span class="geo-label-tip" style="background:#dc2626;">B</span> Point B
+                    </span>
+                    <button class="geo-pick-btn" style="background:#fee2e2;color:#b91c1c;" onclick="startGeoPickMode('B')">
+                        <i class="fas fa-crosshairs mr-1"></i>Pick
+                    </button>
+                </div>
+                <div class="flex gap-1">
+                    <input id="geoLatB" type="number" placeholder="Lat" step="0.000001" class="light-input text-xs" oninput="runGeoCalc()">
+                    <input id="geoLngB" type="number" placeholder="Lng" step="0.000001" class="light-input text-xs" oninput="runGeoCalc()">
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div id="geoResults" class="hidden bg-gray-50 rounded-lg p-2 border border-purple-100 mb-2">
+                <div class="geo-result-row">
+                    <span class="geo-result-label"><i class="fas fa-ruler" style="color:#7c3aed;"></i> Distance</span>
+                    <span id="geoDistResult" class="geo-result-value" style="color:#7c3aed;">—</span>
+                </div>
+                <div class="geo-result-row">
+                    <span class="geo-result-label"><i class="fas fa-location-arrow" style="color:#2563eb;"></i> Azimuth A→B</span>
+                    <span id="geoBearingResult" class="geo-result-value" style="color:#2563eb;">—</span>
+                </div>
+                <div class="geo-result-row">
+                    <span class="geo-result-label"><i class="fas fa-location-arrow" style="color:#dc2626;transform:rotate(180deg);display:inline-block;"></i> Back Bearing B→A</span>
+                    <span id="geoBackBearingResult" class="geo-result-value" style="color:#dc2626;">—</span>
+                </div>
+            </div>
+
+            <button onclick="clearGeoTools()" class="w-full text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-600 py-1 rounded font-bold transition-colors">
+                <i class="fas fa-times mr-1"></i>Clear Points
+            </button>
+        </div>
+
         <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-auto">
             <p class="text-xs text-blue-800 font-semibold mb-2"><i class="fas fa-mouse-pointer mr-1"></i> Coverage Controls</p>
             <ul class="text-[10px] text-blue-700 space-y-1 list-disc pl-3">
@@ -922,6 +1015,31 @@
     </div>
 
     <div id="map"></div>
+
+    <!-- ══ TRUE NORTH COMPASS ══ -->
+    <div id="northCompass" title="True North Indicator">
+        <svg viewBox="0 0 68 68" width="68" height="68" xmlns="http://www.w3.org/2000/svg">
+            <!-- Outer ring -->
+            <circle cx="34" cy="34" r="32" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
+            <!-- Tick marks for cardinal directions -->
+            <line x1="34" y1="4" x2="34" y2="9" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+            <line x1="34" y1="59" x2="34" y2="64" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="4" y1="34" x2="9" y2="34" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="59" y1="34" x2="64" y2="34" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Cardinal labels -->
+            <text x="34" y="19" text-anchor="middle" dominant-baseline="middle" font-size="8.5" font-weight="900" fill="#dc2626" font-family="system-ui,sans-serif" letter-spacing="0">N</text>
+            <text x="34" y="54" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">S</text>
+            <text x="14" y="34" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">W</text>
+            <text x="54" y="34" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">E</text>
+            <!-- North needle (red) -->
+            <polygon points="34,11 30,34 34,31 38,34" fill="#dc2626" opacity="0.95"/>
+            <!-- South needle (gray) -->
+            <polygon points="34,57 30,34 34,37 38,34" fill="#d1d5db"/>
+            <!-- Center hub -->
+            <circle cx="34" cy="34" r="3.5" fill="#1f2937"/>
+            <circle cx="34" cy="34" r="1.5" fill="#ffffff"/>
+        </svg>
+    </div>
 
     <!-- UI Overlay Controls -->
     <button id="annotationBtn" class="tool-icon-btn" onclick="toggleAnnotationPanel()" title="Annotations">
@@ -1402,7 +1520,7 @@
     <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-[6000] flex items-center justify-center">
             <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden">
                 <div class="bg-gray-800 text-white p-3 flex justify-between items-center flex-shrink-0">
-                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> 3W Dashboard</h3>
+                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> NetAlytics Dashboard</h3>
                     <button onclick="closeMetabaseDashboard()" class="text-gray-300 hover:text-white text-xl transition-colors">
                         <i class="fas fa-times"></i>
                     </button>
@@ -1698,12 +1816,12 @@
 
     <div id="chatPanel" class="hidden fixed bottom-20 right-8 w-[600px] bg-white shadow-2xl rounded-2xl border border-gray-200 flex-col z-[6000] overflow-hidden">
         <div class="bg-blue-600 p-3 text-white font-bold flex justify-between items-center">
-            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> 3W AI Agent</span>
+            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> NetAlytics AI Agent</span>
             <button onclick="toggleChat()" class="hover:text-blue-200"><i class="fas fa-times"></i></button>
         </div>
         <div id="chatMessages" class="h-[550px] overflow-y-auto p-4 flex flex-col gap-3 bg-gray-50 text-sm">
             <div class="self-start bg-white border border-gray-200 text-gray-800 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl shadow-sm max-w-[95%] w-full">
-                Hello! I am your 3W capacity planning assistant. Ask me to find a site or analyze congestion.
+                Hello! I am your NetAlytics capacity planning assistant. Ask me to find a site or analyze congestion.
             </div>
         </div>
         <form onsubmit="handleChatSubmit(event)" class="p-3 border-t border-gray-200 bg-white flex gap-2">
@@ -5800,6 +5918,138 @@
             });
         }
 
+
+    // ================================================================
+    // GEO TOOLS — True North, Distance, Bearing & Azimuth
+    // ================================================================
+
+    let geoPickMode  = null;   // 'A' | 'B' | null
+    let geoPointA    = null;
+    let geoPointB    = null;
+    let geoMarkerA   = null;
+    let geoMarkerB   = null;
+    let geoPolyline  = null;
+
+    const _toRad = d => d * Math.PI / 180;
+    const _toDeg = r => r * 180 / Math.PI;
+
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371000;
+        const φ1 = _toRad(lat1), φ2 = _toRad(lat2);
+        const Δφ = _toRad(lat2 - lat1), Δλ = _toRad(lon2 - lon1);
+        const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function calculateBearing(lat1, lon1, lat2, lon2) {
+        const φ1 = _toRad(lat1), φ2 = _toRad(lat2);
+        const Δλ = _toRad(lon2 - lon1);
+        const y = Math.sin(Δλ) * Math.cos(φ2);
+        const x = Math.cos(φ1)*Math.sin(φ2) - Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
+        return (_toDeg(Math.atan2(y, x)) + 360) % 360;
+    }
+
+    function startGeoPickMode(point) {
+        geoPickMode = point;
+        const label = `Click map to set Point ${point}`;
+        document.getElementById('geoPickStatusText').textContent = label;
+        document.getElementById('geoPickStatus').classList.remove('hidden');
+        if (map) map.getContainer().style.cursor = 'crosshair';
+    }
+
+    function _placeGeoMarker(lat, lng, point) {
+        const isA = point === 'A';
+        const color = isA ? '#2563eb' : '#dc2626';
+        const fillColor = isA ? '#3b82f6' : '#ef4444';
+        const ref = isA ? 'geoMarkerA' : 'geoMarkerB';
+        if (window[ref]) map.removeLayer(window[ref]);
+        window[ref] = L.circleMarker([lat, lng], {
+            radius: 7, color, fillColor, fillOpacity: 1, weight: 2.5, interactive: false
+        }).addTo(map);
+        window[ref].bindTooltip(`<b>${point}</b>`, {
+            permanent: true, direction: 'top', offset: [0, -8],
+            className: 'leaflet-tooltip leaflet-tooltip-top',
+            opacity: 1
+        });
+    }
+
+    function setGeoPoint(lat, lng, point) {
+        if (point === 'A') {
+            geoPointA = {lat, lng};
+            document.getElementById('geoLatA').value = lat.toFixed(6);
+            document.getElementById('geoLngA').value = lng.toFixed(6);
+        } else {
+            geoPointB = {lat, lng};
+            document.getElementById('geoLatB').value = lat.toFixed(6);
+            document.getElementById('geoLngB').value = lng.toFixed(6);
+        }
+        _placeGeoMarker(lat, lng, point);
+
+        geoPickMode = null;
+        document.getElementById('geoPickStatus').classList.add('hidden');
+        if (map) map.getContainer().style.cursor = '';
+        runGeoCalc();
+    }
+
+    function runGeoCalc() {
+        const latA = parseFloat(document.getElementById('geoLatA').value);
+        const lngA = parseFloat(document.getElementById('geoLngA').value);
+        const latB = parseFloat(document.getElementById('geoLatB').value);
+        const lngB = parseFloat(document.getElementById('geoLngB').value);
+
+        if (isNaN(latA) || isNaN(lngA) || isNaN(latB) || isNaN(lngB)) {
+            document.getElementById('geoResults').classList.add('hidden');
+            return;
+        }
+
+        const dist = haversineDistance(latA, lngA, latB, lngB);
+        const bearing = calculateBearing(latA, lngA, latB, lngB);
+        const backBearing = (bearing + 180) % 360;
+
+        const distStr = dist >= 1000
+            ? (dist / 1000).toFixed(3) + ' km'
+            : dist.toFixed(1) + ' m';
+
+        document.getElementById('geoDistResult').textContent        = distStr;
+        document.getElementById('geoBearingResult').textContent     = bearing.toFixed(2) + '°';
+        document.getElementById('geoBackBearingResult').textContent = backBearing.toFixed(2) + '°';
+        document.getElementById('geoResults').classList.remove('hidden');
+
+        // Draw dashed line between the two points
+        if (geoPolyline) map.removeLayer(geoPolyline);
+        geoPolyline = L.polyline([[latA, lngA], [latB, lngB]], {
+            color: '#7c3aed', weight: 2, dashArray: '6 5', opacity: 0.85, interactive: false
+        }).addTo(map);
+
+        // Refresh markers with latest coordinate values
+        _placeGeoMarker(latA, lngA, 'A');
+        _placeGeoMarker(latB, lngB, 'B');
+    }
+
+    function clearGeoTools() {
+        if (geoMarkerA)  { map.removeLayer(geoMarkerA);  geoMarkerA  = null; }
+        if (geoMarkerB)  { map.removeLayer(geoMarkerB);  geoMarkerB  = null; }
+        if (geoPolyline) { map.removeLayer(geoPolyline); geoPolyline = null; }
+        geoPointA = geoPointB = null;
+        ['geoLatA','geoLngA','geoLatB','geoLngB'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('geoResults').classList.add('hidden');
+        geoPickMode = null;
+        document.getElementById('geoPickStatus').classList.add('hidden');
+        if (map) map.getContainer().style.cursor = '';
+    }
+
+    // Attach geo-pick click handler on the map
+    (function waitForMap() {
+        if (typeof map !== 'undefined' && map) {
+            map.on('click', function(e) {
+                if (geoPickMode) setGeoPoint(e.latlng.lat, e.latlng.lng, geoPickMode);
+            });
+        } else {
+            setTimeout(waitForMap, 300);
+        }
+    })();
 
     </script>
 </body>
