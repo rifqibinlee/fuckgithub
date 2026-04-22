@@ -381,14 +381,14 @@
         /* ── TRUE NORTH COMPASS ── */
         #northCompass {
             position: absolute;
-            bottom: 90px;
-            right: 12px;
+            top: 80px;
+            right: 10px;
             z-index: 1000;
-            width: 68px;
-            height: 68px;
+            width: 44px;
+            height: 44px;
             background: rgba(255,255,255,0.96);
             border-radius: 50%;
-            box-shadow: 0 2px 14px rgba(0,0,0,0.22), 0 0 0 1.5px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.07);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -770,6 +770,18 @@
                 <i class="fas fa-layer-group"></i> Map Layers
             </div>
 
+            <!-- Base Map Section -->
+            <div style="padding:8px 0; border-bottom:1px solid #f3f4f6;">
+                <div style="padding:4px 14px 6px; font-size:0.62rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:0.08em;">Base Map</div>
+                <label class="layer-menu-item" onclick="toggleBaseMap()">
+                    <div class="layer-menu-icon" id="baseMapIcon" style="background:linear-gradient(135deg,#0f4c81,#1a7a4a); overflow:hidden; position:relative;">
+                        <i class="fas fa-satellite" style="color:white;font-size:0.7rem;"></i>
+                    </div>
+                    <span class="layer-menu-label" id="baseMapLabel">Satellite View</span>
+                    <div class="layer-toggle-switch active" id="toggle-satellite"><div class="layer-toggle-knob"></div></div>
+                </label>
+            </div>
+
             <!-- Traffic Section -->
             <div style="padding:8px 0; border-bottom:1px solid #f3f4f6;">
                 <div style="padding:4px 14px 6px; font-size:0.62rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:0.08em;">Traffic</div>
@@ -1018,7 +1030,7 @@
 
     <!-- ══ TRUE NORTH COMPASS ══ -->
     <div id="northCompass" title="True North Indicator">
-        <svg viewBox="0 0 68 68" width="68" height="68" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 68 68" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
             <!-- Outer ring -->
             <circle cx="34" cy="34" r="32" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
             <!-- Tick marks for cardinal directions -->
@@ -2558,8 +2570,13 @@
         }).setView([4.2105, 101.9758], 6);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 19 }).addTo(map);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { attribution: '&copy;OpenStreetMap, &copy;CartoDB', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+        var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 19 });
+        var labelsLayer    = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { attribution: '&copy;OpenStreetMap, &copy;CartoDB', subdomains: 'abcd', maxZoom: 19 });
+        var streetLayer    = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy;OpenStreetMap, &copy;CartoDB', subdomains: 'abcd', maxZoom: 19 });
+
+        satelliteLayer.addTo(map);
+        labelsLayer.addTo(map);
+        var isSatelliteMode = true;
 
         // --- Traffic Layer (TomTom) ---
         var trafficLayer = L.tileLayer(
@@ -5918,6 +5935,38 @@
             });
         }
 
+
+    // ================================================================
+    // BASE MAP TOGGLE — Satellite ↔ Street
+    // ================================================================
+    function toggleBaseMap() {
+        const sw     = document.getElementById('toggle-satellite');
+        const icon   = document.getElementById('baseMapIcon');
+        const label  = document.getElementById('baseMapLabel');
+
+        if (isSatelliteMode) {
+            // Switch to Street
+            map.removeLayer(satelliteLayer);
+            map.removeLayer(labelsLayer);
+            streetLayer.addTo(map);
+            streetLayer.setZIndex(0);
+            isSatelliteMode = false;
+            sw.classList.remove('active');
+            icon.style.background = 'linear-gradient(135deg,#2563eb,#7c3aed)';
+            icon.innerHTML = '<i class="fas fa-map" style="color:white;font-size:0.7rem;"></i>';
+            label.textContent = 'Street Map';
+        } else {
+            // Switch to Satellite
+            map.removeLayer(streetLayer);
+            satelliteLayer.addTo(map);
+            labelsLayer.addTo(map);
+            isSatelliteMode = true;
+            sw.classList.add('active');
+            icon.style.background = 'linear-gradient(135deg,#0f4c81,#1a7a4a)';
+            icon.innerHTML = '<i class="fas fa-satellite" style="color:white;font-size:0.7rem;"></i>';
+            label.textContent = 'Satellite View';
+        }
+    }
 
     // ================================================================
     // GEO TOOLS — True North, Distance, Bearing & Azimuth
