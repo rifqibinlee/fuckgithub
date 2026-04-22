@@ -965,9 +965,21 @@
                     }
 
                     if (isCongested) { heatPoints.push([site.lat, site.lng, 1.0]); congCount++; }
-
+                    
                     const markerColor = isCongested ? '#dc2626' : '#2563eb';
-                    const customIcon = L.divIcon({ className: 'custom-pin', html: `<div style="background-color:${markerColor}; width:14px; height:14px; border-radius:50%;border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>`, iconSize: [14, 14] });
+                    
+                    // --- NEW: Added floating Site ID label above the dot ---
+                    const customIcon = L.divIcon({ 
+                        className: 'custom-pin', 
+                        html: `
+                            <div style="position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 900; color: #1e293b; text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff, 2px 0 0 #fff, -2px 0 0 #fff; white-space: nowrap; pointer-events: none; letter-spacing: 0.5px;">
+                                ${site.site_id}
+                            </div>
+                            <div style="background-color:${markerColor}; width:14px; height:14px; border-radius:50%; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>
+                        `, 
+                        iconSize: [14, 14],
+                        iconAnchor: [7, 7] // Keeps the dot perfectly centered on the coordinate
+                    });
 
                     const popupContent = createPopupContent(site, isCongested);
                     var marker = L.marker([site.lat, site.lng], {icon: customIcon}).bindPopup(popupContent);
