@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>3W</title>
+  <title>3W - Unified Platfor</title>
 
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -36,6 +36,8 @@
   <!-- CesiumJS for 3D Map -->
   <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.122/Build/Cesium/Widgets/widgets.css">
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.122/Build/Cesium/Cesium.js"></script>
+  <!-- SheetJS for Excel parsing -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
     <style>
         .table-container { overflow-x: auto; }
@@ -1108,7 +1110,7 @@
         <i class="fas fa-tasks"></i>
         <span id="tasksBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-0.5 font-bold">0</span>
     </button>
-    <button id="dashboardBtn" class="tool-icon-btn" onclick="openMetabaseDashboard()" title="3W Dashboard">
+    <button id="dashboardBtn" class="tool-icon-btn" onclick="openMetabaseDashboard()" title="NetAlytics Dashboard">
         <i class="fas fa-chart-pie"></i>
     </button>
 
@@ -1654,6 +1656,109 @@
                 </div>
             </div>
 
+            <!-- ── BULK EXCEL PROCESSING ── -->
+            <div style="margin:10px 12px 0; border:1px solid #bbf7d0; border-radius:10px; overflow:hidden; flex-shrink:0;">
+                <!-- Section header / toggle -->
+                <div onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display==='none' ? 'block' : 'none'; this.querySelector('i.chevron').style.transform = this.nextElementSibling.style.display==='none' ? 'rotate(-90deg)' : 'rotate(0deg)';"
+                    style="display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:#f0fdf4; cursor:pointer; user-select:none;">
+                    <span style="font-size:0.68rem; font-weight:800; color:#14532d; display:flex; align-items:center; gap:6px;">
+                        <i class="fas fa-file-excel" style="color:#16a34a;"></i> Bulk Site Processing
+                    </span>
+                    <i class="fas fa-chevron-down chevron" style="font-size:0.6rem; color:#6b7280; transition:transform 0.2s;"></i>
+                </div>
+
+                <!-- Collapsible body -->
+                <div style="padding:10px 12px; background:white;">
+
+                    <!-- Mode tabs -->
+                    <div style="display:flex; gap:4px; margin-bottom:10px; background:#f3f4f6; border-radius:7px; padding:3px;">
+                        <button id="gsBulkTabSingle" onclick="gsSwitchBulkTab('single')"
+                            style="flex:1; padding:5px; border:none; border-radius:5px; font-size:0.7rem; font-weight:700; cursor:pointer; background:white; color:#16a34a; box-shadow:0 1px 3px rgba(0,0,0,0.1); transition:all 0.15s;">
+                            <i class="fas fa-crosshairs" style="margin-right:3px;"></i>Single
+                        </button>
+                        <button id="gsBulkTabExcel" onclick="gsSwitchBulkTab('excel')"
+                            style="flex:1; padding:5px; border:none; border-radius:5px; font-size:0.7rem; font-weight:700; cursor:pointer; background:transparent; color:#6b7280; transition:all 0.15s;">
+                            <i class="fas fa-file-excel" style="margin-right:3px;"></i>Excel
+                        </button>
+                    </div>
+
+                    <!-- Single site entry -->
+                    <div id="gsBulkSinglePanel">
+                        <p style="font-size:0.65rem; color:#6b7280; margin:0 0 7px;">Type a Site ID and run a single TNB lookup.</p>
+                        <div style="display:flex; gap:5px; margin-bottom:8px;">
+                            <div style="position:relative; flex:1;">
+                                <input id="gsBulkSingleInput" type="text" placeholder="Enter Site ID…"
+                                    style="width:100%; padding:7px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:0.78rem; outline:none; box-sizing:border-box;"
+                                    oninput="gsBulkSingleSearch(this.value)"
+                                    onkeydown="if(event.key==='Enter') gensetRunSingle()"
+                                    autocomplete="off">
+                                <div id="gsBulkSingleResults" style="position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #e5e7eb; border-radius:0 0 7px 7px; max-height:160px; overflow-y:auto; z-index:300; box-shadow:0 8px 16px rgba(0,0,0,0.12); display:none;"></div>
+                            </div>
+                            <button onclick="gensetRunSingle()" id="gsBulkSingleRunBtn"
+                                style="padding:7px 10px; background:#16a34a; color:white; border:none; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer; white-space:nowrap; transition:background 0.15s;"
+                                onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+                                <i class="fas fa-search-location"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Excel upload (hidden by default) -->
+                    <div id="gsBulkExcelPanel" style="display:none;">
+                        <p style="font-size:0.65rem; color:#6b7280; margin:0 0 7px;">Upload a file with a <b>site_id</b> column to batch-process all sites.</p>
+                        <label id="gensetXlsxLabel" style="display:flex; align-items:center; gap:6px; padding:7px 10px; border:1.5px dashed #86efac; border-radius:7px; background:#f0fdf4; cursor:pointer; font-size:0.72rem; color:#16a34a; font-weight:700; margin-bottom:8px; transition:background 0.15s;"
+                            onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
+                            <i class="fas fa-upload"></i>
+                            <span id="gensetXlsxName">Choose .xlsx / .xls / .csv…</span>
+                            <input type="file" id="gensetXlsxInput" accept=".xlsx,.xls,.csv" onchange="gensetXlsxLoaded(this)" style="display:none;">
+                        </label>
+                    </div>
+
+                    <!-- Progress bar (shared) -->
+                    <div id="gensetBulkProgress" style="display:none; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                            <span id="gensetBulkProgressLabel" style="font-size:0.65rem; font-weight:700; color:#16a34a;">Processing…</span>
+                            <span id="gensetBulkProgressPct" style="font-size:0.65rem; font-weight:800; color:#14532d;">0%</span>
+                        </div>
+                        <div style="height:6px; background:#dcfce7; border-radius:3px; overflow:hidden;">
+                            <div id="gensetBulkProgressBar" style="height:100%; width:0%; background:linear-gradient(90deg,#16a34a,#4ade80); border-radius:3px; transition:width 0.3s;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Run / Stop / Clear buttons (Excel mode only) -->
+                    <div id="gsBulkExcelBtns" style="display:none; gap:6px; margin-bottom:8px;">
+                        <button id="gensetBulkRunBtn" onclick="gensetRunBulk()" disabled
+                            style="flex:1; padding:7px; background:#d1d5db; color:#9ca3af; border:none; border-radius:7px; font-size:0.75rem; font-weight:700; cursor:not-allowed; transition:all 0.15s;">
+                            <i class="fas fa-play" style="margin-right:4px;"></i>Run All
+                        </button>
+                        <button id="gensetBulkStopBtn" onclick="gensetStopBulk()" style="display:none; padding:7px 12px; background:#fee2e2; color:#b91c1c; border:none; border-radius:7px; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                        <button onclick="gensetClearBulk()" style="padding:7px 10px; background:#f3f4f6; color:#6b7280; border:none; border-radius:7px; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+
+                    <!-- Summary stats (shared) -->
+                    <div id="gensetBulkStats" style="display:none; grid-template-columns:repeat(3,1fr); gap:4px; margin-bottom:8px; text-align:center;">
+                        <div style="background:#f0fdf4; border-radius:6px; padding:5px;">
+                            <div id="gsBulkStatTotal" style="font-size:0.95rem; font-weight:900; color:#14532d;">0</div>
+                            <div style="font-size:0.55rem; font-weight:700; text-transform:uppercase; color:#6b7280;">Total</div>
+                        </div>
+                        <div style="background:#f0fdf4; border-radius:6px; padding:5px;">
+                            <div id="gsBulkStatFound" style="font-size:0.95rem; font-weight:900; color:#16a34a;">0</div>
+                            <div style="font-size:0.55rem; font-weight:700; text-transform:uppercase; color:#6b7280;">Found</div>
+                        </div>
+                        <div style="background:#fef2f2; border-radius:6px; padding:5px;">
+                            <div id="gsBulkStatNone" style="font-size:0.95rem; font-weight:900; color:#dc2626;">0</div>
+                            <div style="font-size:0.55rem; font-weight:700; text-transform:uppercase; color:#6b7280;">None</div>
+                        </div>
+                    </div>
+
+                    <!-- Results list (shared) -->
+                    <div id="gensetBulkResults" style="display:none; max-height:220px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:7px; font-size:0.65rem;"></div>
+                </div>
+            </div>
+
             <!-- ── GEO TOOLS ── -->
             <div style="margin:10px 12px 0; padding:10px; background:#faf5ff; border:1px solid #e9d5ff; border-radius:10px; flex-shrink:0;">
                 <div style="font-size:0.6rem; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:8px; display:flex; align-items:center; gap:5px;">
@@ -1676,11 +1781,11 @@
                             <i class="fas fa-crosshairs" style="margin-right:2px;"></i>Pick
                         </button>
                     </div>
-                    <div style="display:flex; gap:4px;">
+                    <div style="display:flex; gap:4px; overflow:hidden;">
                         <input id="gsGeoLatA" type="number" placeholder="Lat" step="0.000001"
-                            style="flex:1; padding:5px 7px; border:1px solid #d1d5db; border-radius:5px; font-size:0.72rem; outline:none;" oninput="gsRunGeoCalc()">
+                            style="flex:1; min-width:0; padding:5px 4px; border:1px solid #d1d5db; border-radius:5px; font-size:0.7rem; outline:none; box-sizing:border-box;" oninput="gsRunGeoCalc()">
                         <input id="gsGeoLngA" type="number" placeholder="Lng" step="0.000001"
-                            style="flex:1; padding:5px 7px; border:1px solid #d1d5db; border-radius:5px; font-size:0.72rem; outline:none;" oninput="gsRunGeoCalc()">
+                            style="flex:1; min-width:0; padding:5px 4px; border:1px solid #d1d5db; border-radius:5px; font-size:0.7rem; outline:none; box-sizing:border-box;" oninput="gsRunGeoCalc()">
                     </div>
                 </div>
 
@@ -1694,11 +1799,11 @@
                             <i class="fas fa-crosshairs" style="margin-right:2px;"></i>Pick
                         </button>
                     </div>
-                    <div style="display:flex; gap:4px;">
+                    <div style="display:flex; gap:4px; overflow:hidden;">
                         <input id="gsGeoLatB" type="number" placeholder="Lat" step="0.000001"
-                            style="flex:1; padding:5px 7px; border:1px solid #d1d5db; border-radius:5px; font-size:0.72rem; outline:none;" oninput="gsRunGeoCalc()">
+                            style="flex:1; min-width:0; padding:5px 4px; border:1px solid #d1d5db; border-radius:5px; font-size:0.7rem; outline:none; box-sizing:border-box;" oninput="gsRunGeoCalc()">
                         <input id="gsGeoLngB" type="number" placeholder="Lng" step="0.000001"
-                            style="flex:1; padding:5px 7px; border:1px solid #d1d5db; border-radius:5px; font-size:0.72rem; outline:none;" oninput="gsRunGeoCalc()">
+                            style="flex:1; min-width:0; padding:5px 4px; border:1px solid #d1d5db; border-radius:5px; font-size:0.7rem; outline:none; box-sizing:border-box;" oninput="gsRunGeoCalc()">
                     </div>
                 </div>
 
@@ -1736,23 +1841,23 @@
             </div>
         </div>
 
-        <!-- Tool buttons — mirror of Coverage Map toolbar -->
+        <!-- Tool buttons — top-right, stacked below compass -->
         <button id="gensetAnnotationBtn"
             onclick="toggleAnnotationPanel()"
             title="Annotations"
-            style="position:absolute; top:10px; left:350px; z-index:300; width:42px; height:42px; border-radius:50%; background:#1d4ed8; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; box-shadow:0 4px 14px rgba(0,0,0,0.2); transition:all 0.2s;">
+            style="position:absolute; top:135px; right:10px; z-index:1200; width:34px; height:34px; border-radius:8px; background:#1d4ed8; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.85rem; box-shadow:0 2px 8px rgba(0,0,0,0.2); transition:all 0.2s;">
             <i class="fas fa-draw-polygon"></i>
         </button>
         <button id="gensetNotesBtn"
             onclick="toggleNotesPanel()"
             title="My Notes"
-            style="position:absolute; top:10px; left:402px; z-index:300; width:42px; height:42px; border-radius:50%; background:#6d28d9; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; box-shadow:0 4px 14px rgba(0,0,0,0.2); transition:all 0.2s;">
+            style="position:absolute; top:178px; right:10px; z-index:1200; width:34px; height:34px; border-radius:8px; background:#6d28d9; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.85rem; box-shadow:0 2px 8px rgba(0,0,0,0.2); transition:all 0.2s;">
             <i class="fas fa-sticky-note"></i>
         </button>
         <button id="gensetTasksBtn"
             onclick="toggleTasksPanel()"
             title="Tasks"
-            style="position:absolute; top:10px; left:454px; z-index:300; width:42px; height:42px; border-radius:50%; background:#d97706; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; box-shadow:0 4px 14px rgba(0,0,0,0.2); transition:all 0.2s;">
+            style="position:absolute; top:221px; right:10px; z-index:1200; width:34px; height:34px; border-radius:8px; background:#d97706; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.85rem; box-shadow:0 2px 8px rgba(0,0,0,0.2); transition:all 0.2s;">
             <i class="fas fa-tasks"></i>
         </button>
 
@@ -1797,7 +1902,7 @@
     <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-[6000] flex items-center justify-center">
             <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden">
                 <div class="bg-gray-800 text-white p-3 flex justify-between items-center flex-shrink-0">
-                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> NetAlyti3Wcs Dashboard</h3>
+                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> NetAlytics Dashboard</h3>
                     <button onclick="closeMetabaseDashboard()" class="text-gray-300 hover:text-white text-xl transition-colors">
                         <i class="fas fa-times"></i>
                     </button>
@@ -2093,12 +2198,12 @@
 
     <div id="chatPanel" class="hidden fixed bottom-20 right-8 w-[600px] bg-white shadow-2xl rounded-2xl border border-gray-200 flex-col z-[6000] overflow-hidden">
         <div class="bg-blue-600 p-3 text-white font-bold flex justify-between items-center">
-            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> 3W AI Agent</span>
+            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> NetAlytics AI Agent</span>
             <button onclick="toggleChat()" class="hover:text-blue-200"><i class="fas fa-times"></i></button>
         </div>
         <div id="chatMessages" class="h-[550px] overflow-y-auto p-4 flex flex-col gap-3 bg-gray-50 text-sm">
             <div class="self-start bg-white border border-gray-200 text-gray-800 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl shadow-sm max-w-[95%] w-full">
-                Hello! I am your 3W capacity planning assistant. Ask me to find a site or analyze congestion.
+                Hello! I am your NetAlytics capacity planning assistant. Ask me to find a site or analyze congestion.
             </div>
         </div>
         <form onsubmit="handleChatSubmit(event)" class="p-3 border-t border-gray-200 bg-white flex gap-2">
@@ -6481,8 +6586,21 @@
         if (gensetMapInited) return;
         gensetMapInited = true;
 
-        gensetMap = L.map('gensetMap', { zoomControl: true, preferCanvas: true })
+        gensetMap = L.map('gensetMap', { zoomControl: false, preferCanvas: false })
                      .setView([4.2105, 101.9758], 6);
+
+        // Zoom control top-right (same as Coverage Map), compass goes below it
+        L.control.zoom({ position: 'topright' }).addTo(gensetMap);
+
+        // Create a dedicated pane for the route so it always sits above tiles & DEM
+        gensetMap.createPane('routePane');
+        gensetMap.getPane('routePane').style.zIndex = 650; // above markerPane (600)
+        gensetMap.getPane('routePane').style.pointerEvents = 'none';
+
+        // Create a pane for the 2 km radius ring (below route, above tiles)
+        gensetMap.createPane('ringPane');
+        gensetMap.getPane('ringPane').style.zIndex = 420;
+        gensetMap.getPane('ringPane').style.pointerEvents = 'none';
 
         // Tile layers
         gsSatLayer    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -6636,7 +6754,8 @@
 
         gensetNearbyCircle = L.circle([lat, lng], {
             radius: 2000, color: '#16a34a', weight: 1.5,
-            fillColor: '#16a34a', fillOpacity: 0.06, dashArray: '6,4'
+            fillColor: '#16a34a', fillOpacity: 0.06, dashArray: '6,4',
+            pane: 'ringPane'
         }).addTo(gensetMap);
 
         try {
@@ -6692,7 +6811,9 @@ out center;`;
             const best   = valid[0];
             const coords = best.geometry.coordinates.map(c => [c[1], c[0]]);
             gensetRouteLine = L.polyline(coords, {
-                color: '#f59e0b', weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round'
+                color: '#f59e0b', weight: 6, opacity: 0.95,
+                lineCap: 'round', lineJoin: 'round',
+                pane: 'routePane'
             }).addTo(gensetMap);
             gensetMap.fitBounds(gensetRouteLine.getBounds(), { padding: [60, 60] });
 
@@ -6816,7 +6937,8 @@ out center;`;
 
         if (gsGeoLine) gensetMap.removeLayer(gsGeoLine);
         gsGeoLine = L.polyline([[latA, lngA], [latB, lngB]], {
-            color: '#7c3aed', weight: 2, dashArray: '6 5', opacity: 0.85, interactive: false
+            color: '#7c3aed', weight: 2, dashArray: '6 5', opacity: 0.85,
+            interactive: false, pane: 'routePane'
         }).addTo(gensetMap);
 
         // Refresh point markers with latest typed values
@@ -6833,6 +6955,281 @@ out center;`;
         gsGeoPickMode = null;
         document.getElementById('gsGeoPickStatus').style.display = 'none';
         if (gensetMap) gensetMap.getContainer().style.cursor = '';
+    }
+
+    // ── Bulk Excel processing ──
+    let gsBulkSiteIds  = [];
+    let gsBulkResults  = [];
+    let gsBulkRunning  = false;
+    let gsBulkAbort    = false;
+
+    function gensetXlsxLoaded(input) {
+        const file = input.files[0];
+        if (!file) return;
+        document.getElementById('gensetXlsxName').textContent = file.name;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const wb   = XLSX.read(e.target.result, { type: 'array' });
+                const ws   = wb.Sheets[wb.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                const headers = rows.length ? Object.keys(rows[0]) : [];
+                const col = headers.find(h => h.toLowerCase().replace(/[\s_-]/g,'') === 'siteid') || headers[0];
+                gsBulkSiteIds = rows.map(r => String(r[col] || '').trim()).filter(Boolean);
+                gsBulkResults = [];
+                const btn = document.getElementById('gensetBulkRunBtn');
+                if (gsBulkSiteIds.length) {
+                    btn.disabled = false; btn.style.background = '#16a34a'; btn.style.color = 'white'; btn.style.cursor = 'pointer';
+                    gsSetStatus(`${gsBulkSiteIds.length} sites loaded from Excel`, false);
+                    setTimeout(() => gsSetStatus(null), 2500);
+                } else {
+                    alert('No site_id values found in the first sheet.');
+                }
+            } catch(err) { alert('Could not read file: ' + err.message); }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    async function gensetRunBulk() {
+        if (!gsBulkSiteIds.length || gsBulkRunning) return;
+        if (!gensetSitesData.length) { alert('Sites not loaded yet — please wait.'); return; }
+        gsBulkRunning = true; gsBulkAbort = false; gsBulkResults = [];
+
+        const total       = gsBulkSiteIds.length;
+        const progress    = document.getElementById('gensetBulkProgress');
+        const progressBar = document.getElementById('gensetBulkProgressBar');
+        const progressLbl = document.getElementById('gensetBulkProgressLabel');
+        const progressPct = document.getElementById('gensetBulkProgressPct');
+        const resultsEl   = document.getElementById('gensetBulkResults');
+        const statsEl     = document.getElementById('gensetBulkStats');
+        const runBtn      = document.getElementById('gensetBulkRunBtn');
+        const stopBtn     = document.getElementById('gensetBulkStopBtn');
+
+        progress.style.display = 'block'; resultsEl.style.display = 'block'; statsEl.style.display = 'grid';
+        stopBtn.style.display = 'inline-flex'; runBtn.style.display = 'none'; resultsEl.innerHTML = '';
+        let found = 0, none = 0;
+
+        for (let i = 0; i < total; i++) {
+            if (gsBulkAbort) break;
+            const siteId = gsBulkSiteIds[i];
+            const pct = Math.round((i / total) * 100);
+            progressBar.style.width = pct + '%'; progressPct.textContent = pct + '%';
+            progressLbl.textContent = `Processing ${i+1}/${total}: ${siteId}`;
+            gsSetStatus(`${i+1}/${total} — ${siteId}`);
+
+            const site = gensetSitesData.find(s => s.site_id.toUpperCase() === siteId.toUpperCase());
+            if (!site) {
+                const row = { siteId, status:'not_found', subName:'Site not in DB', dist:'—', time:'—' };
+                gsBulkResults.push(row); none++;
+                gensetBulkAppendRow(resultsEl, row, i); gensetBulkUpdateStats(total, found, none); continue;
+            }
+            try {
+                const result = await gensetFindTNBSilent(site.lat, site.lng);
+                if (result) {
+                    found++;
+                    const row = { siteId, status:'found', subName: result.sub.name, dist:(result.roadDist/1000).toFixed(3)+' km', time:Math.ceil(result.duration/60)+' min' };
+                    gsBulkResults.push(row); gensetBulkAppendRow(resultsEl, row, i);
+                } else {
+                    none++;
+                    const row = { siteId, status:'none', subName:'None within 2 km', dist:'—', time:'—' };
+                    gsBulkResults.push(row); gensetBulkAppendRow(resultsEl, row, i);
+                }
+            } catch {
+                none++;
+                const row = { siteId, status:'error', subName:'Error', dist:'—', time:'—' };
+                gsBulkResults.push(row); gensetBulkAppendRow(resultsEl, row, i);
+            }
+            gensetBulkUpdateStats(total, found, none);
+            await new Promise(r => setTimeout(r, 700)); // rate-limit Overpass/OSRM
+        }
+
+        progressBar.style.width = '100%'; progressPct.textContent = '100%';
+        progressLbl.textContent = gsBulkAbort ? 'Stopped.' : 'Complete!';
+        gsSetStatus(gsBulkAbort ? 'Stopped' : `Done — ${found}/${total} found`, false);
+        setTimeout(() => gsSetStatus(null), 3000);
+        gsBulkRunning = false;
+        runBtn.style.display = 'inline-flex'; stopBtn.style.display = 'none';
+    }
+
+    async function gensetFindTNBSilent(lat, lng) {
+        const q = `[out:json][timeout:20];(node["power"="substation"](around:2000,${lat},${lng});way["power"="substation"](around:2000,${lat},${lng});relation["power"="substation"](around:2000,${lat},${lng}););out center;`;
+        const ovData = await (await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:q })).json();
+        const subs = (ovData.elements||[]).map(el=>({ name:el.tags?.name||el.tags?.operator||'TNB Substation', lat:el.type==='node'?el.lat:el.center?.lat, lng:el.type==='node'?el.lon:el.center?.lon })).filter(s=>s.lat&&s.lng);
+        if (!subs.length) return null;
+        const routes = await Promise.all(subs.map(async sub => {
+            try {
+                const d = await (await fetch(`https://router.project-osrm.org/route/v1/driving/${lng},${lat};${sub.lng},${sub.lat}?overview=false`)).json();
+                if (d.code!=='Ok'||!d.routes?.length) return null;
+                return { sub, roadDist:d.routes[0].distance, duration:d.routes[0].duration };
+            } catch { return null; }
+        }));
+        const valid = routes.filter(r=>r&&r.roadDist<=2000).sort((a,b)=>a.roadDist-b.roadDist);
+        return valid[0]||null;
+    }
+
+    function gensetBulkAppendRow(container, row, idx) {
+        const bg    = idx%2===0?'#ffffff':'#f9fafb';
+        const color = row.status==='found'?'#16a34a':row.status==='none'?'#dc2626':'#9ca3af';
+        const icon  = row.status==='found'?'fa-check-circle':row.status==='none'?'fa-times-circle':'fa-question-circle';
+        const el    = document.createElement('div');
+        el.style.cssText = `display:grid;grid-template-columns:1fr 1.4fr 0.7fr 0.6fr;gap:4px;align-items:center;padding:5px 8px;background:${bg};border-bottom:1px solid #f3f4f6;`;
+        el.innerHTML = `<span style="font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${row.siteId}">${row.siteId}</span><span style="color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${row.subName}">${row.subName}</span><span style="font-weight:700;color:#d97706;">${row.dist}</span><span style="display:flex;align-items:center;gap:3px;color:${color};"><i class="fas ${icon}" style="font-size:0.65rem;"></i>${row.time}</span>`;
+        container.appendChild(el);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function gensetBulkUpdateStats(total, found, none) {
+        document.getElementById('gsBulkStatTotal').textContent = total;
+        document.getElementById('gsBulkStatFound').textContent = found;
+        document.getElementById('gsBulkStatNone').textContent  = none;
+    }
+
+    // ── Bulk tab switcher ──
+    let gsBulkMode = 'single'; // 'single' | 'excel'
+
+    function gsSwitchBulkTab(mode) {
+        gsBulkMode = mode;
+        const singlePanel = document.getElementById('gsBulkSinglePanel');
+        const excelPanel  = document.getElementById('gsBulkExcelPanel');
+        const excelBtns   = document.getElementById('gsBulkExcelBtns');
+        const tabSingle   = document.getElementById('gsBulkTabSingle');
+        const tabExcel    = document.getElementById('gsBulkTabExcel');
+
+        if (mode === 'single') {
+            singlePanel.style.display = 'block';
+            excelPanel.style.display  = 'none';
+            excelBtns.style.display   = 'none';
+            tabSingle.style.background = 'white'; tabSingle.style.color = '#16a34a'; tabSingle.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+            tabExcel.style.background  = 'transparent'; tabExcel.style.color = '#6b7280'; tabExcel.style.boxShadow = 'none';
+        } else {
+            singlePanel.style.display = 'none';
+            excelPanel.style.display  = 'block';
+            excelBtns.style.display   = 'flex';
+            tabExcel.style.background = 'white'; tabExcel.style.color = '#16a34a'; tabExcel.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+            tabSingle.style.background = 'transparent'; tabSingle.style.color = '#6b7280'; tabSingle.style.boxShadow = 'none';
+        }
+    }
+
+    function gsBulkSingleSearch(val) {
+        const box = document.getElementById('gsBulkSingleResults');
+        if (!val || val.length < 2) { box.style.display = 'none'; return; }
+        const q    = val.toLowerCase();
+        const hits = gensetSitesData.filter(s =>
+            s.site_id.toLowerCase().includes(q) || (s.site_name && s.site_name.toLowerCase().includes(q))
+        ).slice(0, 8);
+        if (!hits.length) { box.style.display = 'none'; return; }
+        box.innerHTML = hits.map(s =>
+            `<div onclick="document.getElementById('gsBulkSingleInput').value='${s.site_id}'; document.getElementById('gsBulkSingleResults').style.display='none';"
+                  style="padding:6px 10px; cursor:pointer; font-size:0.78rem; color:#374151; border-bottom:1px solid #f3f4f6;"
+                  onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
+                <b>${s.site_id}</b>${s.site_name ? ' — ' + s.site_name : ''}
+             </div>`
+        ).join('');
+        box.style.display = 'block';
+    }
+
+    async function gensetRunSingle() {
+        const siteId = document.getElementById('gsBulkSingleInput').value.trim();
+        if (!siteId) return;
+        document.getElementById('gsBulkSingleResults').style.display = 'none';
+
+        if (!gensetSitesData.length) { alert('Sites not loaded yet — please wait.'); return; }
+
+        const site = gensetSitesData.find(s => s.site_id.toUpperCase() === siteId.toUpperCase());
+
+        const resultsEl = document.getElementById('gensetBulkResults');
+        const statsEl   = document.getElementById('gensetBulkStats');
+        const progress  = document.getElementById('gensetBulkProgress');
+        const progressBar = document.getElementById('gensetBulkProgressBar');
+        const progressLbl = document.getElementById('gensetBulkProgressLabel');
+        const progressPct = document.getElementById('gensetBulkProgressPct');
+
+        resultsEl.style.display = 'block';
+        statsEl.style.display   = 'grid';
+        progress.style.display  = 'block';
+        progressBar.style.width = '30%';
+        progressPct.textContent = '';
+        progressLbl.textContent = `Looking up ${siteId}…`;
+        gsSetStatus(`Looking up ${siteId}…`);
+
+        // Keep existing rows, append new one
+        const rowIdx = resultsEl.children.length;
+
+        if (!site) {
+            progressBar.style.width = '100%';
+            progressLbl.textContent = 'Done';
+            const row = { siteId, status: 'not_found', subName: 'Site not in DB', dist: '—', time: '—' };
+            gsBulkResults.push(row);
+            gensetBulkAppendRow(resultsEl, row, rowIdx);
+            gensetBulkUpdateStats(gsBulkResults.length,
+                gsBulkResults.filter(r=>r.status==='found').length,
+                gsBulkResults.filter(r=>r.status!=='found').length);
+            gsSetStatus(null);
+            setTimeout(() => { progress.style.display = 'none'; progressBar.style.width = '0%'; }, 1500);
+            return;
+        }
+
+        // Fly to site on map
+        gensetSelectSite(site, gensetSiteMarkers[site.site_id] || { setIcon: () => {} });
+
+        try {
+            progressBar.style.width = '60%';
+            const result = await gensetFindTNBSilent(site.lat, site.lng);
+            progressBar.style.width = '100%';
+            progressLbl.textContent = 'Done';
+
+            let row;
+            if (result) {
+                row = { siteId, status: 'found', subName: result.sub.name, dist: (result.roadDist/1000).toFixed(3)+' km', time: Math.ceil(result.duration/60)+' min' };
+                // Also draw the route on the map
+                gensetClearResults();
+                const ovData = await (await fetch('https://overpass-api.de/api/interpreter', {
+                    method: 'POST',
+                    body: `[out:json][timeout:20];(node["power"="substation"](around:2000,${site.lat},${site.lng});way["power"="substation"](around:2000,${site.lat},${site.lng});relation["power"="substation"](around:2000,${site.lat},${site.lng}););out center;`
+                })).json();
+                const subs = (ovData.elements||[]).map(el=>({name:el.tags?.name||'TNB Substation',lat:el.type==='node'?el.lat:el.center?.lat,lng:el.type==='node'?el.lon:el.center?.lon,tags:el.tags||{}})).filter(s=>s.lat&&s.lng);
+                subs.forEach(sub => {
+                    const m = L.marker([sub.lat, sub.lng], { icon: GENSET_TNB_ICON }).bindPopup(`<b style="color:#d97706;">${sub.name}</b>`).addTo(gensetMap);
+                    gensetTnbMarkers.push(m);
+                });
+                gensetNearbyCircle = L.circle([site.lat, site.lng], { radius:2000, color:'#16a34a', weight:1.5, fillColor:'#16a34a', fillOpacity:0.06, dashArray:'6,4', pane:'ringPane' }).addTo(gensetMap);
+                const routeRes = await (await fetch(`https://router.project-osrm.org/route/v1/driving/${site.lng},${site.lat};${result.sub.lng},${result.sub.lat}?overview=full&geometries=geojson`)).json();
+                if (routeRes.code === 'Ok') {
+                    const coords = routeRes.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+                    gensetRouteLine = L.polyline(coords, { color:'#f59e0b', weight:6, opacity:0.95, lineCap:'round', lineJoin:'round', pane:'routePane' }).addTo(gensetMap);
+                    gensetMap.fitBounds(gensetRouteLine.getBounds(), { padding:[60,60] });
+                }
+            } else {
+                row = { siteId, status: 'none', subName: 'None within 2 km', dist: '—', time: '—' };
+            }
+            gsBulkResults.push(row);
+            gensetBulkAppendRow(resultsEl, row, rowIdx);
+            gensetBulkUpdateStats(gsBulkResults.length,
+                gsBulkResults.filter(r=>r.status==='found').length,
+                gsBulkResults.filter(r=>r.status!=='found').length);
+        } catch(err) {
+            const row = { siteId, status:'error', subName:'Error', dist:'—', time:'—' };
+            gsBulkResults.push(row); gensetBulkAppendRow(resultsEl, row, rowIdx);
+        }
+
+        gsSetStatus(null);
+        setTimeout(() => { progress.style.display = 'none'; progressBar.style.width = '0%'; }, 1500);
+    }
+
+    function gensetStopBulk()  { gsBulkAbort = true; }
+
+    function gensetClearBulk() {
+        gsBulkAbort = true; gsBulkRunning = false; gsBulkSiteIds = []; gsBulkResults = [];
+        document.getElementById('gensetXlsxName').textContent   = 'Choose .xlsx / .xls file…';
+        document.getElementById('gensetXlsxInput').value        = '';
+        document.getElementById('gensetBulkProgress').style.display = 'none';
+        document.getElementById('gensetBulkResults').style.display  = 'none';
+        document.getElementById('gensetBulkStats').style.display    = 'none';
+        document.getElementById('gensetBulkResults').innerHTML       = '';
+        document.getElementById('gensetBulkProgressBar').style.width = '0%';
+        const btn = document.getElementById('gensetBulkRunBtn');
+        btn.disabled = true; btn.style.background='#d1d5db'; btn.style.color='#9ca3af'; btn.style.cursor='not-allowed';
+        btn.style.display='inline-flex'; document.getElementById('gensetBulkStopBtn').style.display='none';
     }
 
     </script>
