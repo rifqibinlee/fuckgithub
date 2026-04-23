@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>3W</title>
+  <title>3W - Unified Platfor</title>
 
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -261,7 +261,7 @@
 
 
         /* Sliding Panels */
-        .sliding-panel { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; background: #ffffff; z-index: 1500; display: flex; flex-direction: column; box-shadow: -4px 0 20px rgba(0,0,0,0.12); border-left: 1px solid #e5e7eb; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .sliding-panel { position: fixed; top: 72px; right: 0; bottom: 0; width: 360px; background: #ffffff; z-index: 1500; display: flex; flex-direction: column; box-shadow: -4px 0 20px rgba(0,0,0,0.12); border-left: 1px solid #e5e7eb; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
         .sliding-panel.open { transform: translateX(0); }
 
         /* ===== PANEL RESIZE HANDLES ===== */
@@ -1108,7 +1108,7 @@
         <i class="fas fa-tasks"></i>
         <span id="tasksBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-0.5 font-bold">0</span>
     </button>
-    <button id="dashboardBtn" class="tool-icon-btn" onclick="openMetabaseDashboard()" title="NetAlytics Dashboard">
+    <button id="dashboardBtn" class="tool-icon-btn" onclick="openMetabaseDashboard()" title="3W Dashboard">
         <i class="fas fa-chart-pie"></i>
     </button>
 
@@ -1560,74 +1560,219 @@
         <div id="gensetSidebar" style="position:absolute; top:0; left:0; bottom:0; width:340px; background:#ffffff; z-index:150; border-right:1px solid #e5e7eb; box-shadow:2px 0 15px rgba(0,0,0,0.08); display:flex; flex-direction:column; overflow-y:auto; font-family:'Inter',sans-serif;">
 
             <!-- Header -->
-            <div style="background:linear-gradient(135deg,#14532d,#16a34a); color:white; padding:16px; flex-shrink:0;">
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-                    <i class="fas fa-bolt" style="font-size:1.2rem;"></i>
-                    <h2 style="font-size:1.05rem; font-weight:800; margin:0;">Genset — TNB Finder</h2>
+            <div style="background:linear-gradient(135deg,#14532d,#16a34a); color:white; padding:14px 16px 12px; flex-shrink:0;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <i class="fas fa-bolt" style="font-size:1.1rem;"></i>
+                        <h2 style="font-size:1.0rem; font-weight:800; margin:0;">Genset — TNB Finder</h2>
+                    </div>
+                    <!-- Live loading badge -->
+                    <div id="gensetStatusBadge" style="display:none; align-items:center; gap:5px; background:rgba(255,255,255,0.18); border-radius:20px; padding:3px 9px; font-size:0.65rem; font-weight:700; letter-spacing:0.03em;">
+                        <i id="gensetStatusIcon" class="fas fa-circle-notch fa-spin" style="font-size:0.6rem;"></i>
+                        <span id="gensetStatusText">Loading…</span>
+                    </div>
                 </div>
-                <p style="font-size:0.68rem; color:#bbf7d0; margin:0;">Select a cell site to find the nearest TNB substation within 2 km via road.</p>
+                <p style="font-size:0.67rem; color:#bbf7d0; margin:0;">Select a cell site to find the nearest TNB substation within 2 km via road.</p>
+            </div>
+
+            <!-- Map Style Switcher -->
+            <div style="padding:10px 12px; border-bottom:1px solid #f3f4f6; background:#fafafa; flex-shrink:0;">
+                <div style="font-size:0.6rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:6px;">Map Style</div>
+                <div style="display:flex; gap:5px; margin-bottom:6px;">
+                    <!-- Satellite pill -->
+                    <button id="gs-btn-sat" onclick="gsSetBaseMap('satellite')"
+                        style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:6px 4px; border-radius:7px; border:1.5px solid #16a34a; background:#dcfce7; color:#14532d; font-size:0.7rem; font-weight:700; cursor:pointer; transition:all 0.15s;">
+                        <i class="fas fa-satellite" style="font-size:0.65rem;"></i> Satellite
+                    </button>
+                    <!-- Street pill -->
+                    <button id="gs-btn-street" onclick="gsSetBaseMap('street')"
+                        style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:6px 4px; border-radius:7px; border:1.5px solid #e5e7eb; background:#f9fafb; color:#6b7280; font-size:0.7rem; font-weight:700; cursor:pointer; transition:all 0.15s;">
+                        <i class="fas fa-map" style="font-size:0.65rem;"></i> Street
+                    </button>
+                </div>
+                <!-- DEM toggle row -->
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:5px 8px; background:#fff7ed; border-radius:7px; border:1px solid #fed7aa; cursor:pointer;" onclick="gsToggleDEM()">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="fas fa-mountain" style="color:#c2410c; font-size:0.7rem;"></i>
+                        <span style="font-size:0.7rem; font-weight:700; color:#9a3412;">DEM / Hillshade</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <input id="gsDemOpacitySlider" type="range" min="10" max="100" value="55"
+                            oninput="gsSetDemOpacity(this.value)" onclick="event.stopPropagation()"
+                            style="display:none; width:60px; accent-color:#c2410c; height:3px; cursor:pointer;">
+                        <span id="gsDemOpacityVal" style="display:none; font-size:0.62rem; font-weight:700; color:#c2410c; min-width:26px; text-align:right;">55%</span>
+                        <div id="gsDemSwitch" style="width:32px; height:17px; border-radius:9px; background:#d1d5db; position:relative; transition:background 0.2s; pointer-events:none; flex-shrink:0;">
+                            <div style="position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:white; box-shadow:0 1px 3px rgba(0,0,0,0.25); transition:left 0.2s;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Search -->
-            <div style="padding:12px; border-bottom:1px solid #f3f4f6;">
+            <div style="padding:10px 12px; border-bottom:1px solid #f3f4f6; flex-shrink:0;">
                 <div style="position:relative;">
-                    <i class="fas fa-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.78rem;"></i>
+                    <i class="fas fa-search" style="position:absolute; left:9px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.75rem;"></i>
                     <input id="gensetSearchInput" type="text" placeholder="Search site ID or name…"
-                        style="width:100%; padding:8px 10px 8px 30px; border:1px solid #d1d5db; border-radius:6px; font-size:0.82rem; outline:none; box-sizing:border-box;"
+                        style="width:100%; padding:7px 10px 7px 28px; border:1px solid #d1d5db; border-radius:6px; font-size:0.8rem; outline:none; box-sizing:border-box;"
                         oninput="gensetOnSearch(this.value)" autocomplete="off"/>
                     <div id="gensetSearchResults" style="position:absolute; top:100%; left:0; right:0; background:white; border-radius:0 0 8px 8px; max-height:200px; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.15); display:none; z-index:201; border:1px solid #e5e7eb;"></div>
                 </div>
             </div>
 
             <!-- Selected site info -->
-            <div id="gensetSiteCard" style="display:none; margin:12px; background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:12px;">
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                    <div style="width:10px;height:10px;border-radius:50%;background:#16a34a;flex-shrink:0;"></div>
-                    <span id="gensetSiteName" style="font-size:0.85rem; font-weight:800; color:#14532d;">—</span>
+            <div id="gensetSiteCard" style="display:none; margin:10px 12px 0; background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:10px;">
+                <div style="display:flex; align-items:center; gap:7px; margin-bottom:5px;">
+                    <div style="width:9px;height:9px;border-radius:50%;background:#16a34a;flex-shrink:0;"></div>
+                    <span id="gensetSiteName" style="font-size:0.82rem; font-weight:800; color:#14532d;">—</span>
                 </div>
-                <div id="gensetSiteDetails" style="font-size:0.7rem; color:#4b5563; line-height:1.6;"></div>
+                <div id="gensetSiteDetails" style="font-size:0.68rem; color:#4b5563; line-height:1.6;"></div>
                 <button onclick="gensetFindTNB()" id="gensetFindBtn"
-                    style="margin-top:10px; width:100%; padding:9px; background:#16a34a; color:white; border:none; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:background 0.15s;"
+                    style="margin-top:8px; width:100%; padding:8px; background:#16a34a; color:white; border:none; border-radius:7px; font-size:0.78rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px; transition:background 0.15s;"
                     onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
                     <i class="fas fa-search-location"></i> Find Nearest TNB Substation
                 </button>
             </div>
 
-            <!-- Results -->
-            <div id="gensetResultPanel" style="display:none; margin:12px; margin-top:0;">
-                <!-- Loading -->
-                <div id="gensetLoading" style="display:none; text-align:center; padding:16px; color:#16a34a; font-size:0.8rem; font-weight:700;">
+            <!-- TNB Result Panel -->
+            <div id="gensetResultPanel" style="display:none; margin:8px 12px 0;">
+                <div id="gensetLoading" style="display:none; text-align:center; padding:14px; color:#16a34a; font-size:0.78rem; font-weight:700;">
                     <i class="fas fa-circle-notch fa-spin" style="margin-right:6px;"></i> Searching via roads…
                 </div>
-                <!-- Found -->
-                <div id="gensetFound" style="display:none; background:#f0fdf4; border:1.5px solid #4ade80; border-radius:10px; padding:12px;">
-                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
-                        <i class="fas fa-check-circle" style="color:#16a34a; font-size:1rem;"></i>
-                        <span style="font-size:0.8rem; font-weight:800; color:#14532d;">Substation Found</span>
+                <div id="gensetFound" style="display:none; background:#f0fdf4; border:1.5px solid #4ade80; border-radius:10px; padding:10px;">
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:7px;">
+                        <i class="fas fa-check-circle" style="color:#16a34a; font-size:0.95rem;"></i>
+                        <span style="font-size:0.78rem; font-weight:800; color:#14532d;">Substation Found</span>
                     </div>
-                    <div id="gensetFoundContent" style="font-size:0.72rem; color:#374151; line-height:1.8;"></div>
+                    <div id="gensetFoundContent" style="font-size:0.7rem; color:#374151; line-height:1.8;"></div>
                 </div>
-                <!-- Not found -->
-                <div id="gensetNotFound" style="display:none; background:#fef2f2; border:1.5px solid #fca5a5; border-radius:10px; padding:12px;">
-                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
-                        <i class="fas fa-times-circle" style="color:#dc2626; font-size:1rem;"></i>
-                        <span style="font-size:0.8rem; font-weight:800; color:#991b1b;">No Substation Nearby</span>
+                <div id="gensetNotFound" style="display:none; background:#fef2f2; border:1.5px solid #fca5a5; border-radius:10px; padding:10px;">
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:5px;">
+                        <i class="fas fa-times-circle" style="color:#dc2626; font-size:0.95rem;"></i>
+                        <span style="font-size:0.78rem; font-weight:800; color:#991b1b;">No Substation Nearby</span>
                     </div>
-                    <p style="font-size:0.72rem; color:#6b7280; margin:0;">There are no TNB substations within 2 km via road from this cell site.</p>
+                    <p style="font-size:0.7rem; color:#6b7280; margin:0;">No TNB substations found within 2 km via road from this site.</p>
                 </div>
             </div>
 
-            <!-- Legend / hint -->
-            <div style="margin-top:auto; padding:12px; border-top:1px solid #f3f4f6; background:#f9fafb;">
-                <p style="font-size:0.65rem; color:#6b7280; font-weight:600; margin:0 0 4px;">
-                    <i class="fas fa-info-circle" style="color:#16a34a; margin-right:4px;"></i>Substation data sourced from OpenStreetMap. Road routing via OSRM.
+            <!-- ── GEO TOOLS ── -->
+            <div style="margin:10px 12px 0; padding:10px; background:#faf5ff; border:1px solid #e9d5ff; border-radius:10px; flex-shrink:0;">
+                <div style="font-size:0.6rem; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:8px; display:flex; align-items:center; gap:5px;">
+                    <i class="fas fa-drafting-compass"></i> Geo Tools
+                </div>
+
+                <!-- Pick-mode banner -->
+                <div id="gsGeoPickStatus" style="display:none; font-size:0.65rem; font-weight:700; color:#1d4ed8; background:#eff6ff; padding:4px 8px; border-radius:5px; margin-bottom:6px; display:none; align-items:center; gap:5px;">
+                    <i class="fas fa-crosshairs fa-spin" style="font-size:0.6rem;"></i>
+                    <span id="gsGeoPickText">Click map to set point</span>
+                </div>
+
+                <!-- Point A -->
+                <div style="margin-bottom:6px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:3px;">
+                        <span style="font-size:0.62rem; font-weight:800; color:#2563eb; display:flex; align-items:center; gap:4px; text-transform:uppercase;">
+                            <span style="background:#1e40af; color:white; border-radius:3px; padding:1px 5px; font-size:8px;">A</span> Point A
+                        </span>
+                        <button onclick="gsStartGeoPick('A')" style="font-size:8px; font-weight:700; padding:2px 7px; border-radius:4px; border:none; background:#dbeafe; color:#1d4ed8; cursor:pointer;">
+                            <i class="fas fa-crosshairs" style="margin-right:2px;"></i>Pick
+                        </button>
+                    </div>
+                    <div style="display:flex; gap:4px;">
+                        <input id="gsGeoLatA" type="number" placeholder="Lat" step="0.000001"
+                            style="flex:1; padding:5px 7px; border:1px solid #d1d5db; border-radius:5px; font-size:0.72rem; outline:none;" oninput="gsRunGeoCalc()">
+                        <input id="gsGeoLngA" type="number" placeholder="Lng" step="0.000001"
+                            style="flex:1; padding:5px 7px; border:1px solid #d1d5db; border-radius:5px; font-size:0.72rem; outline:none;" oninput="gsRunGeoCalc()">
+                    </div>
+                </div>
+
+                <!-- Point B -->
+                <div style="margin-bottom:6px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:3px;">
+                        <span style="font-size:0.62rem; font-weight:800; color:#dc2626; display:flex; align-items:center; gap:4px; text-transform:uppercase;">
+                            <span style="background:#dc2626; color:white; border-radius:3px; padding:1px 5px; font-size:8px;">B</span> Point B
+                        </span>
+                        <button onclick="gsStartGeoPick('B')" style="font-size:8px; font-weight:700; padding:2px 7px; border-radius:4px; border:none; background:#fee2e2; color:#b91c1c; cursor:pointer;">
+                            <i class="fas fa-crosshairs" style="margin-right:2px;"></i>Pick
+                        </button>
+                    </div>
+                    <div style="display:flex; gap:4px;">
+                        <input id="gsGeoLatB" type="number" placeholder="Lat" step="0.000001"
+                            style="flex:1; padding:5px 7px; border:1px solid #d1d5db; border-radius:5px; font-size:0.72rem; outline:none;" oninput="gsRunGeoCalc()">
+                        <input id="gsGeoLngB" type="number" placeholder="Lng" step="0.000001"
+                            style="flex:1; padding:5px 7px; border:1px solid #d1d5db; border-radius:5px; font-size:0.72rem; outline:none;" oninput="gsRunGeoCalc()">
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div id="gsGeoResults" style="display:none; background:white; border-radius:7px; padding:7px; border:1px solid #e9d5ff; margin-bottom:6px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:3px 0; border-bottom:1px solid #f3f4f6; font-size:0.68rem;">
+                        <span style="color:#6b7280; display:flex; align-items:center; gap:4px;"><i class="fas fa-ruler" style="color:#7c3aed;"></i> Distance</span>
+                        <span id="gsGeoDistResult" style="font-weight:800; color:#7c3aed;">—</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:3px 0; border-bottom:1px solid #f3f4f6; font-size:0.68rem;">
+                        <span style="color:#6b7280; display:flex; align-items:center; gap:4px;"><i class="fas fa-location-arrow" style="color:#2563eb;"></i> Azimuth A→B</span>
+                        <span id="gsGeoBearingResult" style="font-weight:800; color:#2563eb;">—</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:3px 0; font-size:0.68rem;">
+                        <span style="color:#6b7280; display:flex; align-items:center; gap:4px;"><i class="fas fa-location-arrow" style="color:#dc2626; transform:rotate(180deg); display:inline-block;"></i> Back Bearing B→A</span>
+                        <span id="gsGeoBackBearing" style="font-weight:800; color:#dc2626;">—</span>
+                    </div>
+                </div>
+
+                <button onclick="gsClearGeoTools()" style="width:100%; font-size:0.65rem; background:#f3f4f6; border:none; border-radius:5px; padding:4px 0; font-weight:700; color:#6b7280; cursor:pointer;">
+                    <i class="fas fa-times" style="margin-right:3px;"></i>Clear Points
+                </button>
+            </div>
+
+            <!-- Legend -->
+            <div style="margin-top:auto; padding:10px 12px; border-top:1px solid #f3f4f6; background:#f9fafb; flex-shrink:0;">
+                <p style="font-size:0.62rem; color:#6b7280; font-weight:600; margin:0 0 5px;">
+                    <i class="fas fa-info-circle" style="color:#16a34a; margin-right:4px;"></i>Substation data: OpenStreetMap · Routing: OSRM
                 </p>
-                <div style="display:flex; gap:12px; font-size:0.65rem; color:#6b7280; margin-top:6px;">
-                    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#16a34a;margin-right:4px;vertical-align:middle;"></span>Cell Site</span>
-                    <span><span style="display:inline-block;width:10px;height:10px;background:#f59e0b;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>TNB Substation</span>
-                    <span><span style="display:inline-block;width:20px;height:3px;background:#f59e0b;margin-right:4px;vertical-align:middle;"></span>Road Route</span>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:0.62rem; color:#6b7280;">
+                    <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#16a34a;margin-right:3px;vertical-align:middle;"></span>Cell Site</span>
+                    <span><span style="display:inline-block;width:9px;height:9px;background:#f59e0b;border-radius:2px;margin-right:3px;vertical-align:middle;"></span>TNB Substation</span>
+                    <span><span style="display:inline-block;width:16px;height:3px;background:#f59e0b;margin-right:3px;vertical-align:middle;"></span>Road Route</span>
                 </div>
             </div>
+        </div>
+
+        <!-- Tool buttons — mirror of Coverage Map toolbar -->
+        <button id="gensetAnnotationBtn"
+            onclick="toggleAnnotationPanel()"
+            title="Annotations"
+            style="position:absolute; top:10px; left:350px; z-index:300; width:42px; height:42px; border-radius:50%; background:#1d4ed8; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; box-shadow:0 4px 14px rgba(0,0,0,0.2); transition:all 0.2s;">
+            <i class="fas fa-draw-polygon"></i>
+        </button>
+        <button id="gensetNotesBtn"
+            onclick="toggleNotesPanel()"
+            title="My Notes"
+            style="position:absolute; top:10px; left:402px; z-index:300; width:42px; height:42px; border-radius:50%; background:#6d28d9; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; box-shadow:0 4px 14px rgba(0,0,0,0.2); transition:all 0.2s;">
+            <i class="fas fa-sticky-note"></i>
+        </button>
+        <button id="gensetTasksBtn"
+            onclick="toggleTasksPanel()"
+            title="Tasks"
+            style="position:absolute; top:10px; left:454px; z-index:300; width:42px; height:42px; border-radius:50%; background:#d97706; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; box-shadow:0 4px 14px rgba(0,0,0,0.2); transition:all 0.2s;">
+            <i class="fas fa-tasks"></i>
+        </button>
+
+        <!-- True North Compass for Genset map -->
+        <div id="gensetCompass" title="True North" style="position:absolute; top:80px; right:10px; z-index:300; width:44px; height:44px; background:rgba(255,255,255,0.95); border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.2),0 0 0 1px rgba(0,0,0,0.07); display:flex; align-items:center; justify-content:center; pointer-events:none;">
+            <svg viewBox="0 0 68 68" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="34" cy="34" r="32" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
+                <line x1="34" y1="4"  x2="34" y2="9"  stroke="#dc2626" stroke-width="2"   stroke-linecap="round"/>
+                <line x1="34" y1="59" x2="34" y2="64" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="4"  y1="34" x2="9"  y2="34" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="59" y1="34" x2="64" y2="34" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/>
+                <text x="34" y="19" text-anchor="middle" dominant-baseline="middle" font-size="8.5" font-weight="900" fill="#dc2626" font-family="system-ui,sans-serif">N</text>
+                <text x="34" y="54" text-anchor="middle" dominant-baseline="middle" font-size="7"   font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">S</text>
+                <text x="14" y="34" text-anchor="middle" dominant-baseline="middle" font-size="7"   font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">W</text>
+                <text x="54" y="34" text-anchor="middle" dominant-baseline="middle" font-size="7"   font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">E</text>
+                <polygon points="34,11 30,34 34,31 38,34" fill="#dc2626" opacity="0.95"/>
+                <polygon points="34,57 30,34 34,37 38,34" fill="#d1d5db"/>
+                <circle cx="34" cy="34" r="3.5" fill="#1f2937"/>
+                <circle cx="34" cy="34" r="1.5" fill="#ffffff"/>
+            </svg>
         </div>
 
         <!-- Map -->
@@ -1652,7 +1797,7 @@
     <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-[6000] flex items-center justify-center">
             <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden">
                 <div class="bg-gray-800 text-white p-3 flex justify-between items-center flex-shrink-0">
-                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> 3W Dashboard</h3>
+                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> NetAlyti3Wcs Dashboard</h3>
                     <button onclick="closeMetabaseDashboard()" class="text-gray-300 hover:text-white text-xl transition-colors">
                         <i class="fas fa-times"></i>
                     </button>
@@ -6284,15 +6429,37 @@
     // ================================================================
     // GENSET — TNB Substation Finder
     // ================================================================
-    let gensetMap         = null;
-    let gensetMapInited   = false;
-    let gensetSitesData   = [];
-    let gensetSiteMarkers = {};
+    let gensetMap          = null;
+    let gensetMapInited    = false;
+    let gensetSitesData    = [];
+    let gensetSiteMarkers  = {};
     let gensetSelectedSite = null;
     let gensetSelectedMarker = null;
-    let gensetTnbMarkers  = [];
-    let gensetRouteLine   = null;
+    let gensetTnbMarkers   = [];
+    let gensetRouteLine    = null;
     let gensetNearbyCircle = null;
+
+    // ── Tile layers for the genset map ──
+    let gsSatLayer, gsLabelsLayer, gsStreetLayer, gsDemLayer;
+    let gsBaseMode  = 'satellite'; // 'satellite' | 'street'
+    let gsDemActive = false;
+
+    // ── Geo tools state (scoped to genset map) ──
+    let gsGeoPickMode  = null;
+    let gsGeoMarkerA   = null;
+    let gsGeoMarkerB   = null;
+    let gsGeoLine      = null;
+
+    // ── Status badge helper ──
+    function gsSetStatus(text, spin = true) {
+        const badge = document.getElementById('gensetStatusBadge');
+        const icon  = document.getElementById('gensetStatusIcon');
+        const label = document.getElementById('gensetStatusText');
+        if (!text) { badge.style.display = 'none'; return; }
+        badge.style.display = 'flex';
+        icon.className = spin ? 'fas fa-circle-notch fa-spin' : 'fas fa-check-circle';
+        label.textContent = text;
+    }
 
     const GENSET_SITE_ICON = (highlight) => L.divIcon({
         className: '',
@@ -6302,7 +6469,7 @@
 
     const GENSET_TNB_ICON = L.divIcon({
         className: '',
-        html: `<div style="position:relative;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">
+        html: `<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;">
                  <div style="width:20px;height:20px;background:#f59e0b;border:2.5px solid white;border-radius:4px;box-shadow:0 2px 8px rgba(245,158,11,0.7);display:flex;align-items:center;justify-content:center;">
                    <i class="fas fa-bolt" style="color:white;font-size:9px;"></i>
                  </div>
@@ -6317,15 +6484,84 @@
         gensetMap = L.map('gensetMap', { zoomControl: true, preferCanvas: true })
                      .setView([4.2105, 101.9758], 6);
 
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-            { attribution: 'Tiles &copy; Esri', maxZoom: 19 }).addTo(gensetMap);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
-            { attribution: '&copy;OpenStreetMap,&copy;CartoDB', subdomains: 'abcd', maxZoom: 19 }).addTo(gensetMap);
+        // Tile layers
+        gsSatLayer    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            { attribution: 'Tiles &copy; Esri', maxZoom: 19 });
+        gsLabelsLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+            { attribution: '&copy;OpenStreetMap,&copy;CartoDB', subdomains: 'abcd', maxZoom: 19 });
+        gsStreetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+            { attribution: '&copy;OpenStreetMap,&copy;CartoDB', subdomains: 'abcd', maxZoom: 19 });
+        gsDemLayer    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}',
+            { attribution: 'Hillshade &copy; Esri, USGS, NOAA', maxZoom: 19, opacity: 0.55, zIndex: 3 });
+
+        gsSatLayer.addTo(gensetMap);
+        gsLabelsLayer.addTo(gensetMap);
+
+        // Attach geo-pick click handler
+        gensetMap.on('click', function(e) {
+            if (gsGeoPickMode) gsSetGeoPoint(e.latlng.lat, e.latlng.lng, gsGeoPickMode);
+        });
 
         await gensetLoadSites();
     }
 
+    // ── Layer controls ──
+    function gsSetBaseMap(mode) {
+        if (!gensetMap) return;
+        if (mode === 'satellite') {
+            if (gsStreetLayer) gensetMap.removeLayer(gsStreetLayer);
+            gsSatLayer.addTo(gensetMap);
+            gsLabelsLayer.addTo(gensetMap);
+            gsBaseMode = 'satellite';
+        } else {
+            if (gsSatLayer)    gensetMap.removeLayer(gsSatLayer);
+            if (gsLabelsLayer) gensetMap.removeLayer(gsLabelsLayer);
+            gsStreetLayer.addTo(gensetMap);
+            gsBaseMode = 'street';
+        }
+        if (gsDemActive) { gsDemLayer.bringToFront(); if (mode === 'satellite') gsLabelsLayer.bringToFront(); }
+
+        // Update pill buttons
+        const satBtn    = document.getElementById('gs-btn-sat');
+        const streetBtn = document.getElementById('gs-btn-street');
+        if (mode === 'satellite') {
+            satBtn.style.borderColor    = '#16a34a'; satBtn.style.background    = '#dcfce7'; satBtn.style.color    = '#14532d';
+            streetBtn.style.borderColor = '#e5e7eb'; streetBtn.style.background = '#f9fafb'; streetBtn.style.color = '#6b7280';
+        } else {
+            streetBtn.style.borderColor = '#2563eb'; streetBtn.style.background = '#dbeafe'; streetBtn.style.color = '#1e3a8a';
+            satBtn.style.borderColor    = '#e5e7eb'; satBtn.style.background    = '#f9fafb'; satBtn.style.color    = '#6b7280';
+        }
+    }
+
+    function gsToggleDEM() {
+        if (!gensetMap) return;
+        const sw        = document.getElementById('gsDemSwitch');
+        const knob      = sw.querySelector('div');
+        const slider    = document.getElementById('gsDemOpacitySlider');
+        const valLabel  = document.getElementById('gsDemOpacityVal');
+
+        if (gsDemActive) {
+            gensetMap.removeLayer(gsDemLayer);
+            gsDemActive = false;
+            sw.style.background = '#d1d5db'; knob.style.left = '2px';
+            slider.style.display = 'none'; valLabel.style.display = 'none';
+        } else {
+            gsDemLayer.addTo(gensetMap); gsDemLayer.bringToFront();
+            if (gsBaseMode === 'satellite') gsLabelsLayer.bringToFront();
+            gsDemActive = true;
+            sw.style.background = '#c2410c'; knob.style.left = '17px';
+            slider.style.display = 'inline-block'; valLabel.style.display = 'inline-block';
+        }
+    }
+
+    function gsSetDemOpacity(val) {
+        if (gsDemLayer) gsDemLayer.setOpacity(val / 100);
+        document.getElementById('gsDemOpacityVal').textContent = val + '%';
+    }
+
+    // ── Sites loader ──
     async function gensetLoadSites() {
+        gsSetStatus('Loading sites…');
         try {
             const res  = await fetch('/api/sites');
             const data = await res.json();
@@ -6352,22 +6588,21 @@
             });
 
             gensetMap.addLayer(clusterGroup);
+            gsSetStatus(`${gensetSitesData.length} sites loaded`, false);
+            setTimeout(() => gsSetStatus(null), 2500);
         } catch(e) {
             console.error('Genset: failed to load sites', e);
+            gsSetStatus('Load failed', false);
         }
     }
 
+    // ── Site selection ──
     function gensetSelectSite(site, marker) {
-        // De-highlight previous
         if (gensetSelectedMarker) gensetSelectedMarker.setIcon(GENSET_SITE_ICON(false));
         gensetSelectedSite   = site;
         gensetSelectedMarker = marker;
         marker.setIcon(GENSET_SITE_ICON(true));
-
-        // Clear previous TNB results
         gensetClearResults();
-
-        // Show card
         document.getElementById('gensetSiteName').textContent = site.site_id + (site.site_name ? ' — ' + site.site_name : '');
         document.getElementById('gensetSiteDetails').innerHTML =
             `<span style="color:#6b7280;">Lat:</span> <b>${site.lat.toFixed(6)}</b>&emsp;` +
@@ -6375,20 +6610,20 @@
             (site.region ? `<span style="color:#6b7280;">Region:</span> <b>${site.region}</b>` : '');
         document.getElementById('gensetSiteCard').style.display = 'block';
         document.getElementById('gensetResultPanel').style.display = 'none';
-
         gensetMap.flyTo([site.lat, site.lng], 14, { animate: true, duration: 1.2 });
     }
 
     function gensetClearResults() {
         gensetTnbMarkers.forEach(m => gensetMap.removeLayer(m));
         gensetTnbMarkers = [];
-        if (gensetRouteLine)    { gensetMap.removeLayer(gensetRouteLine);    gensetRouteLine   = null; }
+        if (gensetRouteLine)    { gensetMap.removeLayer(gensetRouteLine);    gensetRouteLine    = null; }
         if (gensetNearbyCircle) { gensetMap.removeLayer(gensetNearbyCircle); gensetNearbyCircle = null; }
         document.getElementById('gensetFound').style.display    = 'none';
         document.getElementById('gensetNotFound').style.display = 'none';
         document.getElementById('gensetLoading').style.display  = 'none';
     }
 
+    // ── TNB finder ──
     async function gensetFindTNB() {
         if (!gensetSelectedSite) return;
         const { lat, lng } = gensetSelectedSite;
@@ -6397,15 +6632,14 @@
         document.getElementById('gensetResultPanel').style.display = 'block';
         document.getElementById('gensetLoading').style.display = 'block';
         document.getElementById('gensetFindBtn').disabled = true;
+        gsSetStatus('Querying Overpass…');
 
-        // Draw 2 km radius ring
         gensetNearbyCircle = L.circle([lat, lng], {
             radius: 2000, color: '#16a34a', weight: 1.5,
             fillColor: '#16a34a', fillOpacity: 0.06, dashArray: '6,4'
         }).addTo(gensetMap);
 
         try {
-            // 1. Query Overpass for power=substation within 2 km
             const overpassUrl = 'https://overpass-api.de/api/interpreter';
             const query = `[out:json][timeout:25];
 (
@@ -6421,43 +6655,31 @@ out center;`;
             const substations = (ovData.elements || []).map(el => ({
                 id:   el.id,
                 name: el.tags?.name || el.tags?.['name:en'] || el.tags?.operator || 'TNB Substation',
-                lat:  el.type === 'node' ? el.lat : el.center?.lat,
-                lng:  el.type === 'node' ? el.lon : el.center?.lon,
+                lat:  el.type === 'node' ? el.lat  : el.center?.lat,
+                lng:  el.type === 'node' ? el.lon  : el.center?.lon,
                 tags: el.tags || {}
             })).filter(s => s.lat && s.lng);
 
-            if (substations.length === 0) {
-                gensetShowNotFound();
-                return;
-            }
+            if (substations.length === 0) { gensetShowNotFound(); return; }
 
-            // 2. For each substation, get road distance via OSRM
+            gsSetStatus('Routing via roads…');
+
             const routeResults = await Promise.all(substations.map(async sub => {
                 try {
                     const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lng},${lat};${sub.lng},${sub.lat}?overview=full&geometries=geojson`;
-                    const rRes    = await fetch(osrmUrl);
-                    const rData   = await rRes.json();
+                    const rData   = await (await fetch(osrmUrl)).json();
                     if (rData.code !== 'Ok' || !rData.routes?.length) return null;
-                    return {
-                        sub,
-                        roadDist: rData.routes[0].distance,        // metres
-                        duration: rData.routes[0].duration,         // seconds
-                        geometry: rData.routes[0].geometry
-                    };
+                    return { sub, roadDist: rData.routes[0].distance, duration: rData.routes[0].duration, geometry: rData.routes[0].geometry };
                 } catch { return null; }
             }));
 
-            // 3. Filter to ≤ 2 km road distance, pick nearest
-            const valid = routeResults
-                .filter(r => r && r.roadDist <= 2000)
-                .sort((a, b) => a.roadDist - b.roadDist);
+            const valid = routeResults.filter(r => r && r.roadDist <= 2000).sort((a, b) => a.roadDist - b.roadDist);
 
-            // Plot all substations found (within straight-line 2 km) as small markers
             substations.forEach(sub => {
                 const m = L.marker([sub.lat, sub.lng], { icon: GENSET_TNB_ICON })
                     .bindPopup(`<b style="color:#d97706;">${sub.name}</b><br>
                         <span style="font-size:0.75rem;color:#6b7280;">
-                            ${sub.tags.voltage ? 'Voltage: ' + sub.tags.voltage + '<br>' : ''}
+                            ${sub.tags.voltage  ? 'Voltage: '  + sub.tags.voltage  + '<br>' : ''}
                             ${sub.tags.operator ? 'Operator: ' + sub.tags.operator + '<br>' : ''}
                             Lat: ${sub.lat.toFixed(6)}, Lng: ${sub.lng.toFixed(6)}
                         </span>`)
@@ -6465,23 +6687,15 @@ out center;`;
                 gensetTnbMarkers.push(m);
             });
 
-            if (valid.length === 0) {
-                gensetShowNotFound();
-                return;
-            }
+            if (valid.length === 0) { gensetShowNotFound(); return; }
 
-            // 4. Draw route for nearest
-            const best = valid[0];
+            const best   = valid[0];
             const coords = best.geometry.coordinates.map(c => [c[1], c[0]]);
             gensetRouteLine = L.polyline(coords, {
-                color: '#f59e0b', weight: 5, opacity: 0.85,
-                lineCap: 'round', lineJoin: 'round'
+                color: '#f59e0b', weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round'
             }).addTo(gensetMap);
-
-            // Fit map to route
             gensetMap.fitBounds(gensetRouteLine.getBounds(), { padding: [60, 60] });
 
-            // 5. Show result card
             const km   = (best.roadDist / 1000).toFixed(3);
             const mins = Math.ceil(best.duration / 60);
             document.getElementById('gensetLoading').style.display = 'none';
@@ -6504,9 +6718,12 @@ out center;`;
                 ${best.sub.tags.voltage ? `<div style="margin-top:6px;font-size:0.68rem;color:#6b7280;"><i class="fas fa-plug" style="margin-right:4px;color:#d97706;"></i>Voltage: <b>${best.sub.tags.voltage}</b></div>` : ''}
                 ${valid.length > 1 ? `<div style="margin-top:4px;font-size:0.68rem;color:#6b7280;"><i class="fas fa-info-circle" style="margin-right:4px;"></i>${valid.length - 1} other substation${valid.length > 2 ? 's' : ''} also within 2 km.</div>` : ''}
             `;
+            gsSetStatus('Done', false);
+            setTimeout(() => gsSetStatus(null), 2000);
 
         } catch(err) {
             console.error('Genset TNB search error:', err);
+            gsSetStatus('Error', false);
             gensetShowNotFound();
         } finally {
             document.getElementById('gensetFindBtn').disabled = false;
@@ -6519,20 +6736,21 @@ out center;`;
         document.getElementById('gensetFound').style.display    = 'none';
         document.getElementById('gensetNotFound').style.display = 'block';
         document.getElementById('gensetFindBtn').disabled       = false;
+        gsSetStatus(null);
     }
 
+    // ── Search autocomplete ──
     function gensetOnSearch(val) {
         const box = document.getElementById('gensetSearchResults');
         if (!val || val.length < 2) { box.style.display = 'none'; return; }
-        const q = val.toLowerCase();
+        const q    = val.toLowerCase();
         const hits = gensetSitesData.filter(s =>
-            s.site_id.toLowerCase().includes(q) ||
-            (s.site_name && s.site_name.toLowerCase().includes(q))
+            s.site_id.toLowerCase().includes(q) || (s.site_name && s.site_name.toLowerCase().includes(q))
         ).slice(0, 10);
         if (!hits.length) { box.style.display = 'none'; return; }
         box.innerHTML = hits.map(s =>
             `<div onclick="gensetSearchSelect('${s.site_id}')"
-                  style="padding:8px 12px;cursor:pointer;font-size:0.82rem;color:#374151;border-bottom:1px solid #f3f4f6;"
+                  style="padding:7px 12px;cursor:pointer;font-size:0.8rem;color:#374151;border-bottom:1px solid #f3f4f6;"
                   onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
                 <b>${s.site_id}</b>${s.site_name ? ' — ' + s.site_name : ''}
              </div>`
@@ -6545,8 +6763,76 @@ out center;`;
         if (!site) return;
         document.getElementById('gensetSearchResults').style.display = 'none';
         document.getElementById('gensetSearchInput').value = site.site_id;
-        const marker = gensetSiteMarkers[site.site_id];
-        gensetSelectSite(site, marker || { setIcon: () => {} });
+        gensetSelectSite(site, gensetSiteMarkers[site.site_id] || { setIcon: () => {} });
+    }
+
+    // ── Geo Tools (genset-scoped, using gs* IDs) ──
+    function gsStartGeoPick(point) {
+        gsGeoPickMode = point;
+        const el = document.getElementById('gsGeoPickStatus');
+        document.getElementById('gsGeoPickText').textContent = `Click map to set Point ${point}`;
+        el.style.display = 'flex';
+        if (gensetMap) gensetMap.getContainer().style.cursor = 'crosshair';
+    }
+
+    function gsSetGeoPoint(lat, lng, point) {
+        if (point === 'A') {
+            document.getElementById('gsGeoLatA').value = lat.toFixed(6);
+            document.getElementById('gsGeoLngA').value = lng.toFixed(6);
+        } else {
+            document.getElementById('gsGeoLatB').value = lat.toFixed(6);
+            document.getElementById('gsGeoLngB').value = lng.toFixed(6);
+        }
+        // Place marker
+        const color = point === 'A' ? '#2563eb' : '#dc2626';
+        const ref   = point === 'A' ? 'gsGeoMarkerA' : 'gsGeoMarkerB';
+        if (window[ref]) gensetMap.removeLayer(window[ref]);
+        window[ref] = L.circleMarker([lat, lng], {
+            radius: 7, color, fillColor: color, fillOpacity: 1, weight: 2.5, interactive: false
+        }).bindTooltip(`<b>${point}</b>`, { permanent: true, direction: 'top', offset: [0, -8], opacity: 1 }).addTo(gensetMap);
+
+        gsGeoPickMode = null;
+        document.getElementById('gsGeoPickStatus').style.display = 'none';
+        if (gensetMap) gensetMap.getContainer().style.cursor = '';
+        gsRunGeoCalc();
+    }
+
+    function gsRunGeoCalc() {
+        const latA = parseFloat(document.getElementById('gsGeoLatA').value);
+        const lngA = parseFloat(document.getElementById('gsGeoLngA').value);
+        const latB = parseFloat(document.getElementById('gsGeoLatB').value);
+        const lngB = parseFloat(document.getElementById('gsGeoLngB').value);
+        if (isNaN(latA) || isNaN(lngA) || isNaN(latB) || isNaN(lngB)) {
+            document.getElementById('gsGeoResults').style.display = 'none'; return;
+        }
+        const dist    = haversineDistance(latA, lngA, latB, lngB);
+        const bearing = calculateBearing(latA, lngA, latB, lngB);
+        const back    = (bearing + 180) % 360;
+        const distStr = dist >= 1000 ? (dist / 1000).toFixed(3) + ' km' : dist.toFixed(1) + ' m';
+        document.getElementById('gsGeoDistResult').textContent   = distStr;
+        document.getElementById('gsGeoBearingResult').textContent = bearing.toFixed(2) + '°';
+        document.getElementById('gsGeoBackBearing').textContent   = back.toFixed(2) + '°';
+        document.getElementById('gsGeoResults').style.display    = 'block';
+
+        if (gsGeoLine) gensetMap.removeLayer(gsGeoLine);
+        gsGeoLine = L.polyline([[latA, lngA], [latB, lngB]], {
+            color: '#7c3aed', weight: 2, dashArray: '6 5', opacity: 0.85, interactive: false
+        }).addTo(gensetMap);
+
+        // Refresh point markers with latest typed values
+        const mkA = window['gsGeoMarkerA'], mkB = window['gsGeoMarkerB'];
+        if (mkA) { gensetMap.removeLayer(mkA); window['gsGeoMarkerA'] = L.circleMarker([latA, lngA], { radius:7, color:'#2563eb', fillColor:'#3b82f6', fillOpacity:1, weight:2.5, interactive:false }).bindTooltip('<b>A</b>',{permanent:true,direction:'top',offset:[0,-8],opacity:1}).addTo(gensetMap); }
+        if (mkB) { gensetMap.removeLayer(mkB); window['gsGeoMarkerB'] = L.circleMarker([latB, lngB], { radius:7, color:'#dc2626', fillColor:'#ef4444', fillOpacity:1, weight:2.5, interactive:false }).bindTooltip('<b>B</b>',{permanent:true,direction:'top',offset:[0,-8],opacity:1}).addTo(gensetMap); }
+    }
+
+    function gsClearGeoTools() {
+        ['gsGeoMarkerA','gsGeoMarkerB'].forEach(ref => { if (window[ref]) { gensetMap.removeLayer(window[ref]); window[ref] = null; } });
+        if (gsGeoLine) { gensetMap.removeLayer(gsGeoLine); gsGeoLine = null; }
+        ['gsGeoLatA','gsGeoLngA','gsGeoLatB','gsGeoLngB'].forEach(id => { document.getElementById(id).value = ''; });
+        document.getElementById('gsGeoResults').style.display = 'none';
+        gsGeoPickMode = null;
+        document.getElementById('gsGeoPickStatus').style.display = 'none';
+        if (gensetMap) gensetMap.getContainer().style.cursor = '';
     }
 
     </script>
