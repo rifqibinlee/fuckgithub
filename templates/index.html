@@ -474,24 +474,25 @@
 
         <div id="resultsSection" class="hidden">
             <div class="bg-white rounded-lg shadow-md p-5 mb-6 sticky top-0 z-40 border-b-4 border-blue-600 transition-all">
-                <div class="flex flex-wrap items-end gap-6">
-                    <div class="w-full sm:w-48">
+                <!-- Row 1: Filters -->
+                <div class="flex flex-wrap gap-3 mb-4">
+                    <div class="flex-1 min-w-[160px]">
                         <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Filter Region</label>
                         <select id="globalFilterRegion" class="w-full p-2.5 border border-gray-300 rounded-lg font-semibold bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700">
                             <option value="All">All Regions</option>
                         </select>
                     </div>
-                    <div class="w-full sm:w-48">
+                    <div class="flex-1 min-w-[160px]">
                         <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Filter Year</label>
                         <select id="globalFilterYear" class="w-full p-2.5 border border-gray-300 rounded-lg font-semibold bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700"></select>
                     </div>
-                    <div class="w-full sm:w-48">
+                    <div class="flex-1 min-w-[160px]">
                         <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Filter Week</label>
                         <select id="globalFilterWeek" class="w-full p-2.5 border border-gray-300 rounded-lg font-semibold bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700">
                             <option value="All">All Weeks</option>
                         </select>
                     </div>
-                    <div class="w-full sm:w-48">
+                    <div class="flex-1 min-w-[160px]">
                         <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Filter Operator</label>
                         <select id="globalFilterOperator" class="w-full p-2.5 border border-gray-300 rounded-lg font-semibold bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700">
                             <option value="All">All Operators</option>
@@ -499,28 +500,27 @@
                             <option value="Digi">Digi</option>
                         </select>
                     </div>
-                    <div class="w-full sm:w-48">
+                    <div class="flex-1 min-w-[160px]">
                         <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Filter Cluster</label>
                         <input type="text" id="globalFilterCluster" placeholder="e.g. KUL_01" class="w-full p-2.5 border border-gray-300 rounded-lg font-semibold bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700">
                     </div>
-                    <div class="flex-1 flex flex-wrap gap-4 justify-end items-end">
-                        <div class="h-[42px]">
-                             <a href="/download/cd_file" class="bg-gradient-to-r from-teal-500 to-teal-700 text-white px-6 py-2.5 rounded-lg hover:shadow-lg transition flex items-center gap-2 font-bold h-full border border-teal-600" title="Download Unified CD File">
-                                <i class="fas fa-file-export"></i> <span>Export Unified CD</span>
-                            </a>
-                        </div>
-                        <div class="bg-blue-50 px-5 py-3 rounded-lg text-center border border-blue-100 min-w-[120px] shadow-sm">
-                            <div class="text-[10px] text-blue-500 font-bold uppercase tracking-wider mb-1">Total Sites</div>
-                            <div id="scoreTotalSectors" class="text-2xl font-bold text-blue-700">-</div>
-                        </div>
-                        <div class="bg-red-50 px-5 py-3 rounded-lg text-center border border-red-100 min-w-[120px] shadow-sm">
-                            <div class="text-[10px] text-red-500 font-bold uppercase tracking-wider mb-1">Congested Sectors</div>
-                            <div id="scoreCongested" class="text-2xl font-bold text-red-700">-</div>
-                        </div>
-                         <div class="bg-green-50 px-5 py-3 rounded-lg text-center border border-green-100 min-w-[120px] shadow-sm">
-                            <div class="text-[10px] text-green-500 font-bold uppercase tracking-wider mb-1">Avg Vol (GB)</div>
-                            <div id="scoreAvgVol" class="text-2xl font-bold text-green-700">-</div>
-                        </div>
+                </div>
+                <!-- Row 2: Export button + stats cards -->
+                <div class="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-100">
+                    <a href="/download/cd_file" class="bg-gradient-to-r from-teal-500 to-teal-700 text-white px-6 py-2.5 rounded-lg hover:shadow-lg transition flex items-center gap-2 font-bold h-[42px] border border-teal-600" title="Download Unified CD File">
+                        <i class="fas fa-file-export"></i> <span>Export Unified CD</span>
+                    </a>
+                    <div class="bg-blue-50 px-5 py-3 rounded-lg text-center border border-blue-100 min-w-[120px] shadow-sm">
+                        <div class="text-[10px] text-blue-500 font-bold uppercase tracking-wider mb-1">Total Sites</div>
+                        <div id="scoreTotalSectors" class="text-2xl font-bold text-blue-700">-</div>
+                    </div>
+                    <div class="bg-red-50 px-5 py-3 rounded-lg text-center border border-red-100 min-w-[120px] shadow-sm">
+                        <div class="text-[10px] text-red-500 font-bold uppercase tracking-wider mb-1">Congested Sectors</div>
+                        <div id="scoreCongested" class="text-2xl font-bold text-red-700">-</div>
+                    </div>
+                    <div class="bg-green-50 px-5 py-3 rounded-lg text-center border border-green-100 min-w-[120px] shadow-sm">
+                        <div class="text-[10px] text-green-500 font-bold uppercase tracking-wider mb-1">Avg Vol (GB)</div>
+                        <div id="scoreAvgVol" class="text-2xl font-bold text-green-700">-</div>
                     </div>
                 </div>
             </div>
@@ -622,30 +622,6 @@
             </div>
         </div>
     </div>
-
-   	<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 flex justify-between items-center shadow-md">
-        <div class="flex items-center gap-3">
-            <i class="fas fa-robot text-2xl"></i>
-            <div>
-                <h3 class="font-bold text-sm tracking-wide">3W AI Agent</h3>
-                <p class="text-[10px] text-blue-100 uppercase tracking-wider">Powered by Claude 4 Sonnet</p>
-            </div>
-        </div>
-        <button onclick="toggleAgentChat()" class="text-white hover:text-gray-200 focus:outline-none transition-transform hover:scale-110"><i class="fas fa-times text-lg"></i></button>
-    </div>
-    
-    <div id="agentChatMessages" class="flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3 text-sm scroll-smooth">
-        <div class="self-start bg-white border border-gray-200 text-gray-800 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl shadow-sm max-w-[85%]">
-            Hello! I am your local 3W Agent. Ask me about site congestion, capacities, or upgrade pricing!
-        </div>
-    </div>
-    <div class="p-3 bg-white border-t border-gray-200">
-        <form id="agentChatForm" class="flex gap-2" onsubmit="handleAgentChatSubmit(event)">
-            <input type="text" id="agentChatInput" placeholder="Ask about site 1712H..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" autocomplete="off">
-            <button type="submit" class="bg-blue-600 text-white w-10 h-10 rounded-lg flex items-center justify-center hover:bg-blue-700 transition shadow"><i class="fas fa-paper-plane"></i></button>
-        </form>
-    </div>
-  
 
     <div id="mapContainer" style="position:absolute; top:72px; bottom:0; left:0; right:0; overflow:hidden;">
 
@@ -879,10 +855,6 @@
     </button>
 
     <div id="sidebar">
-                <a href="/" class="inline-flex items-center gap-2 text-xs font-semibold mb-3 transition-colors duration-200" style="color:#1e3a8a;">
-                    <i class="fas fa-arrow-left"></i> Back to RAN Forecast
-                </a>
-
         <div>
             <h1 class="text-xl font-bold flex items-center gap-3 text-gray-800 mb-1"><i class="fas fa-satellite text-blue-600"></i> 3W</h1>
             <p class="text-xs text-gray-500">What • Where • When</p>
@@ -1223,24 +1195,21 @@
         </div>
 
         <!-- CCTV Sidebar -->
-        <div id="cctvSidebar" style="position:absolute; top:0; left:0; bottom:0; width:360px; background:#fff; z-index:150; border-right:1px solid #e5e7eb; box-shadow:2px 0 15px rgba(0,0,0,0.08); display:flex; flex-direction:column; overflow-y:auto;">
+        <div id="cctvSidebar" style="position:absolute; top:0; left:0; bottom:0; width:360px; background:#ffffff; color:#1e293b; z-index:150; padding:20px; box-shadow:1px 0 0 #e2e8f0, 4px 0 16px rgba(0,0,0,.06); display:flex; flex-direction:column; gap:14px; overflow-y:auto;">
             <!-- Header -->
-            <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb); color:white; padding:16px; flex-shrink:0;">
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                    <i class="fas fa-video" style="font-size:1.2rem;"></i>
-                    <h2 style="font-size:1.1rem; font-weight:800; margin:0;">CCTV Planning Tool</h2>
-                </div>
-                <p style="font-size:0.72rem; color:#bfdbfe; margin:0;">Draw an AOI, upload building & pole data, then generate optimal CCTV placement candidates.</p>
+            <div>
+                <h1 style="font-size:1.1rem; font-weight:800; display:flex; align-items:center; gap:10px; color:#1e293b; margin-bottom:2px;"><i class="fas fa-video" style="color:#2563eb;"></i> CCTV Planning Tool</h1>
+                <p style="font-size:0.72rem; color:#64748b; margin:0;">Draw an AOI, upload building &amp; pole data, then generate optimal CCTV placement candidates.</p>
             </div>
 
-            <div style="padding:16px; display:flex; flex-direction:column; gap:14px; flex:1;">
+            <div style="display:flex; flex-direction:column; gap:14px; flex:1;">
                 <!-- Search -->
-                <div style="position:relative;">
-                    <label style="font-size:0.68rem; font-weight:700; color:#4b5563; text-transform:uppercase; display:block; margin-bottom:4px;">Search Sites</label>
+                <div class="control-group" style="position:relative;">
+                    <label class="control-label">Search Sites</label>
                     <div style="position:relative;">
                         <i class="fas fa-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.8rem;"></i>
                         <input id="cctvSearchInput" type="text" placeholder="Site ID or name…"
-                            style="width:100%; padding:8px 12px 8px 32px; border:1px solid #d1d5db; border-radius:6px; font-size:0.82rem; outline:none; box-sizing:border-box;"
+                            class="light-input" style="padding-left:32px;"
                             oninput="onCctvSearch(this.value)" autocomplete="off" />
                         <div id="cctvSearchResults" style="position:absolute; top:100%; left:0; right:0; background:white; border-radius:0 0 8px 8px; max-height:200px; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.15); display:none; z-index:201; border:1px solid #e5e7eb;"></div>
                     </div>
@@ -1383,25 +1352,49 @@
 
         <!-- CCTV Map -->
         <div id="cctvMap" style="position:absolute; top:0; left:360px; right:0; bottom:0;"></div>
+
+        <!-- Tool buttons — top-left, matching Coverage Map style -->
+        <button onclick="toggleAnnotationPanel()" title="Annotations"
+            style="position:absolute; top:10px; left:376px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
+            <i class="fas fa-draw-polygon"></i>
+        </button>
+        <button onclick="toggleNotesPanel()" title="My Notes"
+            style="position:absolute; top:10px; left:428px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
+            <i class="fas fa-sticky-note"></i>
+        </button>
+        <button onclick="toggleTasksPanel()" title="Tasks"
+            style="position:absolute; top:10px; left:480px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
+            <i class="fas fa-tasks"></i>
+        </button>
+
+        <!-- Layer / View Toggle — bottom left -->
+        <div style="position:absolute; bottom:24px; left:376px; z-index:1100; display:flex; align-items:flex-end; gap:8px;">
+            <button onclick="cctvToggleBaseMap()" id="cctvLayerBtn" title="Toggle Satellite/Street"
+                style="display:flex; align-items:center; gap:8px; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:7px 11px 7px 9px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.12); transition:box-shadow .2s;">
+                <div style="width:30px; height:30px; border-radius:5px; background:#0f2d52; display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-satellite" style="color:white; font-size:0.75rem;"></i>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px;">
+                    <span id="cctvLayerLabel" style="line-height:1.2;font-size:0.78rem;font-weight:600;color:#374151;">Satellite</span>
+                    <span style="font-size:0.65rem;color:#6b7280;">Base map</span>
+                </div>
+            </button>
+        </div>
     </div>
 
     <!-- Illegal Bitcoin Mining Analyser -->
     <div id="bitcoinContainer" style="display:none; position:absolute; top:72px; bottom:0; left:0; right:0; overflow:hidden; background:#f3f4f6;">
-        <!-- Sidebar (matches index.html style) -->
-        <div id="mhSidebar" style="position:absolute; top:0; left:0; bottom:0; width:350px; background:#ffffff; z-index:150; border-right:1px solid #e5e7eb; box-shadow:2px 0 15px rgba(0,0,0,0.08); display:flex; flex-direction:column; overflow-y:auto; font-family:'Inter',sans-serif;">
+        <!-- Sidebar (matches coverage map style) -->
+        <div id="mhSidebar" style="position:absolute; top:0; left:0; bottom:0; width:350px; background:#ffffff; color:#1e293b; z-index:150; padding:20px; box-shadow:1px 0 0 #e2e8f0, 4px 0 16px rgba(0,0,0,.06); display:flex; flex-direction:column; gap:14px; overflow-y:auto; font-family:'Inter',sans-serif;">
             <!-- Header -->
-            <div style="background:linear-gradient(135deg,#92400e,#d97706); color:white; padding:16px; flex-shrink:0;">
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-                    <i class="fab fa-bitcoin" style="font-size:1.2rem;"></i>
-                    <h2 style="font-size:1.05rem; font-weight:800; margin:0;">Illegal Mining Analyser</h2>
-                </div>
-                <p style="font-size:0.68rem; color:#fde68a; margin:0;">Select 2 or 3 cell sites to triangulate suspected illegal Bitcoin mining locations.</p>
+            <div>
+                <h1 style="font-size:1.1rem; font-weight:800; display:flex; align-items:center; gap:10px; color:#1e293b; margin-bottom:2px;"><i class="fab fa-bitcoin" style="color:#d97706;"></i> Illegal Mining Analyser</h1>
+                <p style="font-size:0.72rem; color:#64748b; margin:0;">Select 2 or 3 cell sites to triangulate suspected illegal Bitcoin mining locations.</p>
             </div>
-            <div style="padding:14px; display:flex; flex-direction:column; gap:12px; flex:1;">
+            <div style="display:flex; flex-direction:column; gap:12px; flex:1;">
                 <!-- Mode Toggle -->
                 <div class="control-group">
                     <label class="control-label">Analysis Mode</label>
-                    <div style="display:flex; gap:6px;">
                         <button id="mh_btn2pt" onclick="mhSetMode(2)" style="flex:1; padding:7px; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer; background:#2563eb; color:white; border:none;">2-Point</button>
                         <button id="mh_btn3pt" onclick="mhSetMode(3)" style="flex:1; padding:7px; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer; background:#f3f4f6; color:#4b5563; border:1px solid #d1d5db;">3-Point</button>
                     </div>
@@ -1469,7 +1462,35 @@
         </div>
         <!-- Map hint -->
         <div id="mhMapHint" style="position:absolute; bottom:20px; left:calc(350px + 50%); transform:translateX(-50%); background:rgba(15,23,42,0.88); color:white; border-radius:8px; padding:8px 16px; font-size:0.78rem; font-weight:600; z-index:200; pointer-events:none;">Click a cell site to select Site 1</div>
-        <!-- Map -->
+
+        <!-- Tool buttons — top-left, matching Coverage Map style -->
+        <button onclick="toggleAnnotationPanel()" title="Annotations"
+            style="position:absolute; top:10px; left:366px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
+            <i class="fas fa-draw-polygon"></i>
+        </button>
+        <button onclick="toggleNotesPanel()" title="My Notes"
+            style="position:absolute; top:10px; left:418px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
+            <i class="fas fa-sticky-note"></i>
+        </button>
+        <button onclick="toggleTasksPanel()" title="Tasks"
+            style="position:absolute; top:10px; left:470px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
+            <i class="fas fa-tasks"></i>
+        </button>
+
+        <!-- Layer / View Toggle — bottom left -->
+        <div style="position:absolute; bottom:24px; left:366px; z-index:1100; display:flex; align-items:flex-end; gap:8px;">
+            <button onclick="mhToggleBaseMap()" id="mhLayerBtn" title="Toggle Satellite/Street"
+                style="display:flex; align-items:center; gap:8px; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:7px 11px 7px 9px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.12); transition:box-shadow .2s;">
+                <div style="width:30px; height:30px; border-radius:5px; background:#0f2d52; display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-satellite" style="color:white; font-size:0.75rem;"></i>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px;">
+                    <span id="mhLayerLabel" style="line-height:1.2;font-size:0.78rem;font-weight:600;color:#374151;">Satellite</span>
+                    <span style="font-size:0.65rem;color:#6b7280;">Base map</span>
+                </div>
+            </button>
+        </div>
+
         <div id="mhMap" style="position:absolute; top:0; left:350px; right:0; bottom:0;"></div>
     </div>
 
@@ -1479,27 +1500,22 @@
     <div id="gensetContainer" style="display:none; position:absolute; top:72px; bottom:0; left:0; right:0; overflow:hidden;">
 
         <!-- Sidebar -->
-        <div id="gensetSidebar" style="position:absolute; top:0; left:0; bottom:0; width:340px; background:#ffffff; z-index:150; border-right:1px solid #e5e7eb; box-shadow:2px 0 15px rgba(0,0,0,0.08); display:flex; flex-direction:column; overflow-y:auto; font-family:'Inter',sans-serif;">
+        <div id="gensetSidebar" style="position:absolute; top:0; left:0; bottom:0; width:340px; background:#ffffff; color:#1e293b; z-index:150; padding:20px; box-shadow:1px 0 0 #e2e8f0, 4px 0 16px rgba(0,0,0,.06); display:flex; flex-direction:column; gap:14px; overflow-y:auto; font-family:'Inter',sans-serif;">
 
             <!-- Header -->
-            <div style="background:linear-gradient(135deg,#14532d,#16a34a); color:white; padding:14px 16px 12px; flex-shrink:0;">
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <i class="fas fa-bolt" style="font-size:1.1rem;"></i>
-                        <h2 style="font-size:1.0rem; font-weight:800; margin:0;">Genset — TNB Finder</h2>
-                    </div>
-                    <!-- Live loading badge -->
-                    <div id="gensetStatusBadge" style="display:none; align-items:center; gap:5px; background:rgba(255,255,255,0.18); border-radius:20px; padding:3px 9px; font-size:0.65rem; font-weight:700; letter-spacing:0.03em;">
-                        <i id="gensetStatusIcon" class="fas fa-circle-notch fa-spin" style="font-size:0.6rem;"></i>
-                        <span id="gensetStatusText">Loading…</span>
-                    </div>
+            <div>
+                <h1 style="font-size:1.1rem; font-weight:800; display:flex; align-items:center; gap:10px; color:#1e293b; margin-bottom:2px;"><i class="fas fa-bolt" style="color:#16a34a;"></i> Genset — TNB Finder</h1>
+                <p style="font-size:0.72rem; color:#64748b; margin:0;">Select a cell site to find the nearest TNB substation within 2 km via road.</p>
+                <!-- Live loading badge -->
+                <div id="gensetStatusBadge" style="display:none; margin-top:6px; align-items:center; gap:5px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:20px; padding:3px 9px; font-size:0.65rem; font-weight:700; letter-spacing:0.03em; width:fit-content;">
+                    <i id="gensetStatusIcon" class="fas fa-circle-notch fa-spin" style="font-size:0.6rem; color:#16a34a;"></i>
+                    <span id="gensetStatusText" style="color:#14532d;">Loading…</span>
                 </div>
-                <p style="font-size:0.67rem; color:#bbf7d0; margin:0;">Select a cell site to find the nearest TNB substation within 2 km via road.</p>
             </div>
 
             <!-- Map Style Switcher -->
-            <div style="padding:10px 12px; border-bottom:1px solid #f3f4f6; background:#fafafa; flex-shrink:0;">
-                <div style="font-size:0.6rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:6px;">Map Style</div>
+            <div class="control-group" style="flex-shrink:0;">
+                <span class="control-label">Map Style</span>
                 <div style="display:flex; gap:5px; margin-bottom:6px;">
                     <!-- Satellite pill -->
                     <button id="gs-btn-sat" onclick="gsSetBaseMap('satellite')"
@@ -1531,11 +1547,12 @@
             </div>
 
             <!-- Search -->
-            <div style="padding:10px 12px; border-bottom:1px solid #f3f4f6; flex-shrink:0;">
+            <div class="control-group" style="flex-shrink:0;">
+                <span class="control-label">Search Site</span>
                 <div style="position:relative;">
                     <i class="fas fa-search" style="position:absolute; left:9px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.75rem;"></i>
                     <input id="gensetSearchInput" type="text" placeholder="Search site ID or name…"
-                        style="width:100%; padding:7px 10px 7px 28px; border:1px solid #d1d5db; border-radius:6px; font-size:0.8rem; outline:none; box-sizing:border-box;"
+                        class="light-input" style="padding-left:28px;"
                         oninput="gensetOnSearch(this.value)" autocomplete="off"/>
                     <div id="gensetSearchResults" style="position:absolute; top:100%; left:0; right:0; background:white; border-radius:0 0 8px 8px; max-height:200px; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.15); display:none; z-index:201; border:1px solid #e5e7eb;"></div>
                 </div>
@@ -1761,23 +1778,23 @@
             </div>
         </div>
 
-        <!-- Tool buttons — top-right, stacked below compass -->
+        <!-- Tool buttons — top-left, matching Coverage Map style -->
         <button id="gensetAnnotationBtn"
             onclick="toggleAnnotationPanel()"
             title="Annotations"
-            style="position:absolute; top:135px; right:10px; z-index:1200; width:34px; height:34px; border-radius:8px; background:#1d4ed8; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.85rem; box-shadow:0 2px 8px rgba(0,0,0,0.2); transition:all 0.2s;">
+            style="position:absolute; top:10px; left:350px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
             <i class="fas fa-draw-polygon"></i>
         </button>
         <button id="gensetNotesBtn"
             onclick="toggleNotesPanel()"
             title="My Notes"
-            style="position:absolute; top:178px; right:10px; z-index:1200; width:34px; height:34px; border-radius:8px; background:#6d28d9; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.85rem; box-shadow:0 2px 8px rgba(0,0,0,0.2); transition:all 0.2s;">
+            style="position:absolute; top:10px; left:402px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
             <i class="fas fa-sticky-note"></i>
         </button>
         <button id="gensetTasksBtn"
             onclick="toggleTasksPanel()"
             title="Tasks"
-            style="position:absolute; top:221px; right:10px; z-index:1200; width:34px; height:34px; border-radius:8px; background:#d97706; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.85rem; box-shadow:0 2px 8px rgba(0,0,0,0.2); transition:all 0.2s;">
+            style="position:absolute; top:10px; left:454px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
             <i class="fas fa-tasks"></i>
         </button>
 
@@ -1819,8 +1836,8 @@
         </div>
     </div>
 
-    <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-[6000] flex items-center justify-center">
-            <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden">
+    <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-[6000] flex items-center justify-center" style="padding-top:72px;">
+            <div class="bg-white rounded-xl shadow-2xl w-[95vw] flex flex-col overflow-hidden" style="height:calc(95vh - 72px);">
                 <div class="bg-gray-800 text-white p-3 flex justify-between items-center flex-shrink-0">
                     <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> 3W Dashboard</h3>
                     <button onclick="closeMetabaseDashboard()" class="text-gray-300 hover:text-white text-xl transition-colors">
@@ -1847,7 +1864,7 @@
         </div>
     </div>
 
-    <div id="settingsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div id="settingsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style="z-index:99999;">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
             <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white flex items-center justify-between">
                 <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-cog"></i> Account Settings</h2>
@@ -5229,16 +5246,19 @@
         function mhDefaultIcon(){return L.divIcon({className:'custom-pin',html:'<div style="width:8px;height:8px;border-radius:50%;background:#2563eb;border:1.5px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>',iconSize:[8,8],iconAnchor:[4,4]});}
         function mhSelectedIcon(c){return L.divIcon({className:'',html:'<div style="width:14px;height:14px;border-radius:50%;background:'+c+';border:2px solid white;box-shadow:0 0 10px '+c+';"></div>',iconSize:[14,14],iconAnchor:[7,7]});}
 
+        let mhSatLayer=null, mhStreetLayer=null, mhLabelLayer=null, mhSatMode=true;
         async function initMinerHunter(){
             if(mhInitialized){mhMap.invalidateSize();return;}
             mhInitialized=true;
             mhMap=L.map('mhMap',{zoomControl:true,preferCanvas:true}).setView([3.8,108.5],6);
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'&copy; Esri',maxZoom:19}).addTo(mhMap);
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:0.7}).addTo(mhMap);
+            mhSatLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'&copy; Esri',maxZoom:19});
+            mhStreetLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap',maxZoom:19});
+            mhLabelLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:0.7});
+            mhSatLayer.addTo(mhMap); mhLabelLayer.addTo(mhMap); mhSatMode=true;
             let data;
             if(siteDataCache&&siteDataCache.length>0){data=siteDataCache;}else{try{const r=await fetch('/api/sites');data=await r.json();if(!Array.isArray(data))data=[];}catch(e){data=[];}}
             mhSitesData=data.filter(s=>s&&s.site_id&&!isNaN(parseFloat(s.lat))&&!isNaN(parseFloat(s.lng))).map(s=>({site_id:s.site_id,site_name:s.site_name||s.site_id,lat:parseFloat(s.lat),lon:parseFloat(s.lng),state:s.region||'',district:s.cluster||''}));
-            const cl=L.markerClusterGroup({disableClusteringAtZoom:14,maxClusterRadius:50});
+            const cl=L.markerClusterGroup({disableClusteringAtZoom:14,maxClusterRadius:50,iconCreateFunction:c=>L.divIcon({html:`<div class="cluster-base cluster-normal"><span>${c.getChildCount()}</span></div>`,className:'marker-cluster',iconSize:[40,40]})});
             mhSitesData.forEach(s=>{const m=L.marker([s.lat,s.lon],{icon:mhDefaultIcon()}).on('click',()=>mhSelectSite(s));mhSiteMarkerMap[s.site_id]=m;cl.addLayer(m);});
             mhMap.addLayer(cl);
             // Coverage
@@ -5246,6 +5266,14 @@
             mhSetMode(2);
         }
 
+        function mhToggleBaseMap(){
+            if(!mhMap) return;
+            mhSatMode=!mhSatMode;
+            if(mhSatMode){mhStreetLayer.remove();mhSatLayer.addTo(mhMap);mhLabelLayer.addTo(mhMap);}
+            else{mhSatLayer.remove();mhLabelLayer.remove();mhStreetLayer.addTo(mhMap);}
+            const lbl=document.getElementById('mhLayerLabel');
+            if(lbl) lbl.textContent=mhSatMode?'Satellite':'Street';
+        }
         function mhSetMode(m){mhMode=m;document.getElementById('mh_btn2pt').style.background=m===2?'#2563eb':'#f3f4f6';document.getElementById('mh_btn2pt').style.color=m===2?'white':'#4b5563';document.getElementById('mh_btn2pt').style.border=m===2?'none':'1px solid #d1d5db';document.getElementById('mh_btn3pt').style.background=m===3?'#2563eb':'#f3f4f6';document.getElementById('mh_btn3pt').style.color=m===3?'white':'#4b5563';document.getElementById('mh_btn3pt').style.border=m===3?'none':'1px solid #d1d5db';document.getElementById('mhSlot3Wrapper').style.display=m===2?'none':'';document.getElementById('mhStep3').style.display=m===2?'none':'';document.getElementById('mhSep23').style.display=m===2?'none':'';mhResetAll();}
         function mhSelectSite(s){const max=mhMode===2?2:3;const slot=mhSelected.slice(0,max).findIndex(x=>x===null);if(slot===-1)return;if(mhSelected.some(x=>x&&x.site_id===s.site_id))return;mhSelected[slot]=s;mhUpdateUI();mhMap.panTo([s.lat,s.lon]);}
         function mhRemoveSite(i){mhSelected[i]=null;const f=mhSelected.filter(s=>s);mhSelected=[f[0]||null,f[1]||null,f[2]||null];mhUpdateUI();mhClearAnalysis();}
@@ -5458,14 +5486,26 @@
             if (autohide) setTimeout(() => { el.style.opacity = '0'; }, autohide);
         }
 
+        function cctvToggleBaseMap() {
+            if (!cctvMap) return;
+            window.cctvSatMode = !window.cctvSatMode;
+            if (window.cctvSatMode) { cctvStreetLayer.remove(); cctvSatLayer.addTo(cctvMap); cctvLabelLayer.addTo(cctvMap); }
+            else { cctvSatLayer.remove(); cctvLabelLayer.remove(); cctvStreetLayer.addTo(cctvMap); }
+            const lbl = document.getElementById('cctvLayerLabel');
+            if (lbl) lbl.textContent = window.cctvSatMode ? 'Satellite' : 'Street';
+        }
+
         async function initCctvMap() {
             if (cctvInitialized) { cctvMap.invalidateSize(); return; }
             cctvInitialized = true;
             setCctvStatus('Initializing map…', 'fas fa-circle-notch fa-spin');
 
             cctvMap = L.map('cctvMap', { center: [3.1390, 101.6869], zoom: 12, zoomControl: true });
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri', maxZoom: 19 }).addTo(cctvMap);
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, opacity: 0.7 }).addTo(cctvMap);
+            window.cctvSatLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri', maxZoom: 19 });
+            window.cctvStreetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 });
+            window.cctvLabelLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, opacity: 0.7 });
+            window.cctvSatMode = true;
+            cctvSatLayer.addTo(cctvMap); cctvLabelLayer.addTo(cctvMap);
 
             cctvCoverageGroup = L.layerGroup().addTo(cctvMap);
             cctvResultLayers = L.layerGroup().addTo(cctvMap);
@@ -5508,7 +5548,7 @@
                 setCctvStatus('Rendering ' + cctvSiteDataCache.length + ' sites…', 'fas fa-broadcast-tower fa-beat-fade');
                 await new Promise(r => setTimeout(r, 50));
 
-                cctvSiteMarkers = L.markerClusterGroup({ disableClusteringAtZoom: 14, maxClusterRadius: 50 });
+                cctvSiteMarkers = L.markerClusterGroup({ disableClusteringAtZoom: 14, maxClusterRadius: 50, iconCreateFunction: c => L.divIcon({ html: `<div class="cluster-base cluster-normal"><span>${c.getChildCount()}</span></div>`, className: 'marker-cluster', iconSize: [40, 40] }) });
                 cctvSiteDataCache.forEach(site => {
                     const icon = L.divIcon({ className: 'custom-pin', html: '<div style="background:#2563eb; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>', iconSize: [12, 12] });
                     const popup = '<div style="padding:8px; min-width:180px;"><div style="font-weight:800; color:#1e3a8a;">' + site.site_id + '</div><div style="font-size:0.75rem; color:#64748b;">' + (site.site_name||'') + '</div></div>';
@@ -6664,8 +6704,8 @@
             const clusterGroup = L.markerClusterGroup({
                 maxClusterRadius: 50,
                 iconCreateFunction: c => L.divIcon({
-                    html: `<div style="width:34px;height:34px;border-radius:50%;background:#16a34a;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.25);">${c.getChildCount()}</div>`,
-                    className: '', iconSize: [34, 34]
+                    html: `<div class="cluster-base cluster-normal"><span>${c.getChildCount()}</span></div>`,
+                    className: 'marker-cluster', iconSize: [40, 40]
                 })
             });
 
