@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>3W</title>
+  <title>3W - Unified Platfor</title>
 
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -412,7 +412,7 @@
             </button>
 
             <div class="relative" style="margin-left:4px;">
-                <button id="menuBtn" onclick="document.getElementById('menuDropdown').classList.toggle('hidden')"
+                <button id="menuBtn"
                     style="background:#f1f5f9; border:1px solid #e2e8f0; color:#1e293b; padding:5px 10px 5px 6px; border-radius:6px; font-weight:600; font-size:.8rem; cursor:pointer; display:flex; align-items:center; gap:8px; transition:background .2s;"
                     onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
                     <div style="width:26px;height:26px;border-radius:50%;background:#0f2d52;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;color:white;flex-shrink:0;">
@@ -1822,7 +1822,7 @@
     <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-[6000] flex items-center justify-center">
             <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden">
                 <div class="bg-gray-800 text-white p-3 flex justify-between items-center flex-shrink-0">
-                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> 3W Dashboard</h3>
+                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> NetAlytics Dashboard</h3>
                     <button onclick="closeMetabaseDashboard()" class="text-gray-300 hover:text-white text-xl transition-colors">
                         <i class="fas fa-times"></i>
                     </button>
@@ -2118,12 +2118,12 @@
 
     <div id="chatPanel" class="hidden fixed bottom-20 right-8 w-[600px] bg-white shadow-2xl rounded-2xl border border-gray-200 flex-col z-[6000] overflow-hidden">
         <div class="bg-blue-600 p-3 text-white font-bold flex justify-between items-center">
-            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> 3W AI Agent</span>
+            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> NetAlytics AI Agent</span>
             <button onclick="toggleChat()" class="hover:text-blue-200"><i class="fas fa-times"></i></button>
         </div>
         <div id="chatMessages" class="h-[550px] overflow-y-auto p-4 flex flex-col gap-3 bg-gray-50 text-sm">
             <div class="self-start bg-white border border-gray-200 text-gray-800 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl shadow-sm max-w-[95%] w-full">
-                Hello! I am your 3W capacity planning assistant. Ask me to find a site or analyze congestion.
+                Hello! I am your NetAlytics capacity planning assistant. Ask me to find a site or analyze congestion.
             </div>
         </div>
         <form onsubmit="handleChatSubmit(event)" class="p-3 border-t border-gray-200 bg-white flex gap-2">
@@ -2344,6 +2344,18 @@
             // Close dropdowns
             document.getElementById('toolsDropdown')?.classList.add('hidden');
             document.getElementById('opsDropdown')?.classList.add('hidden');
+
+            // Close sliding panels unless staying on map or genset
+            if (tab !== 'map' && tab !== 'genset') {
+                ['annotationPanel','tasksPanel','notesPanel'].forEach(id => {
+                    document.getElementById(id)?.classList.remove('open');
+                });
+                // Reset button active states
+                document.getElementById('annotationBtn')?.classList.remove('active');
+                document.getElementById('notesBtn')?.classList.remove('active');
+                if (typeof annPanelOpen !== 'undefined') annPanelOpen = false;
+                if (typeof cancelDraw === 'function') try { cancelDraw(); } catch(e) {}
+            }
 
             if (tab === 'dashboard') {
                 if (dashboardView) dashboardView.style.display = 'block';
@@ -4161,6 +4173,17 @@
         // Leaflet.draw feature group (replaces drawnItems)
         var drawnItems = new L.FeatureGroup();
         map.addLayer(drawnItems);
+        var drawnItemsGenset = null; // initialised in initGensetMap
+
+        // Returns the currently visible annotation map (coverage or genset)
+        function _annMap() {
+            const gc = document.getElementById('gensetContainer');
+            return (typeof gensetMap !== 'undefined' && gensetMap && gc && gc.style.display !== 'none')
+                ? gensetMap : map;
+        }
+        function _annDrawnItems() {
+            return _annMap() === gensetMap ? drawnItemsGenset : drawnItems;
+        }
 
         // --- HELPERS ---
         function statusBorderColor(status) {
@@ -4241,11 +4264,12 @@
             document.getElementById('drawHintText').textContent = drawHints[type] || 'Draw on the map.';
             hint.classList.remove('hidden');
             const options = { shapeOptions: { color: '#2563eb', fillColor: '#2563eb', fillOpacity: 0.2, weight: 2 } };
-            if      (type === 'marker')    currentDrawHandler = new L.Draw.Marker(map, {});
-            else if (type === 'polyline')  currentDrawHandler = new L.Draw.Polyline(map, options);
-            else if (type === 'polygon')   currentDrawHandler = new L.Draw.Polygon(map, options);
-            else if (type === 'rectangle') currentDrawHandler = new L.Draw.Rectangle(map, options);
-            else if (type === 'circle')    currentDrawHandler = new L.Draw.Circle(map, options);
+            const activeMap = _annMap();
+            if      (type === 'marker')    currentDrawHandler = new L.Draw.Marker(activeMap, {});
+            else if (type === 'polyline')  currentDrawHandler = new L.Draw.Polyline(activeMap, options);
+            else if (type === 'polygon')   currentDrawHandler = new L.Draw.Polygon(activeMap, options);
+            else if (type === 'rectangle') currentDrawHandler = new L.Draw.Rectangle(activeMap, options);
+            else if (type === 'circle')    currentDrawHandler = new L.Draw.Circle(activeMap, options);
             if (currentDrawHandler) {
                 currentDrawHandler.enable();
                 const btnMap = { marker: 0, polyline: 1, polygon: 2, rectangle: 3, circle: 4 };
@@ -4260,7 +4284,7 @@
                 currentDrawHandler = null;
             }
             if (pendingLayer) {
-                try { map.removeLayer(pendingLayer); } catch(e) {}
+                try { _annMap().removeLayer(pendingLayer); } catch(e) {}
                 pendingLayer = null;
             }
             const hint = document.getElementById('drawHint');
@@ -4268,10 +4292,10 @@
             document.querySelectorAll('.draw-tool-btn').forEach(b => b.classList.remove('active'));
         }
 
-        // Listen for drawn shapes — opens the proper Create Modal
-        map.on(L.Draw.Event.CREATED, function(e) {
+        // Draw CREATED handler — shared by both maps
+        function _onDrawCreated(e) {
             pendingLayer = e.layer;
-            pendingLayer.addTo(map);
+            pendingLayer.addTo(_annMap());
 
             const layerType = e.layerType;
             const typeMap = { marker: 'point', polyline: 'polyline', polygon: 'polygon', rectangle: 'rectangle', circle: 'circle' };
@@ -4310,7 +4334,10 @@
             const hint = document.getElementById('drawHint');
             if (hint) hint.classList.add('hidden');
             document.querySelectorAll('.draw-tool-btn').forEach(b => b.classList.remove('active'));
-        });
+        }
+
+        // Register on coverage map now; genset map registered in initGensetMap
+        map.on(L.Draw.Event.CREATED, _onDrawCreated);
 
         // --- SAVE NEW ANNOTATION ---
         async function saveAnnotation() {
@@ -4429,7 +4456,11 @@
 
         // --- RENDER ANNOTATION LAYERS ON MAP ---
         function renderAnnotationLayers(anns) {
-            Object.values(annotationLayers).forEach(l => { try { map.removeLayer(l); } catch(e) {} });
+            // Clear from both maps
+            Object.values(annotationLayers).forEach(l => {
+                try { map.removeLayer(l); } catch(e) {}
+                try { if (gensetMap) gensetMap.removeLayer(l); } catch(e) {}
+            });
             annotationLayers = {};
 
             anns.forEach(a => {
@@ -4463,7 +4494,10 @@
                     if (layer) {
                         layer.bindTooltip(`<b>${escHtml(a.title)}</b><br><span class="status-badge status-${a.status}">${a.status}</span>`, { sticky: true });
                         layer.on('click', () => openDetailModal(a.id));
-                        if (!hiddenAnnotations.has(a.id)) layer.addTo(map);
+                        if (!hiddenAnnotations.has(a.id)) {
+                            layer.addTo(map);
+                            if (gensetMap) layer.addTo(gensetMap);
+                        }
                         annotationLayers[a.id] = layer;
                     }
                 } catch(e) { console.warn('Could not render annotation', a.id, e); }
@@ -4475,10 +4509,16 @@
             e.stopPropagation();
             if (hiddenAnnotations.has(id)) {
                 hiddenAnnotations.delete(id);
-                if (annotationLayers[id]) annotationLayers[id].addTo(map);
+                if (annotationLayers[id]) {
+                    annotationLayers[id].addTo(map);
+                    if (gensetMap) try { annotationLayers[id].addTo(gensetMap); } catch(ex) {}
+                }
             } else {
                 hiddenAnnotations.add(id);
-                if (annotationLayers[id]) { try { map.removeLayer(annotationLayers[id]); } catch(e) {} }
+                if (annotationLayers[id]) {
+                    try { map.removeLayer(annotationLayers[id]); } catch(e) {}
+                    try { if (gensetMap) gensetMap.removeLayer(annotationLayers[id]); } catch(e) {}
+                }
             }
             const card   = document.getElementById('ann-card-' + id);
             const eyeBtn = document.getElementById('ann-eye-' + id);
@@ -4497,15 +4537,24 @@
             Object.entries(annotationLayers).forEach(([id, layer]) => {
                 try {
                     if (annotationsVisible) {
-                        if (!hiddenAnnotations.has(parseInt(id))) layer.addTo(map);
+                        if (!hiddenAnnotations.has(parseInt(id))) {
+                            layer.addTo(map);
+                            if (gensetMap) try { layer.addTo(gensetMap); } catch(ex) {}
+                        }
                     } else {
                         map.removeLayer(layer);
+                        if (gensetMap) try { gensetMap.removeLayer(layer); } catch(ex) {}
                     }
                 } catch(e) {}
             });
             try {
-                if (annotationsVisible) { if (!map.hasLayer(drawnItems)) map.addLayer(drawnItems); }
-                else { if (map.hasLayer(drawnItems)) map.removeLayer(drawnItems); }
+                if (annotationsVisible) {
+                    if (!map.hasLayer(drawnItems)) map.addLayer(drawnItems);
+                    if (gensetMap && drawnItemsGenset && !gensetMap.hasLayer(drawnItemsGenset)) gensetMap.addLayer(drawnItemsGenset);
+                } else {
+                    if (map.hasLayer(drawnItems)) map.removeLayer(drawnItems);
+                    if (gensetMap && drawnItemsGenset && gensetMap.hasLayer(drawnItemsGenset)) gensetMap.removeLayer(drawnItemsGenset);
+                }
             } catch(e) {}
             if (eyeBtn) {
                 eyeBtn.innerHTML = annotationsVisible ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
@@ -6534,6 +6583,10 @@
 
         gsSatLayer.addTo(gensetMap);
         gsLabelsLayer.addTo(gensetMap);
+
+        // Annotation drawing support on genset map
+        drawnItemsGenset = new L.FeatureGroup().addTo(gensetMap);
+        gensetMap.on(L.Draw.Event.CREATED, _onDrawCreated);
 
         // Attach geo-pick click handler
         gensetMap.on('click', function(e) {
