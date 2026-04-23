@@ -850,14 +850,6 @@
                     <span class="layer-menu-label">Signal Noise (-1)</span>
                     <div class="layer-toggle-switch" id="toggle-noise"><div class="layer-toggle-knob"></div></div>
                 </label>
-
-                <label class="layer-menu-item" id="lyr-viewshed" onclick="toggleViewshedLayer()">
-                    <div class="layer-menu-icon" style="background:linear-gradient(135deg,#0ea5e9,#7c3aed);">
-                        <i class="fas fa-eye" style="color:white;font-size:0.65rem;"></i>
-                    </div>
-                    <span class="layer-menu-label">Viewshed</span>
-                    <div class="layer-toggle-switch" id="toggle-viewshed"><div class="layer-toggle-knob"></div></div>
-                </label>
             </div>
         </div>
     </div>
@@ -1532,22 +1524,6 @@
                             style="display:none; width:60px; accent-color:#c2410c; height:3px; cursor:pointer;">
                         <span id="gsDemOpacityVal" style="display:none; font-size:0.62rem; font-weight:700; color:#c2410c; min-width:26px; text-align:right;">55%</span>
                         <div id="gsDemSwitch" style="width:32px; height:17px; border-radius:9px; background:#d1d5db; position:relative; transition:background 0.2s; pointer-events:none; flex-shrink:0;">
-                            <div style="position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:white; box-shadow:0 1px 3px rgba(0,0,0,0.25); transition:left 0.2s;"></div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Viewshed toggle row -->
-                <div style="display:flex; align-items:center; justify-content:space-between; padding:5px 8px; background:#eff6ff; border-radius:7px; border:1px solid #bfdbfe; cursor:pointer; margin-top:5px;" onclick="gsToggleViewshed()">
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <i class="fas fa-eye" style="color:#2563eb; font-size:0.7rem;"></i>
-                        <span style="font-size:0.7rem; font-weight:700; color:#1e40af;">Viewshed</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <input id="gsViewshedOpacitySlider" type="range" min="10" max="100" value="50"
-                            oninput="gsSetViewshedOpacity(this.value)" onclick="event.stopPropagation()"
-                            style="display:none; width:60px; accent-color:#2563eb; height:3px; cursor:pointer;">
-                        <span id="gsViewshedOpacityVal" style="display:none; font-size:0.62rem; font-weight:700; color:#2563eb; min-width:26px; text-align:right;">50%</span>
-                        <div id="gsViewshedSwitch" style="width:32px; height:17px; border-radius:9px; background:#d1d5db; position:relative; transition:background 0.2s; pointer-events:none; flex-shrink:0;">
                             <div style="position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:white; box-shadow:0 1px 3px rgba(0,0,0,0.25); transition:left 0.2s;"></div>
                         </div>
                     </div>
@@ -2970,12 +2946,8 @@
             '2g':       false,
             mr:         true,   // added via .addTo(map)
             ookla:      true,   // added via .addTo(map)
-            noise:      false,
-            viewshed:   false
+            noise:      false
         };
-
-        // ── Viewshed (Coverage Map) ──
-        var viewshedLayer = null;  // L.layerGroup, built lazily on first activation
 
         var layerMap = {}; // populated after layers are declared
 
@@ -3043,25 +3015,6 @@
                 sw.classList.add('active');
             } else {
                 map.removeLayer(layer);
-                sw.classList.remove('active');
-            }
-        }
-
-        /* ── Viewshed toggle (Coverage Map) ─────────────────────────────── */
-        function toggleViewshedLayer() {
-            const sw = document.getElementById('toggle-viewshed');
-            if (!sw) return;
-            layerStates['viewshed'] = !layerStates['viewshed'];
-
-            if (layerStates['viewshed']) {
-                if (!viewshedLayer) {
-                    viewshedLayer = L.layerGroup();
-                    _buildViewshedOnMap(viewshedLayer, map);
-                }
-                viewshedLayer.addTo(map);
-                sw.classList.add('active');
-            } else {
-                if (viewshedLayer) map.removeLayer(viewshedLayer);
                 sw.classList.remove('active');
             }
         }
@@ -6695,89 +6648,6 @@
     function gsSetDemOpacity(val) {
         if (gsDemLayer) gsDemLayer.setOpacity(val / 100);
         document.getElementById('gsDemOpacityVal').textContent = val + '%';
-    }
-
-    /* ── Viewshed (Genset map) ─────────────────────────────────────────── */
-    var gsViewshedActive  = false;
-    var gsViewshedLayer   = null;   // L.layerGroup, built lazily
-    var gsViewshedOpacity = 0.50;   // 0..1
-
-    function gsToggleViewshed() {
-        if (!gensetMap) return;
-        const sw      = document.getElementById('gsViewshedSwitch');
-        const knob    = sw ? sw.querySelector('div') : null;
-        const slider  = document.getElementById('gsViewshedOpacitySlider');
-        const valLbl  = document.getElementById('gsViewshedOpacityVal');
-
-        if (gsViewshedActive) {
-            if (gsViewshedLayer) gensetMap.removeLayer(gsViewshedLayer);
-            gsViewshedActive = false;
-            if (sw)    { sw.style.background = '#d1d5db'; }
-            if (knob)  { knob.style.left = '2px'; }
-            if (slider){ slider.style.display = 'none'; }
-            if (valLbl){ valLbl.style.display = 'none'; }
-        } else {
-            if (!gsViewshedLayer) {
-                gsViewshedLayer = L.layerGroup();
-                _buildViewshedOnMap(gsViewshedLayer, gensetMap);
-            }
-            gsViewshedLayer.addTo(gensetMap);
-            gsViewshedActive = true;
-            if (sw)    { sw.style.background = '#2563eb'; }
-            if (knob)  { knob.style.left = '17px'; }
-            if (slider){ slider.style.display = 'inline-block'; }
-            if (valLbl){ valLbl.style.display = 'inline-block'; }
-        }
-    }
-
-    function gsSetViewshedOpacity(val) {
-        gsViewshedOpacity = val / 100;
-        if (gsViewshedLayer) {
-            gsViewshedLayer.eachLayer(function(l) {
-                if (l.setStyle) l.setStyle({ fillOpacity: gsViewshedOpacity * 0.14 });
-            });
-        }
-        const lbl = document.getElementById('gsViewshedOpacityVal');
-        if (lbl) lbl.textContent = val + '%';
-    }
-
-    /**
-     * Shared viewshed builder used by both Coverage Map and Genset map.
-     * Reads from gensetSitesData (Genset) or siteDataCache (Coverage Map).
-     */
-    function _buildViewshedOnMap(layerGroup, targetMap) {
-        var radiusDefault = 3000;
-        // Prefer gensetSitesData when building for gensetMap
-        var sites = [];
-        if (targetMap === gensetMap && typeof gensetSitesData !== 'undefined' && gensetSitesData.length) {
-            sites = gensetSitesData;
-        } else if (typeof siteDataCache !== 'undefined' && siteDataCache.length) {
-            sites = siteDataCache;
-        }
-
-        if (!sites.length) {
-            var center = targetMap.getCenter();
-            L.circle([center.lat, center.lng], {
-                radius: 5000, color: '#7c3aed', weight: 1,
-                fillColor: '#7c3aed', fillOpacity: 0.10, dashArray: '6,4'
-            }).bindPopup('<b>Viewshed</b><br>No site data loaded yet — select a site first.').addTo(layerGroup);
-            return;
-        }
-
-        sites.forEach(function(site) {
-            var lat = parseFloat(site.lat), lng = parseFloat(site.lng);
-            if (isNaN(lat) || isNaN(lng)) return;
-            var h = parseFloat(site.antenna_height || site.height || 0);
-            var radius = h > 0 ? Math.min(Math.max(h * 80, 1500), 8000) : radiusDefault;
-            L.circle([lat, lng], {
-                radius: radius,
-                color:       '#7c3aed',
-                weight:      0.5,
-                fillColor:   '#a855f7',
-                fillOpacity: 0.07,
-                interactive: false
-            }).addTo(layerGroup);
-        });
     }
 
     // ── Sites loader ──
