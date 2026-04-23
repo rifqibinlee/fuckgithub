@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>3W</title>
+  <title>3W - Unified Platfor</title>
 
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -37,378 +37,278 @@
   <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.122/Build/Cesium/Widgets/widgets.css">
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.122/Build/Cesium/Cesium.js"></script>
   <!-- SheetJS for Excel parsing -->
+  <!-- Corporate fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
     <style>
+        /* ═══════════════════════════════════════════════════
+           CORPORATE THEME — Navy · White · Gray
+           Primary: #0f2d52  Accent: #1e3a8a  Gray: #64748b
+        ═══════════════════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; color: #1e293b; }
+
+        /* ── UTILITY ── */
         .table-container { overflow-x: auto; }
         .dt-buttons { display: none !important; }
         .hidden { display: none; }
-        .tooltip { position: relative; display: inline-block; }
-        .tooltip .tooltiptext { visibility: hidden; width: 450px; background:#1f2937; color:#fff; text-align:left; border-radius:8px; padding:16px; position:absolute; z-index:1000; bottom:125%; left:50%; margin-left:-225px; opacity:0; transition:opacity .3s; box-shadow:0 4px 6px rgba(0,0,0,.3); }
-        .tooltip:hover .tooltiptext { visibility:visible; opacity:1; }
-        .info-card { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:20px; border-radius:12px; margin-bottom:24px; box-shadow:0 4px 6px rgba(0,0,0,.1); }
-        .section-header { background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%); color:white; padding:16px 24px; border-radius:12px; margin-bottom:16px; display:flex;align-items:center; gap:12px; }
-        .status-badge { display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600; }
-        .status-processing { background:#fef3c7; color:#92400e; }
-        .status-complete { background:#d1fae5; color:#065f46; }
-        .status-error { background:#fee2e2; color:#991b1b; }
-        .actual-cell { color: #065f46; font-weight: 700; }
-        .pred-cell { color: #b45309; font-weight: 700; }
-        .congested-cell { color: #b91c1c; font-weight: 700; }
-        .top4-highlight { background:#ffcccc; border-radius:4px; }
-        .layer-calc-cell { background:#e0f2fe; color:#0369a1; font-weight:800; border:1px solid #bae6fd; }
 
-        .dataTable th, .dataTable td {
-            text-align: center !important;
-            vertical-align: middle !important;
-        }
-        .legend-box { display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 2px; }
+        /* ── TOOLTIP ── */
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext { visibility: hidden; width: 450px; background:#1e293b; color:#fff; text-align:left; border-radius:6px; padding:14px; position:absolute; z-index:1000; bottom:125%; left:50%; margin-left:-225px; opacity:0; transition:opacity .3s; box-shadow:0 4px 12px rgba(0,0,0,.25); }
+        .tooltip:hover .tooltiptext { visibility:visible; opacity:1; }
+
+        /* ── DASHBOARD CARDS ── */
+        .info-card { background: #0f2d52; color:white; padding:24px; border-radius:10px; margin-bottom:24px; box-shadow:0 2px 8px rgba(15,45,82,.18); border-left: 4px solid #3b82f6; }
+        .section-header { background:#1e293b; color:white; padding:14px 20px; border-radius:8px; margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+
+        /* ── STATUS BADGES ── */
+        .status-badge { display:inline-block; padding:3px 10px; border-radius:4px; font-size:11px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; }
+        .status-processing { background:#e2e8f0; color:#475569; }
+        .status-complete   { background:#d1fae5; color:#065f46; }
+        .status-error      { background:#fee2e2; color:#991b1b; }
+
+        /* ── TABLE CELLS ── */
+        .actual-cell    { color: #065f46; font-weight: 700; }
+        .pred-cell      { color: #92400e; font-weight: 700; }
+        .congested-cell { color: #b91c1c; font-weight: 700; }
+        .top4-highlight { background:#ffe4e6; border-radius:3px; }
+        .layer-calc-cell { background:#dbeafe; color:#1e40af; font-weight:800; border:1px solid #bfdbfe; }
+        .dataTable th, .dataTable td { text-align: center !important; vertical-align: middle !important; }
+        .legend-box  { display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 2px; }
         .legend-item { display: inline-flex; align-items: center; margin-right: 15px; font-size: 0.85rem; color: #374151; }
 
-        .autocomplete-results {
-            position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 50; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        .autocomplete-item { padding: 8px 12px; cursor: pointer; transition: background-color 0.2s; font-size: 0.9rem; color: #374151; }
-        .autocomplete-item:hover { background-color: #f3f4f6; color: #2563eb; }
-        table.dataTable tbody tr.selected { background-color: #dbeafe !important; }
+        /* ── AUTOCOMPLETE ── */
+        .autocomplete-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 5000; box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+        .autocomplete-item { padding: 8px 12px; cursor: pointer; font-size: 0.88rem; color: #374151; transition: background .15s; }
+        .autocomplete-item:hover { background: #f1f5f9; color: #0f2d52; }
+        table.dataTable tbody tr.selected    { background-color: #dbeafe !important; }
         table.dataTable tbody tr.selected td { font-weight: bold; color: #1e3a8a; border-top: 1px solid #93c5fd; border-bottom: 1px solid #93c5fd; }
 
-        #mapView, #mapContainer { position: absolute; top: 72px; bottom: 0; left: 0; right: 0; overflow: hidden; background: #f3f4f6;}
-        #sidebar { position: absolute; top: 0; left: 0; bottom: 0; width: 350px; background-color: #ffffff; color: #1f2937; z-index: 1000; padding: 20px; box-shadow: 2px 015px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 15px; border-right: 1px solid #e5e7eb; overflow-y: auto; }
+        /* ── MAP / SIDEBAR LAYOUT ── */
+        #mapView, #mapContainer { position: absolute; top: 72px; bottom: 0; left: 0; right: 0; overflow: hidden; background: #f1f5f9; }
+        #sidebar { position: absolute; top: 0; left: 0; bottom: 0; width: 350px; background: #ffffff; color: #1e293b; z-index: 1000; padding: 20px; box-shadow: 1px 0 0 #e2e8f0, 4px 0 16px rgba(0,0,0,.06); display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
         #map { position: absolute; top: 0; right: 0; bottom: 0; left: 350px; z-index: 1; }
-        .control-group { background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; }
-        .control-label { font-size: 0.7rem; font-weight: 700; color: #4b5563; text-transform: uppercase; margin-bottom: 6px; display: block; }
-        .light-input { width: 100%; background: #ffffff; border: 1px solid #d1d5db; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; outline: none; }
+        .control-group { background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .control-label { font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing:.06em; margin-bottom: 6px; display: block; }
+        .light-input { width: 100%; background: #ffffff; border: 1px solid #d1d5db; padding: 7px 10px; border-radius: 5px; font-size: 0.84rem; outline: none; transition: border-color .2s; }
+        .light-input:focus { border-color: #1e3a8a; box-shadow: 0 0 0 3px rgba(30,58,138,.08); }
 
-        /* POPUP STYLES */
-        .leaflet-popup-content-wrapper { background: #ffffff; color: #1f2937; border-radius: 8px; padding: 0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); overflow: hidden; }
+        /* ── POPUP ── */
+        .leaflet-popup-content-wrapper { background: #ffffff; color: #1e293b; border-radius: 6px; padding: 0; box-shadow: 0 8px 24px rgba(0,0,0,.12); overflow: hidden; }
         .leaflet-popup-content { margin: 0; min-width: 750px !important; }
-        .popup-header { background: linear-gradient(to right, #2563eb, #1d4ed8); padding: 12px 16px; color: white; display: flex; flex-direction: column; gap: 8px; position: relative; }
-        .popup-header.header-congested { background: linear-gradient(to right, #dc2626, #991b1b); }
-        .popup-title { font-size: 1.2rem; font-weight: 900; letter-spacing: 0.5px; line-height: 1.1; }
-        .popup-sub { font-size: 0.75rem; color: #bfdbfe; font-weight: 600; }
+        .popup-header { background: #0f2d52; padding: 12px 16px; color: white; display: flex; flex-direction: column; gap: 6px; position: relative; }
+        .popup-header.header-congested { background: #991b1b; }
+        .popup-title { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.3px; }
+        .popup-sub   { font-size: 0.72rem; color: #93c5fd; font-weight: 600; }
 
-        /* TABLE & MATRIX STYLES */
+        /* ── TABLE & MATRIX ── */
         .sector-table-container { max-height: 280px; overflow-y: auto; }
         .sector-table, .matrix-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        .sector-table th, .matrix-table th { background: #f3f4f6; color: #4b5563; font-weight: 800; padding: 8px; position: sticky; top: 0; border-bottom: 2px solid #e5e7eb; }
-        .sector-table td, .matrix-table td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
-        .sector-table td:first-child, .matrix-table td:first-child { text-align: left; font-weight: 700; color: #2563eb; }
+        .sector-table th, .matrix-table th { background: #f1f5f9; color: #475569; font-weight: 700; padding: 8px; position: sticky; top: 0; border-bottom: 2px solid #e2e8f0; font-size:.8rem; }
+        .sector-table td, .matrix-table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; }
+        .sector-table td:first-child, .matrix-table td:first-child { text-align: left; font-weight: 700; color: #1e3a8a; }
+        .matrix-yes { background: #d1fae5; color: #065f46; font-weight: 800; }
+        .matrix-no  { background: #fee2e2; color: #991b1b; }
+        .val-alert  { color: #dc2626 !important; font-weight: 900 !important; background: #fff1f2; }
 
-        .matrix-yes { background-color: #d1fae5; color: #065f46; font-weight: 900; }
-        .matrix-no { background-color: #fee2e2; color: #991b1b; }
-        .val-alert { color: #dc2626 !important; font-weight: 900 !important; background-color: #fef2f2; }
+        /* ── BADGES & CLUSTERS ── */
+        .badge          { padding: 2px 7px; border-radius: 3px; font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing:.04em; }
+        .badge-celcom   { background: #1e3a8a; color: white; }
+        .badge-digi     { background: #92400e; color: white; }
+        .badge-normal   { background: #065f46; color: white; }
+        .badge-congested{ background: #dc2626; color: white; animation: pulse-bg 2s infinite; }
+        .badge-urban    { background: #4c1d95; color: white; }
+        .badge-outside  { background: #134e4a; color: white; }
+        @keyframes pulse-bg { 0%,100% { opacity:1; } 50% { opacity:.7; } }
 
-        /* BADGES & CLUSTERS */
-        .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .badge-celcom { background: #1e40af; color: white; }
-        .badge-digi { background: #ca8a04; color: white; }
-        .badge-normal { background: #059669; color: white; }
-        .badge-congested { background: #dc2626; color: white; animation: pulse-bg 2s infinite; }
-        .badge-urban { background: #7e22ce; color: white; border: 1px solid #d8b4fe; }
-        .badge-outside { background: #0f766e; color: white; border: 1px solid #99f6e4; }
+        .cluster-base      { border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: 0 2px 8px rgba(0,0,0,.18); width: 40px; height: 40px; font-size:.8rem; }
+        .cluster-normal    { background: #ffffff; color: #1e3a8a; border: 2px solid #1e3a8a; }
+        .cluster-congested { background: #ffffff; color: #dc2626; border: 2px solid #dc2626; animation: pulse-cluster 2s infinite; }
+        @keyframes pulse-cluster { 0% { box-shadow: 0 0 0 0 rgba(220,38,38,.6); } 70% { box-shadow: 0 0 0 10px rgba(220,38,38,0); } 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); } }
 
-        @keyframes pulse-bg { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .header-btn { position: absolute; right: 14px; bottom: 10px; background: rgba(255,255,255,.9); color: #0f2d52; font-weight: 800; font-size: 0.68rem; padding: 4px 10px; border-radius: 3px; box-shadow: 0 1px 4px rgba(0,0,0,.15); transition: all .2s; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .header-btn:hover { background: #fff; }
 
-        .cluster-base { border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; box-shadow: 0 4px 10px rgba(0,0,0,0.2); width: 40px; height: 40px; }
-        .cluster-normal { background-color: #ffffff; color: #0056b3; border: 2px solid #0056b3; }
-        .cluster-congested { background-color: #ffffff; color: #d90429; border: 2px solid #d90429; animation: pulse-cluster 2s infinite; }
-        @keyframes pulse-cluster { 0% { box-shadow: 0 0 0 0 rgba(217, 4, 41, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(217, 4, 41, 0); } 100% { box-shadow: 0 0 0 0 rgba(217, 4, 41, 0); } }
+        /* ── LAYER CONTROL ── */
+        #mapLayerControl { position: absolute; bottom: 24px; left: 366px; z-index: 1100; transition: left .3s cubic-bezier(.4,0,.2,1); }
+        #layerMenuBtn { display: flex; align-items: center; gap: 8px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 7px 11px 7px 9px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.12); transition: box-shadow .2s, background .15s; user-select: none; white-space: nowrap; }
+        #layerMenuBtn:hover  { background: #f8fafc; box-shadow: 0 2px 8px rgba(0,0,0,.14); }
+        #layerMenuBtn:active { background: #f1f5f9; }
+        .traffic-btn-icon { width: 30px; height: 30px; border-radius: 5px; background: #0f2d52; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .layer-menu-item { display: flex; align-items: center; gap: 10px; padding: 7px 14px; cursor: pointer; transition: background .15s; user-select: none; }
+        .layer-menu-item:hover { background: #f8fafc; }
+        .layer-menu-icon  { width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .layer-menu-label { flex: 1; font-size: .78rem; font-weight: 500; color: #374151; }
+        .layer-toggle-switch { width: 32px; height: 17px; border-radius: 9px; background: #d1d5db; position: relative; flex-shrink: 0; transition: background .2s; pointer-events: none; }
+        .layer-toggle-switch.active { background: #1e3a8a; }
+        .layer-toggle-knob  { position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: white; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: left .2s; }
+        .layer-toggle-switch.active .layer-toggle-knob { left: 17px; }
 
-        .header-btn { position: absolute; right: 16px; bottom: 12px; background: rgba(255,255,255,0.9); color: #1e40af; font-weight: 900; font-size: 0.7rem; padding: 4px 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: all 0.2s; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-        .header-btn:hover { background: #ffffff; transform: translateY(-1px); }
+        /* ── MODALS ── */
+        .plot-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 5000; align-items: center; justify-content: center; }
+        .plot-modal { background: white; width: 95%; height: 90%; border-radius: 10px; box-shadow: 0 25px 50px rgba(0,0,0,.25); display: flex; flex-direction: column; overflow: hidden; }
+        .plot-modal-header { background: #0f2d52; color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .plot-modal-body { flex: 1; padding: 20px; overflow-y: auto; background: #f8fafc; }
 
-        /* Google Maps-style Layer Control */
-        #mapLayerControl {
-            position: absolute;
-            bottom: 24px;
-            left: 366px;
-            z-index: 1100;
-            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        #layerMenuBtn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #ffffff;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 8px 12px 8px 10px;
-            cursor: pointer;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.18);
-            transition: box-shadow 0.2s, border-color 0.2s, background 0.15s;
-            user-select: none;
-            white-space: nowrap;
-        }
-        #layerMenuBtn:hover { background: #f9fafb; box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
-        #layerMenuBtn:active { background: #f3f4f6; }
-        .traffic-btn-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            background: linear-gradient(135deg, #34a853 0%, #fbbc04 40%, #ea4335 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            position: relative;
-            overflow: hidden;
-        }
-        .traffic-btn-icon::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: repeating-linear-gradient(90deg, transparent 0px, transparent 3px, rgba(255,255,255,0.18) 3px, rgba(255,255,255,0.18) 5px);
-        }
-        .layer-menu-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 7px 14px;
-            cursor: pointer;
-            transition: background 0.15s;
-            user-select: none;
-        }
-        .layer-menu-item:hover { background: #f9fafb; }
-        .layer-menu-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .layer-menu-label {
-            flex: 1;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #374151;
-        }
-        .layer-toggle-switch {
-            width: 34px;
-            height: 18px;
-            border-radius: 9px;
-            background: #d1d5db;
-            position: relative;
-            flex-shrink: 0;
-            transition: background 0.2s;
-            pointer-events: none;
-        }
-        .layer-toggle-switch.active { background: #2563eb; }
-        .layer-toggle-knob {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-            transition: left 0.2s;
-        }
-        .layer-toggle-switch.active .layer-toggle-knob { left: 18px; }
+        .shape-square   { width: 10px; height: 10px; border: 1px solid white; opacity: .85; box-shadow: 1px 1px 3px rgba(0,0,0,.3); }
+        .shape-triangle { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 12px solid; opacity: .85; }
 
-        .plot-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 5000; align-items: center; justify-content: center; }
-        .plot-modal { background: white; width: 95%; height: 90%; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; overflow: hidden; }
-        .plot-modal-header { background: linear-gradient(90deg, #f472b6 0%, #ec4899 100%); color: white; padding: 16px 24px; display: flex; justify-content: space-between;align-items: center; }
-        .plot-modal-body { flex: 1; padding: 20px; overflow-y: auto; background: #f9fafb; }
-
-        .shape-square { width: 10px; height: 10px; border: 1px solid white; opacity: 0.85; box-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
-        .shape-triangle { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 12px solid; opacity: 0.85; filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.4)); }
-
-        .autocomplete-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 5000; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .autocomplete-item { padding: 8px 12px; cursor: pointer; transition: background-color 0.2s; font-size: 0.9rem; color: #374151; }
-        .autocomplete-item:hover { background-color: #f3f4f6; color: #2563eb; }
-
-        .nav {z-index: 9999 !important;}
-      
-        /* Sidebar Collapsing Animations */
-        #sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* ── SIDEBAR COLLAPSE ── */
+        #sidebar { transition: transform .3s cubic-bezier(.4,0,.2,1); }
         #sidebar.collapsed { transform: translateX(-100%); }
-
-        #sidebarToggle {
-            position: absolute; left: 350px; top: 50%; transform: translateY(-50%); width: 24px; height: 48px; background: #2563eb; border: none; border-radius: 0 8px 8px 0; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.1); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s;
-        }
-        /* Tool buttons and sidebar toggle are positioned relative to #mapContainer */
-        #annotationBtn { top: 10px; left: 370px; background: #1d4ed8; }
-        #notesBtn      { top: 10px; left: 422px; background: #6d28d9; }
-        #pricingBtn    { top: 10px; left: 474px; background: #059669; }
-        #tasksBtn      { top: 10px; left: 526px; background: #d97706; }
-        #dashboardBtn  { top: 10px; left: 578px; background: #0ea5e9; }
-        #showAnnotationsBtn { top: 62px; left: 370px; background: #1d4ed8; }
-
-        /* Adjust positions when sidebar collapses */
-        #sidebar.collapsed ~ #sidebarToggle,
-        #sidebar.collapsed ~ #annotationBtn     { left: 30px !important; }
-        #sidebar.collapsed ~ #notesBtn          { left: 82px !important; }
-        #sidebar.collapsed ~ #pricingBtn        { left: 134px !important; }
-        #sidebar.collapsed ~ #tasksBtn          { left: 186px !important; }
-        #sidebar.collapsed ~ #dashboardBtn      { left: 238px !important; }
-        #sidebar.collapsed ~ #showAnnotationsBtn { left: 30px !important; }
-        #sidebarToggle:hover { background: #1d4ed8; width: 28px; }
+        #sidebarToggle { position: absolute; left: 350px; top: 50%; transform: translateY(-50%); width: 22px; height: 44px; background: #0f2d52; border: none; border-radius: 0 6px 6px 0; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1000; box-shadow: 2px 0 8px rgba(0,0,0,.12); transition: left .3s cubic-bezier(.4,0,.2,1), background .2s; }
+        #sidebarToggle:hover { background: #1e3a8a; width: 26px; }
         #sidebarToggle.collapsed { left: 0; }
-        #sidebarToggle i { transition: transform 0.2s; }
+        #sidebarToggle i { transition: transform .2s; }
         #sidebarToggle.collapsed i { transform: rotate(180deg); }
-
-        #map { transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #map { transition: left .3s cubic-bezier(.4,0,.2,1); }
         #map.expanded { left: 0; }
 
-        /* Colorful Toolbar Buttons */
-        .tool-icon-btn { position: absolute; z-index: 1200; color: white; border: none; border-radius: 50%; width: 42px; height: 42px; font-size: 1rem; cursor: pointer; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 4px 14px rgba(0,0,0,0.2); transition: all 0.2s, left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .tool-icon-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        /* ── TOOL BUTTONS ── */
+        #annotationBtn    { top: 10px; left: 370px; background: #1e3a8a; }
+        #notesBtn         { top: 10px; left: 422px; background: #334155; }
+        #pricingBtn       { top: 10px; left: 474px; background: #065f46; }
+        #tasksBtn         { top: 10px; left: 526px; background: #1e3a8a; }
+        #dashboardBtn     { top: 10px; left: 578px; background: #0f2d52; }
+        #showAnnotationsBtn { top: 62px; left: 370px; background: #1e3a8a; }
+        #sidebar.collapsed ~ #sidebarToggle,
+        #sidebar.collapsed ~ #annotationBtn   { left: 30px !important; }
+        #sidebar.collapsed ~ #notesBtn        { left: 82px !important; }
+        #sidebar.collapsed ~ #pricingBtn      { left: 134px !important; }
+        #sidebar.collapsed ~ #tasksBtn        { left: 186px !important; }
+        #sidebar.collapsed ~ #dashboardBtn    { left: 238px !important; }
+        #sidebar.collapsed ~ #showAnnotationsBtn { left: 30px !important; }
+        .tool-icon-btn { position: absolute; z-index: 1200; color: white; border: none; border-radius: 6px; width: 40px; height: 40px; font-size: .9rem; cursor: pointer; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 2px 8px rgba(0,0,0,.18); transition: all .2s, left .3s cubic-bezier(.4,0,.2,1); }
+        .tool-icon-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+        #annotationBtn.active   { background: #dc2626; }
+        #notesBtn.active        { background: #dc2626; }
+        #showAnnotationsBtn.annotations-hidden { background: #64748b; }
 
-        /* Add this to force the embedded iframe to fill the container */
+        /* ── IFRAME ── */
         #metabaseEmbedContainer iframe { width: 100%; height: 100%; border: none; }
 
-
-        /* Sliding Panels */
-        .sliding-panel { position: fixed; top: 72px; right: 0; bottom: 0; width: 360px; background: #ffffff; z-index: 1500; display: flex; flex-direction: column; box-shadow: -4px 0 20px rgba(0,0,0,0.12); border-left: 1px solid #e5e7eb; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+        /* ── SLIDING PANELS ── */
+        .sliding-panel { position: fixed; top: 72px; right: 0; bottom: 0; width: 360px; background: #ffffff; z-index: 1500; display: flex; flex-direction: column; box-shadow: -2px 0 16px rgba(0,0,0,.1); border-left: 1px solid #e2e8f0; transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1); }
         .sliding-panel.open { transform: translateX(0); }
 
-        /* ===== PANEL RESIZE HANDLES ===== */
-        .panel-resize-handle {
-            position: absolute; top: 0; left: 0; bottom: 0; width: 6px;
-            cursor: ew-resize; z-index: 10; display: flex; align-items: center; justify-content: center;
-            transition: background 0.2s;
-        }
-        .panel-resize-handle::after {
-            content: ''; width: 2px; height: 40px; border-radius: 2px;
-            background: #d1d5db; transition: background 0.2s, height 0.2s;
-        }
-        .panel-resize-handle:hover::after, .panel-resize-handle.dragging::after { background: #2563eb; height: 60px; }
-        #tasksPanel .panel-resize-handle:hover::after, #tasksPanel .panel-resize-handle.dragging::after { background: #d97706; }
-        .panel-resize-handle:hover { background: rgba(37,99,235,0.06); }
-        #tasksPanel .panel-resize-handle:hover { background: rgba(217,119,6,0.06); }
+        /* Panel resize handles */
+        .panel-resize-handle { position: absolute; top: 0; left: 0; bottom: 0; width: 5px; cursor: ew-resize; z-index: 10; display: flex; align-items: center; justify-content: center; transition: background .2s; }
+        .panel-resize-handle::after { content: ''; width: 2px; height: 36px; border-radius: 2px; background: #e2e8f0; transition: background .2s, height .2s; }
+        .panel-resize-handle:hover::after, .panel-resize-handle.dragging::after { background: #1e3a8a; height: 56px; }
+        .panel-resize-handle:hover { background: rgba(30,58,138,.05); }
 
-        /* ===== NOTES & TASKS PANEL STYLES ===== */
-        .notes-panel-header { background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%); color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        .note-card { background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s; border-left: 4px solid #7c3aed; margin-bottom: 8px; }
-        .note-card:hover { background: #f3e8ff; box-shadow: 0 2px 8px rgba(124,58,237,0.15); }
+        /* Panel headers — unified corporate navy */
+        .ann-header          { background: #0f2d52; color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .notes-panel-header  { background: #0f2d52; color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .tasks-header        { background: #0f2d52; color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
 
-        .tasks-header { background: linear-gradient(135deg, #92400e 0%, #d97706 100%); color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        .task-card { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s; border-left: 4px solid #d97706; margin-bottom: 8px; }
-        .task-card:hover { background: #fef3c7; box-shadow: 0 2px 8px rgba(217,119,6,0.15); }
-        .task-card.priority-high { border-left-color: #dc2626; }
+        /* Cards in panels */
+        .note-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; cursor: pointer; transition: all .2s; border-left: 3px solid #1e3a8a; margin-bottom: 8px; }
+        .note-card:hover { background: #f1f5f9; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+        .task-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; cursor: pointer; transition: all .2s; border-left: 3px solid #334155; margin-bottom: 8px; }
+        .task-card:hover { background: #f1f5f9; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+        .task-card.priority-high     { border-left-color: #dc2626; }
         .task-card.priority-critical { border-left-color: #7c3aed; background: #faf5ff; border-color: #e9d5ff; }
-        .task-card.priority-low { border-left-color: #6b7280; }
-        .task-card.status-resolved { opacity: 0.6; background: #f0fdf4; border-color: #bbf7d0; border-left-color: #16a34a; }
-        .task-card.status-closed { opacity: 0.45; background: #f8fafc; border-color: #e2e8f0; border-left-color: #94a3b8; }
-        .task-card-title { font-size: 0.82rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
-        .task-card-desc { font-size: 0.72rem; color: #64748b; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .task-card-meta { font-size: 0.67rem; color: #78716c; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .task-priority-badge { padding: 2px 7px; border-radius: 12px; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; }
-        .task-priority-low { background: #f3f4f6; color: #6b7280; }
-        .task-priority-normal { background: #dbeafe; color: #1d4ed8; }
-        .task-priority-high { background: #fee2e2; color: #dc2626; }
+        .task-card.priority-low      { border-left-color: #94a3b8; }
+        .task-card.status-resolved   { opacity: .55; background: #f0fdf4; border-color: #bbf7d0; border-left-color: #16a34a; }
+        .task-card.status-closed     { opacity: .4; background: #f8fafc; border-color: #e2e8f0; border-left-color: #94a3b8; }
+        .task-card-title { font-size: .82rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+        .task-card-desc  { font-size: .72rem; color: #64748b; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .task-card-meta  { font-size: .67rem; color: #78716c; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .task-priority-badge    { padding: 2px 6px; border-radius: 3px; font-size: .58rem; font-weight: 800; text-transform: uppercase; }
+        .task-priority-low      { background: #f1f5f9; color: #64748b; }
+        .task-priority-normal   { background: #dbeafe; color: #1e3a8a; }
+        .task-priority-high     { background: #fee2e2; color: #dc2626; }
         .task-priority-critical { background: #ede9fe; color: #7c3aed; }
-        .task-assigner { font-size: 0.67rem; font-weight: 700; color: #d97706; }
-        .tasks-empty { text-align: center; padding: 48px 24px; color: #9ca3af; }
-        .tasks-empty i { font-size: 2.5rem; margin-bottom: 12px; display: block; }
-        .task-filter-bar { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; background: #fffbeb; display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
-        .task-stats-row { padding: 10px 12px; border-bottom: 1px solid #fde68a; background: #fef3c7; display: flex; gap: 16px; flex-shrink: 0; }
-        .task-stat { text-align: center; }
-        .task-stat-num { font-size: 1.1rem; font-weight: 900; color: #92400e; line-height: 1; }
-        .task-stat-label { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: #b45309; margin-top: 1px; }
-        .task-loc-btn { font-size: 0.65rem; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-radius: 4px; padding: 2px 7px; font-weight: 700; cursor:pointer; transition: all 0.15s; white-space: nowrap; }
-        .task-loc-btn:hover { background: #fde68a; }
+        .task-assigner  { font-size: .67rem; font-weight: 700; color: #475569; }
+        .tasks-empty    { text-align: center; padding: 48px 24px; color: #94a3b8; }
+        .tasks-empty i  { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+        .task-filter-bar  { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; background: #f8fafc; display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+        .task-stats-row   { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; background: #f1f5f9; display: flex; gap: 16px; flex-shrink: 0; }
+        .task-stat        { text-align: center; }
+        .task-stat-num    { font-size: 1.1rem; font-weight: 900; color: #0f2d52; line-height: 1; }
+        .task-stat-label  { font-size: .58rem; font-weight: 700; text-transform: uppercase; color: #64748b; margin-top: 1px; letter-spacing:.05em; }
+        .task-loc-btn     { font-size: .63rem; background: #f1f5f9; color: #0f2d52; border: 1px solid #e2e8f0; border-radius: 3px; padding: 2px 7px; font-weight: 700; cursor: pointer; transition: all .15s; }
+        .task-loc-btn:hover { background: #dbeafe; }
 
-        .comment-bubble { background: #f1f5f9; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
-        .comment-bubble .author { font-size: 0.7rem; font-weight: 700; color: #2563eb; }
-        .comment-bubble .body { font-size: 0.8rem; color: #374151; margin-top: 2px; }
-        .comment-bubble .time { font-size: 0.62rem; color: #94a3b8; }
-
-        /* Draw tool button style */
-        .draw-tool-btn { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 7px; border: 1px solid #e5e7eb; background: white; font-size: 0.72rem; font-weight: 700; cursor: pointer; transition: all 0.15s; color: #374151; }
-        .draw-tool-btn:hover { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; transform: translateY(-1px); }
-        .draw-tool-btn.active { background: #dbeafe; border-color: #2563eb; color: #1d4ed8; }
-
-        .ann-card-hidden { opacity: 0.45; background: #f1f5f9 !important; }
-        .ann-card-hidden:hover { background: #e2e8f0 !important; }
-        .ann-eye-btn { flex-shrink:0; background:none; border:none; cursor:pointer; color:#94a3b8; font-size:0.72rem; padding:2px 4px; border-radius:4px; transition:color 0.15s, background 0.15s; line-height:1; }
-        .ann-eye-btn:hover { color:#2563eb; background:#dbeafe; }
-        .ann-eye-btn.ann-eye-hidden { color:#cbd5e1; }
-        .ann-eye-btn.ann-eye-hidden:hover { color:#dc2626; background:#fee2e2; }
-        .ann-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-        .ann-header { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%); color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        .ann-tab { padding: 6px 14px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
-        .ann-tab.active { background: white; color: #1d4ed8; }
-        .ann-tab:not(.active) { color: rgba(255,255,255,0.75); border-color: rgba(255,255,255,0.3); }
-        .ann-tab:not(.active):hover { background: rgba(255,255,255,0.15); color: white; }
-        .ann-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s; border-left: 4px solid #2563eb; }
-        .ann-card:hover { background: #eff6ff; box-shadow: 0 2px 8px rgba(37,99,235,0.1); }
-        .ann-card.priority-high { border-left-color: #dc2626; }
+        /* Annotation panel specifics */
+        .ann-list   { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .ann-tab    { padding: 5px 12px; border-radius: 4px; font-size: .7rem; font-weight: 700; cursor: pointer; transition: all .2s; border: 1px solid transparent; }
+        .ann-tab.active          { background: white; color: #0f2d52; }
+        .ann-tab:not(.active)    { color: rgba(255,255,255,.7); border-color: rgba(255,255,255,.25); }
+        .ann-tab:not(.active):hover { background: rgba(255,255,255,.12); color: white; }
+        .ann-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; cursor: pointer; transition: all .2s; border-left: 3px solid #1e3a8a; }
+        .ann-card:hover { background: #f1f5f9; box-shadow: 0 1px 6px rgba(0,0,0,.07); }
+        .ann-card.priority-high     { border-left-color: #dc2626; }
         .ann-card.priority-critical { border-left-color: #7c3aed; }
-        .ann-card.priority-low { border-left-color: #6b7280; }
-        .ann-card-title { font-size: 0.82rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
-        .ann-card-meta { font-size: 0.68rem; color: #64748b; display: flex; gap: 8px; flex-wrap: wrap; }
-        .status-badge { padding: 2px 7px; border-radius: 12px; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; }
-        .status-open { background: #dbeafe; color: #1d4ed8; }
-        .status-in_progress { background: #fef3c7; color: #92400e; }
-        .status-resolved { background: #d1fae5; color: #065f46; }
-        .status-closed { background: #f1f5f9; color: #475569; }
-        #annDetailModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 5000; align-items: center; justify-content: center; }
+        .ann-card.priority-low      { border-left-color: #94a3b8; }
+        .ann-card-hidden  { opacity: .4; background: #f1f5f9 !important; }
+        .ann-eye-btn      { flex-shrink:0; background:none; border:none; cursor:pointer; color:#94a3b8; font-size:.7rem; padding:2px 4px; border-radius:3px; transition:color .15s, background .15s; }
+        .ann-eye-btn:hover { color:#1e3a8a; background:#dbeafe; }
+        .ann-card-title   { font-size: .82rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .ann-card-meta    { font-size: .68rem; color: #64748b; display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* Status badges (annotation) */
+        .status-badge      { padding: 2px 7px; border-radius: 3px; font-size: .58rem; font-weight: 800; text-transform: uppercase; letter-spacing:.04em; }
+        .status-open       { background: #dbeafe; color: #1e3a8a; }
+        .status-in_progress{ background: #fef3c7; color: #92400e; }
+        .status-resolved   { background: #d1fae5; color: #065f46; }
+        .status-closed     { background: #f1f5f9; color: #475569; }
+
+        /* Modals */
+        #annDetailModal  { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 5000; align-items: center; justify-content: center; }
         #annDetailModal.show { display: flex; }
-        .ann-modal-box { background: white; width: 540px; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
-        .ann-modal-header { background: linear-gradient(135deg, #1e3a8a, #1d4ed8); color: white; padding: 16px 20px; flex-shrink: 0; }
-        .ann-modal-body { padding: 20px; overflow-y: auto; flex: 1; max-height: 65vh; }
-        .ann-modal-footer { padding: 14px 20px; border-top: 1px solid #e5e7eb; background: #f8fafc; flex-shrink: 0; display: flex; gap: 8px; justify-content: flex-end; }
-        .ann-form-input { width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 7px 10px; font-size: 0.82rem; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
-        .ann-form-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-        .ann-form-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #4b5563; margin-bottom: 4px; display: block; }
-        .btn-primary { background: #2563eb; color: white; border: none; border-radius: 7px; padding: 8px 18px; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: background 0.2s; }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-danger { background: #dc2626; color: white; border: none; border-radius: 7px; padding: 8px 18px; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
-        .btn-ghost { background: transparent; border: 1px solid #d1d5db; border-radius: 7px; padding: 8px 18px; font-weight: 600; font-size: 0.82rem; cursor: pointer; color: #374151; }
-        .btn-ghost:hover { background: #f3f4f6; }
-        #annCreateModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 6000; align-items: center; justify-content: center; }
+        .ann-modal-box    { background: white; width: 540px; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,.25); }
+        .ann-modal-header { background: #0f2d52; color: white; padding: 16px 20px; flex-shrink: 0; }
+        .ann-modal-body   { padding: 20px; overflow-y: auto; flex: 1; max-height: 65vh; }
+        .ann-modal-footer { padding: 12px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0; display: flex; gap: 8px; justify-content: flex-end; }
+        .ann-form-input   { width: 100%; border: 1px solid #d1d5db; border-radius: 5px; padding: 7px 10px; font-size: .82rem; outline: none; transition: border-color .2s; box-sizing: border-box; }
+        .ann-form-input:focus { border-color: #1e3a8a; box-shadow: 0 0 0 3px rgba(30,58,138,.08); }
+        .ann-form-label   { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing:.05em; color: #475569; margin-bottom: 4px; display: block; }
+        .btn-primary  { background: #0f2d52; color: white; border: none; border-radius: 5px; padding: 8px 16px; font-weight: 700; font-size: .82rem; cursor: pointer; transition: background .2s; }
+        .btn-primary:hover { background: #1e3a8a; }
+        .btn-danger   { background: #dc2626; color: white; border: none; border-radius: 5px; padding: 8px 16px; font-weight: 700; font-size: .82rem; cursor: pointer; }
+        .btn-ghost    { background: transparent; border: 1px solid #d1d5db; border-radius: 5px; padding: 8px 16px; font-weight: 600; font-size: .82rem; cursor: pointer; color: #374151; }
+        .btn-ghost:hover { background: #f1f5f9; }
+        #annCreateModal      { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 6000; align-items: center; justify-content: center; }
         #annCreateModal.show { display: flex; }
-        .resizable-modal { position: relative; min-width: 380px; min-height: 300px; max-width: 96vw; max-height: 92vh; box-sizing: border-box; }
-        .modal-resize-e { position: absolute; top: 12px; right: -4px; bottom: 12px; width: 8px; cursor: ew-resize; z-index: 20; display: flex; align-items: center; justify-content: center; }
-        .modal-resize-e::after { content: ''; width: 3px; height: 36px; border-radius: 2px; background: #d1d5db; transition: background 0.15s, height 0.15s; }
-        .modal-resize-e:hover::after, .modal-resize-e.dragging::after { background: #2563eb; height: 52px; }
-        .modal-resize-s { position: absolute; bottom: -4px; left: 12px; right: 12px; height: 8px; cursor: ns-resize; z-index: 20; display: flex; align-items: center; justify-content: center; }
-        .modal-resize-s::after { content: ''; height: 3px; width: 36px; border-radius: 2px; background: #d1d5db; transition: background 0.15s, width 0.15s; }
-        .modal-resize-s:hover::after, .modal-resize-s.dragging::after { background: #2563eb; width: 52px; }
-        .modal-resize-se { position: absolute; bottom: -4px; right: -4px; width: 16px; height: 16px; cursor: nwse-resize; z-index: 21; }
-        .modal-resize-se::after { content: ''; position: absolute; bottom: 4px; right: 4px; width: 8px; height: 8px; border-right: 2px solid #d1d5db; border-bottom: 2px solid #d1d5db; border-radius: 0 0 2px 0; transition: border-color 0.15s; }
-        .modal-resize-se:hover::after, .modal-resize-se.dragging::after { border-color: #2563eb; }
-        .modal-resize-w { position: absolute; top: 12px; left: -4px; bottom: 12px; width: 8px; cursor: ew-resize; z-index: 20; display: flex; align-items: center; justify-content: center; }
-        .modal-resize-w::after { content: ''; width: 3px; height: 36px; border-radius: 2px; background: #d1d5db; transition: background 0.15s, height 0.15s; }
-        .modal-resize-w:hover::after, .modal-resize-w.dragging::after { background: #2563eb; height: 52px; }
-        #annotationBtn.active { background: #dc2626; }
-        #notesBtn.active { background: #dc2626; }
-        #showAnnotationsBtn.annotations-hidden { background: #6b7280; }
+        .resizable-modal  { position: relative; min-width: 380px; min-height: 300px; max-width: 96vw; max-height: 92vh; box-sizing: border-box; }
+        .modal-resize-e   { position: absolute; top: 12px; right: -4px; bottom: 12px; width: 8px; cursor: ew-resize; z-index: 20; display: flex; align-items: center; justify-content: center; }
+        .modal-resize-e::after  { content: ''; width: 3px; height: 34px; border-radius: 2px; background: #d1d5db; transition: background .15s, height .15s; }
+        .modal-resize-e:hover::after, .modal-resize-e.dragging::after { background: #1e3a8a; height: 50px; }
+        .modal-resize-s   { position: absolute; bottom: -4px; left: 12px; right: 12px; height: 8px; cursor: ns-resize; z-index: 20; display: flex; align-items: center; justify-content: center; }
+        .modal-resize-s::after  { content: ''; height: 3px; width: 34px; border-radius: 2px; background: #d1d5db; transition: background .15s, width .15s; }
+        .modal-resize-s:hover::after, .modal-resize-s.dragging::after { background: #1e3a8a; width: 50px; }
+        .modal-resize-se  { position: absolute; bottom: -4px; right: -4px; width: 16px; height: 16px; cursor: nwse-resize; z-index: 21; }
+        .modal-resize-se::after { content: ''; position: absolute; bottom: 4px; right: 4px; width: 8px; height: 8px; border-right: 2px solid #d1d5db; border-bottom: 2px solid #d1d5db; border-radius: 0 0 2px 0; }
+        .modal-resize-se:hover::after, .modal-resize-se.dragging::after { border-color: #1e3a8a; }
+        .modal-resize-w   { position: absolute; top: 12px; left: -4px; bottom: 12px; width: 8px; cursor: ew-resize; z-index: 20; display: flex; align-items: center; justify-content: center; }
+        .modal-resize-w::after  { content: ''; width: 3px; height: 34px; border-radius: 2px; background: #d1d5db; transition: background .15s, height .15s; }
+        .modal-resize-w:hover::after, .modal-resize-w.dragging::after { background: #1e3a8a; height: 50px; }
 
-        /* ── TRUE NORTH COMPASS ── */
-        #northCompass {
-            position: absolute;
-            top: 80px;
-            right: 10px;
-            z-index: 1000;
-            width: 44px;
-            height: 44px;
-            background: rgba(255,255,255,0.96);
-            border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.07);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-        }
+        /* Draw toolbar */
+        .draw-tool-btn { display: flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 5px; border: 1px solid #e2e8f0; background: white; font-size: .7rem; font-weight: 700; cursor: pointer; transition: all .15s; color: #374151; }
+        .draw-tool-btn:hover  { background: #dbeafe; border-color: #93c5fd; color: #1e3a8a; }
+        .draw-tool-btn.active { background: #dbeafe; border-color: #1e3a8a; color: #1e3a8a; }
+        .comment-bubble       { background: #f1f5f9; border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; }
+        .comment-bubble .author { font-size: .68rem; font-weight: 700; color: #0f2d52; }
+        .comment-bubble .body   { font-size: .8rem; color: #374151; margin-top: 2px; }
+        .comment-bubble .time   { font-size: .6rem; color: #94a3b8; }
 
-        /* ── GEO TOOLS ── */
-        .geo-pick-btn {
-            font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 4px; border: none; cursor: pointer; transition: background 0.15s;
-        }
-        .geo-result-row {
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: 0.72rem; padding: 4px 0; border-bottom: 1px solid #f3f4f6;
-        }
+        /* True North Compass */
+        #northCompass { position: absolute; top: 80px; right: 10px; z-index: 1000; width: 44px; height: 44px; background: rgba(255,255,255,.96); border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06); display: flex; align-items: center; justify-content: center; pointer-events: none; }
+
+        /* Geo Tools */
+        .geo-pick-btn   { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 3px; border: none; cursor: pointer; transition: background .15s; }
+        .geo-result-row { display: flex; justify-content: space-between; align-items: center; font-size: .7rem; padding: 4px 0; border-bottom: 1px solid #f1f5f9; }
         .geo-result-row:last-child { border-bottom: none; }
-        .geo-result-label { color: #6b7280; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        .geo-result-label { color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 4px; }
         .geo-result-value { font-weight: 800; }
-        .geo-label-tip { font-size: 9px; background: #1e40af; color: white; border-radius: 3px; padding: 1px 5px; font-weight: 800; }
+        .geo-label-tip    { font-size: 8px; background: #0f2d52; color: white; border-radius: 2px; padding: 1px 5px; font-weight: 800; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -425,77 +325,109 @@
         };
     </script>
 
-    <nav class="text-white p-4 shadow-lg sticky top-0 z-50 h-[72px]" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-    <div class="container mx-auto flex justify-between items-center">
-        <div>
-            <img src="{{ url_for('static', filename='file.svg') }}" alt="Logo" class="h-8 w-auto">
+    <nav style="background:#ffffff; z-index:10000; position:sticky; top:0; height:72px; box-shadow:0 1px 0 #e2e8f0, 0 2px 12px rgba(0,0,0,.06);" class="px-5 flex items-center">
+    <div class="w-full flex justify-between items-center">
+
+        <!-- ── LOGO — 3W centered above tagline ── -->
+        <div style="display:flex; flex-direction:column; align-items:center; line-height:1; gap:2px;">
+            <span style="font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.45rem; letter-spacing:-.5px; color:#0f2d52;">3W</span>
+            <span style="font-family:'Montserrat',sans-serif; font-weight:700; font-size:0.48rem; letter-spacing:.28em; color:#94a3b8; text-transform:uppercase; white-space:nowrap;">What&nbsp;·&nbsp;Where&nbsp;·&nbsp;When</span>
         </div>
 
-        <div class="flex gap-2 absolute left-1/2 transform -translate-x-1/2 items-center">
-          <button id="tabBtnDashboard" onclick="switchMainTab('dashboard')" class="text-white opacity-70 hover:opacity-100 font-semibold border-b-2 border-transparent hover:border-white pb-1 transition-all whitespace-nowrap text-sm px-3">
-          <span class="hidden sm:inline">RAN </span>Forecast
-      </button>
-      
-      <button id="tabBtnMap" onclick="switchMainTab('map')" class="text-white font-semibold border-b-2 border-white pb-1 transition-all whitespace-nowrap text-sm px-3">
-          <span class="hidden sm:inline">Coverage </span>Map
-      </button>
-      
-      <div class="relative" id="toolsDropdownWrapper">
-          <button id="tabBtnTools" onclick="toggleToolsDropdown()" class="text-white opacity-70 hover:opacity-100 font-semibold border-b-2 border-transparent hover:border-white pb-1 transition-all whitespace-nowrap text-sm px-3">
-              <span class="hidden md:inline">Enterprise </span>
-          </button>
-              <div id="toolsDropdown" class="hidden absolute left-1/2 -translate-x-1/2 mt-3 w-64 bg-white rounded-xl shadow-2xl overflow-hidden text-gray-700 border border-gray-100 z-[9999]">
-                  <button onclick="switchMainTab('cctv')" class="w-full text-left px-4 py-3 hover:bg-blue-50 flex items-center gap-3 border-b border-gray-100 transition-colors">
-                      <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center"><i class="fas fa-video text-blue-600 text-sm"></i></div>
-                      <div><div class="font-bold text-sm text-gray-800">CCTV Planning</div><div class="text-[11px] text-gray-400">Site coverage &amp; camera placement</div></div>
-                  </button>
-                  <button onclick="switchMainTab('bitcoin')" class="w-full text-left px-4 py-3 hover:bg-amber-50 flex items-center gap-3 transition-colors">
-                      <div class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center"><i class="fab fa-bitcoin text-amber-600 text-sm"></i></div>
-                      <div><div class="font-bold text-sm text-gray-800">Illegal Bitcoin Mining</div><div class="text-[11px] text-gray-400">Anomaly detection candidates</div></div>
-                  </button>
-              </div>
-          </div>
+        <!-- ── NAV TABS ── -->
+        <div class="flex gap-1 absolute left-1/2 transform -translate-x-1/2 items-center">
+            <button id="tabBtnDashboard" onclick="switchMainTab('dashboard')"
+                style="font-family:'Inter',sans-serif; font-size:.8rem; font-weight:600; color:#64748b; padding:6px 14px; border-radius:5px; border:none; background:transparent; cursor:pointer; transition:all .2s; white-space:nowrap;"
+                onmouseover="this.style.color='#0f2d52'; this.style.background='#f1f5f9'"
+                onmouseout="if(!this.classList.contains('nav-active')){this.style.color='#64748b'; this.style.background='transparent'}">
+                RAN Forecast
+            </button>
 
-          <div class="relative" id="opsDropdownWrapper">
-              <button id="tabBtnOps" onclick="toggleOpsDropdown()" class="text-white opacity-70 hover:opacity-100 font-semibold border-b-2 border-transparent hover:border-white pb-1 transition-all whitespace-nowrap text-sm px-3">
-                  Operations
-              </button>
-              <div id="opsDropdown" class="hidden absolute left-1/2 -translate-x-1/2 mt-3 w-64 bg-white rounded-xl shadow-2xl overflow-hidden text-gray-700 border border-gray-100 z-[9999]">
-                  <button onclick="switchMainTab('genset')" class="w-full text-left px-4 py-3 hover:bg-green-50 flex items-center gap-3 border-b border-gray-100 transition-colors">
-                      <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center"><i class="fas fa-bolt text-green-600 text-sm"></i></div>
-                      <div><div class="font-bold text-sm text-gray-800">Genset</div><div class="text-[11px] text-gray-400">Nearest TNB substation finder</div></div>
-                  </button>
-                  <button class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 opacity-50 cursor-not-allowed" disabled>
-                      <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center"><i class="fas fa-battery-three-quarters text-gray-400 text-sm"></i></div>
-                      <div><div class="font-bold text-sm text-gray-500">USP</div><div class="text-[11px] text-gray-400">Coming soon</div></div>
-                  </button>
-              </div>
-          </div>
-      </div>
+            <button id="tabBtnMap" onclick="switchMainTab('map')"
+                style="font-family:'Inter',sans-serif; font-size:.8rem; font-weight:600; color:#0f2d52; padding:6px 14px; border-radius:5px; border:none; background:#f1f5f9; cursor:pointer; transition:all .2s; white-space:nowrap;"
+                onmouseover="this.style.background='#e2e8f0'"
+                onmouseout="if(!this.classList.contains('nav-active')){this.style.background='#f1f5f9'}">
+                Coverage Map
+            </button>
 
-        <div class="flex items-center gap-3">
+            <div class="relative" id="toolsDropdownWrapper">
+                <button id="tabBtnTools" onclick="toggleToolsDropdown()"
+                    style="font-family:'Inter',sans-serif; font-size:.8rem; font-weight:600; color:#64748b; padding:6px 14px; border-radius:5px; border:none; background:transparent; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:5px; white-space:nowrap;"
+                    onmouseover="this.style.color='#0f2d52'; this.style.background='#f1f5f9'"
+                    onmouseout="if(!this.classList.contains('nav-active')){this.style.color='#64748b'; this.style.background='transparent'}">
+                    Enterprise <i class="fas fa-chevron-down" style="font-size:.55rem; opacity:.6;"></i>
+                </button>
+                <div id="toolsDropdown" class="hidden absolute left-1/2 -translate-x-1/2 mt-2 w-64 bg-white rounded-lg shadow-2xl overflow-hidden text-gray-700 border border-gray-200" style="z-index:9999; top:100%;">
+                    <div style="padding:6px 12px 4px; font-size:.6rem; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:.08em; border-bottom:1px solid #f1f5f9; background:#f8fafc;">Tools</div>
+                    <button onclick="switchMainTab('cctv')" class="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 border-b border-gray-100 transition-colors">
+                        <div style="width:32px;height:32px;border-radius:6px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;"><i class="fas fa-video" style="color:#1e3a8a;font-size:.8rem;"></i></div>
+                        <div><div class="font-bold text-sm text-gray-800">CCTV Planning</div><div class="text-[11px] text-gray-400">Site coverage &amp; camera placement</div></div>
+                    </button>
+                    <button onclick="switchMainTab('bitcoin')" class="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 transition-colors">
+                        <div style="width:32px;height:32px;border-radius:6px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;"><i class="fab fa-bitcoin" style="color:#1e3a8a;font-size:.8rem;"></i></div>
+                        <div><div class="font-bold text-sm text-gray-800">Illegal Mining</div><div class="text-[11px] text-gray-400">Anomaly detection candidates</div></div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative" id="opsDropdownWrapper">
+                <button id="tabBtnOps" onclick="toggleOpsDropdown()"
+                    style="font-family:'Inter',sans-serif; font-size:.8rem; font-weight:600; color:#64748b; padding:6px 14px; border-radius:5px; border:none; background:transparent; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:5px; white-space:nowrap;"
+                    onmouseover="this.style.color='#0f2d52'; this.style.background='#f1f5f9'"
+                    onmouseout="if(!this.classList.contains('nav-active')){this.style.color='#64748b'; this.style.background='transparent'}">
+                    Operations <i class="fas fa-chevron-down" style="font-size:.55rem; opacity:.6;"></i>
+                </button>
+                <div id="opsDropdown" class="hidden absolute left-1/2 -translate-x-1/2 mt-2 w-64 bg-white rounded-lg shadow-2xl overflow-hidden text-gray-700 border border-gray-200" style="z-index:9999; top:100%;">
+                    <div style="padding:6px 12px 4px; font-size:.6rem; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:.08em; border-bottom:1px solid #f1f5f9; background:#f8fafc;">Operations</div>
+                    <button onclick="switchMainTab('genset')" class="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 border-b border-gray-100 transition-colors">
+                        <div style="width:32px;height:32px;border-radius:6px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;"><i class="fas fa-bolt" style="color:#1e3a8a;font-size:.8rem;"></i></div>
+                        <div><div class="font-bold text-sm text-gray-800">Genset</div><div class="text-[11px] text-gray-400">Nearest TNB substation finder</div></div>
+                    </button>
+                    <button class="w-full text-left px-4 py-3 flex items-center gap-3 opacity-40 cursor-not-allowed" disabled>
+                        <div style="width:32px;height:32px;border-radius:6px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;"><i class="fas fa-battery-three-quarters" style="color:#94a3b8;font-size:.8rem;"></i></div>
+                        <div><div class="font-bold text-sm text-gray-500">USP</div><div class="text-[11px] text-gray-400">Coming soon</div></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── RIGHT ACTIONS ── -->
+        <div class="flex items-center gap-2">
             {% if role == 'Admin' %}
-            <a href="/iam" class="bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-lg transition-all duration-300 shadow-lg hover:scale-110" title="User Management (IAM)">
-                <i class="fas fa-shield-alt text-lg"></i>
+            <a href="/iam" style="background:#f1f5f9; color:#475569; width:36px; height:36px; border-radius:6px; display:flex; align-items:center; justify-content:center; transition:background .2s; border:1px solid #e2e8f0;" title="User Management"
+               onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                <i class="fas fa-shield-alt" style="font-size:.85rem;"></i>
             </a>
             {% endif %}
 
-            <button onclick="openMessagingModal()" class="relative bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-lg transition-all duration-300 shadow-lg hover:scale-110" title="Messages">
-                <i class="fas fa-envelope text-lg"></i>
-                <span id="navUnreadBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 font-bold">0</span>
+            <button onclick="openMessagingModal()" style="position:relative; background:#f1f5f9; color:#475569; width:36px; height:36px; border-radius:6px; border:1px solid #e2e8f0; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s;" title="Messages"
+                onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                <i class="fas fa-envelope" style="font-size:.85rem;"></i>
+                <span id="navUnreadBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 font-bold" style="font-size:.6rem;">0</span>
             </button>
 
-            <button onclick="openReviewModal()" class="bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-lg transition-all duration-300 shadow-lg hover:scale-110" title="Submit a Review">
-                <i class="fas fa-star text-lg"></i>
+            <button onclick="openReviewModal()" style="background:#f1f5f9; color:#475569; width:36px; height:36px; border-radius:6px; border:1px solid #e2e8f0; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s;" title="Submit Review"
+                onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                <i class="fas fa-star" style="font-size:.85rem;"></i>
             </button>
 
-            <div class="relative ml-2">
-                <button id="menuBtn" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-gray-100 transition flex items-center gap-2 shadow-lg">
-                    <i class="fas fa-user-circle"></i> {{ username }} <i class="fas fa-chevron-down text-xs ml-1"></i>
+            <div class="relative" style="margin-left:4px;">
+                <button id="menuBtn" onclick="document.getElementById('menuDropdown').classList.toggle('hidden')"
+                    style="background:#f1f5f9; border:1px solid #e2e8f0; color:#1e293b; padding:5px 10px 5px 6px; border-radius:6px; font-weight:600; font-size:.8rem; cursor:pointer; display:flex; align-items:center; gap:8px; transition:background .2s;"
+                    onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                    <div style="width:26px;height:26px;border-radius:50%;background:#0f2d52;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;color:white;flex-shrink:0;">
+                        {{ username[0]|upper if username else 'U' }}
+                    </div>
+                    <span style="color:#1e293b;">{{ username }}</span>
+                    <i class="fas fa-chevron-down" style="font-size:.55rem; color:#94a3b8;"></i>
                 </button>
-                <div id="menuDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl overflow-hidden text-gray-700 border border-gray-100 z-[9999]">
-                    <button onclick="openSettingsModal()" class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2 border-b border-gray-50"><i class="fasfa-cog text-gray-400"></i> Settings</button>
-                    <a href="/logout" class="block px-4 py-3 hover:bg-red-50 text-red-600 flex items-center gap-2"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                <div id="menuDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl overflow-hidden text-gray-700 border border-gray-200" style="z-index:9999; top:100%;">
+                    <button onclick="openSettingsModal()" class="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-2 border-b border-gray-100 text-sm transition-colors">
+                        <i class="fas fa-cog text-gray-400 w-4"></i> Settings
+                    </button>
+                    <a href="/logout" class="block px-4 py-3 hover:bg-red-50 text-red-600 flex items-center gap-2 text-sm transition-colors">
+                        <i class="fas fa-sign-out-alt w-4"></i> Logout
+                    </a>
                 </div>
             </div>
         </div>
@@ -784,7 +716,7 @@
         <!-- Popup Layer Menu -->
         <div id="layerMenu" style="display:none; position:absolute; bottom:calc(100% + 10px); left:0; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.18); border:1px solid #e5e7eb; min-width:240px; overflow:hidden; z-index:2000;">
             <!-- Header -->
-            <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb); color:white; padding:10px 14px; font-size:0.75rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; display:flex; align-items:center; gap:8px;">
+            <div style="background:#0f2d52; color:white; padding:10px 14px; font-size:0.75rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; display:flex; align-items:center; gap:8px;">
                 <i class="fas fa-layer-group"></i> Map Layers
             </div>
 
@@ -947,7 +879,7 @@
     </button>
 
     <div id="sidebar">
-                <a href="/" class="inline-flex items-center gap-2 text-xs font-semibold text-blue-600 hover:text-blue-800 mb-3 transition-colors duration-200">
+                <a href="/" class="inline-flex items-center gap-2 text-xs font-semibold mb-3 transition-colors duration-200" style="color:#1e3a8a;">
                     <i class="fas fa-arrow-left"></i> Back to RAN Forecast
                 </a>
 
@@ -1114,126 +1046,6 @@
         <i class="fas fa-chart-pie"></i>
     </button>
 
-    <div id="annotationPanel" class="sliding-panel">
-        <div class="panel-resize-handle" id="annotationResizeHandle" title="Drag to resize"></div>
-        <div class="ann-header">
-            <div>
-                <h2 class="text-base font-bold flex items-center gap-2"><i class="fas fa-layer-group"></i> Map Annotations</h2>
-                <p class="text-xs text-blue-200 mt-0.5">Draw, comment &amp; assign on the map</p>
-            </div>
-            <button onclick="toggleAnnotationPanel()" class="text-white hover:text-blue-200 text-xl"><i class="fas fa-times"></i></button>
-        </div>
-
-        <!-- Drawing Toolbar -->
-        <div id="drawToolbar" class="px-3 py-2 bg-gray-50 border-b border-gray-200">
-            <p class="text-[10px] font-bold uppercase text-gray-400 mb-2">Drawing Tools</p>
-            <div class="flex flex-wrap gap-2">
-                <button onclick="startDraw('marker')" class="draw-tool-btn" title="Draw Point"><i class="fas fa-map-marker-alt text-red-500"></i><span>Point</span></button>
-                <button onclick="startDraw('polyline')" class="draw-tool-btn" title="Draw Line"><i class="fas fa-minus text-blue-500"></i><span>Line</span></button>
-                <button onclick="startDraw('polygon')" class="draw-tool-btn" title="Draw Polygon"><i class="fas fa-draw-polygon text-green-600"></i><span>Polygon</span></button>
-                <button onclick="startDraw('rectangle')" class="draw-tool-btn" title="Draw Rectangle"><i class="fas fa-vector-square text-purple-600"></i><span>Rect</span></button>
-                <button onclick="startDraw('circle')" class="draw-tool-btn" title="Draw Buffer/Circle"><i class="fas fa-circle text-yellow-500"></i><span>Buffer</span></button>
-                <button onclick="cancelDraw()" class="draw-tool-btn border-red-200 text-red-500" title="Cancel Drawing"><i class="fas fa-ban"></i><span>Cancel</span></button>
-            </div>
-            <div id="drawHint" class="mt-2 text-[10px] text-blue-600 font-semibold hidden"><i class="fas fa-info-circle mr-1"></i><span id="drawHintText"></span></div>
-        </div>
-
-        <!-- Tab bar -->
-        <div class="px-3 py-2 bg-white border-b border-gray-100 flex gap-2">
-            <button id="tab-annotations" onclick="setAnnTab('annotations')" class="ann-tab active flex items-center gap-1.5">
-                <i class="fas fa-layer-group text-[10px]"></i> Annotations
-            </button>
-        </div>
-
-        <!-- Filter bar -->
-        <div id="annFilterBar" class="px-3 py-2 border-b border-gray-100 bg-white flex gap-2 items-center">
-            <select id="annStatusFilter" onchange="loadAnnotations()" class="ann-form-input flex-1 text-xs py-1.5">
-                <option value="">All Statuses</option>
-                <option value="open">Open</option>
-                <option value="in_progress">In Progress</option>
-                <option value="resolved">Resolved</option>
-                <option value="closed">Closed</option>
-            </select>
-            <button onclick="loadAnnotations()" class="bg-blue-50 text-blue-700 border border-blue-200 rounded-lg px-3 py-1.5 text-xs font-bold hover:bg-blue-100"><i class="fas fa-sync-alt"></i></button>
-        </div>
-
-        <!-- Annotations List -->
-        <div id="annList" class="ann-list">
-            <div class="text-center text-gray-400 py-8 text-sm"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading...</div>
-        </div>
-    </div>
-
-    <div id="tasksPanel" class="sliding-panel" style="width: 380px;">
-        <div class="panel-resize-handle" id="tasksResizeHandle" title="Drag to resize"></div>
-        <div class="tasks-header">
-            <div>
-                <h2 class="text-base font-bold flex items-center gap-2"><i class="fas fa-tasks"></i> Tasks</h2>
-                <p class="text-xs mt-0.5" style="color: rgba(255,255,255,0.75);">Assigned to you & assigned by you</p>
-            </div>
-            <button onclick="toggleTasksPanel()" class="text-white hover:text-amber-200 text-xl"><i class="fas fa-times"></i></button>
-        </div>
-
-        <div class="task-stats-row" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:0; padding:10px 12px;">
-            <div class="task-stat" style="text-align:center;"><div id="taskStatOpen" class="task-stat-num">0</div><div class="task-stat-label">Open</div></div>
-            <div class="task-stat" style="text-align:center;"><div id="taskStatInProgress" class="task-stat-num">0</div><div class="task-stat-label">In Progress</div></div>
-            <div class="task-stat" style="text-align:center;"><div id="taskStatResolved" class="task-stat-num">0</div><div class="task-stat-label">Resolved</div></div>
-            <div class="task-stat" style="text-align:center;"><div id="taskStatCritical" class="task-stat-num" style="color:#7c3aed;">0</div><div class="task-stat-label">Critical</div></div>
-        </div>
-
-        <div class="task-filter-bar" style="flex-wrap:wrap; gap:6px;">
-            <select id="taskStatusFilter" onchange="renderTasks()" class="ann-form-input text-xs py-1.5" style="flex:1; min-width:100px;">
-                <option value="">All Statuses</option>
-                <option value="open">Open</option>
-                <option value="in_progress">In Progress</option>
-                <option value="resolved">Resolved</option>
-                <option value="closed">Closed</option>
-            </select>
-            <select id="taskPriorityFilter" onchange="renderTasks()" class="ann-form-input text-xs py-1.5" style="flex:1; min-width:100px;">
-                <option value="">All Priorities</option>
-                <option value="critical">Critical</option>
-                <option value="high">High</option>
-                <option value="normal">Normal</option>
-                <option value="low">Low</option>
-            </select>
-            <button onclick="loadTasks()" class="bg-amber-50 text-amber-700 border border-amber-200 rounded-lg px-3 py-1.5 text-xs font-bold hover:bg-amber-100 flex-shrink-0"><i class="fas fa-sync-alt"></i></button>
-        </div>
-
-        <div id="taskList" class="ann-list" style="background:#fffbeb;">
-            <div class="text-center text-gray-400 py-8 text-sm"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading tasks...</div>
-        </div>
-    </div>
-
-    <div id="notesPanel" class="sliding-panel">
-        <div class="panel-resize-handle" id="notesResizeHandle" title="Drag to resize"></div>
-        <div class="notes-panel-header">
-            <div>
-                <h2 class="text-base font-bold flex items-center gap-2"><i class="fas fa-sticky-note"></i> My Notes</h2>
-                <p class="text-xs mt-0.5" style="color:rgba(255,255,255,0.75);">Personal unassigned drawings</p>
-            </div>
-            <button onclick="toggleNotesPanel()" class="text-white hover:text-purple-200 text-xl"><i class="fas fa-times"></i></button>
-        </div>
-
-        <div class="px-4 py-2 border-b border-purple-100 bg-purple-50 flex items-center gap-4 flex-shrink-0">
-            <div class="text-center">
-                <div id="noteStatTotal" class="text-lg font-black text-purple-700">0</div>
-                <div class="text-[10px] font-bold uppercase text-purple-500">Total</div>
-            </div>
-            <div class="text-center">
-                <div id="noteStatOpen" class="text-lg font-black text-purple-700">0</div>
-                <div class="text-[10px] font-bold uppercase text-purple-500">Open</div>
-            </div>
-            <div class="text-center">
-                <div id="noteStatResolved" class="text-lg font-black text-green-600">0</div>
-                <div class="text-[10px] font-bold uppercase text-green-500">Resolved</div>
-            </div>
-            <button onclick="loadNotes()" class="ml-auto bg-purple-100 text-purple-700 border border-purple-200 rounded-lg px-3 py-1.5 text-xs font-bold hover:bg-purple-200 flex-shrink-0"><i class="fas fa-sync-alt"></i></button>
-        </div>
-
-        <div id="noteList" class="ann-list" style="background:#fdfcff;">
-            <div class="text-center text-gray-400 py-8 text-sm"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading notes...</div>
-        </div>
-    </div>
-
     <div class="absolute bottom-8 right-8 bg-white rounded-lg shadow-xl z-[1000] border border-gray-200 w-56 pointer-events-auto overflow-hidden" style="transition: all 0.25s ease;">
         <button onclick="toggleMapLegend()" class="w-full flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors" style="border:none; background:none;">
             <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Legend</h4>
@@ -1261,6 +1073,114 @@
     </script>
 
     </div><!-- /#mapContainer -->
+
+    <!-- ══ SLIDING PANELS — body-level so they work from any tab ══ -->
+    <div id="annotationPanel" class="sliding-panel">
+        <div class="panel-resize-handle" id="annotationResizeHandle" title="Drag to resize"></div>
+        <div class="ann-header">
+            <div>
+                <h2 class="text-base font-bold flex items-center gap-2"><i class="fas fa-layer-group"></i> Map Annotations</h2>
+                <p class="text-xs text-blue-200 mt-0.5">Draw, comment &amp; assign on the map</p>
+            </div>
+            <button onclick="toggleAnnotationPanel()" class="text-white hover:text-blue-200 text-xl"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="drawToolbar" class="px-3 py-2 bg-gray-50 border-b border-gray-200">
+            <p class="text-[10px] font-bold uppercase text-gray-400 mb-2">Drawing Tools</p>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="startDraw('marker')" class="draw-tool-btn" title="Draw Point"><i class="fas fa-map-marker-alt text-red-500"></i><span>Point</span></button>
+                <button onclick="startDraw('polyline')" class="draw-tool-btn" title="Draw Line"><i class="fas fa-minus text-blue-500"></i><span>Line</span></button>
+                <button onclick="startDraw('polygon')" class="draw-tool-btn" title="Draw Polygon"><i class="fas fa-draw-polygon text-green-600"></i><span>Polygon</span></button>
+                <button onclick="startDraw('rectangle')" class="draw-tool-btn" title="Draw Rectangle"><i class="fas fa-vector-square text-purple-600"></i><span>Rect</span></button>
+                <button onclick="startDraw('circle')" class="draw-tool-btn" title="Draw Buffer/Circle"><i class="fas fa-circle text-yellow-500"></i><span>Buffer</span></button>
+                <button onclick="cancelDraw()" class="draw-tool-btn border-red-200 text-red-500" title="Cancel Drawing"><i class="fas fa-ban"></i><span>Cancel</span></button>
+            </div>
+            <div id="drawHint" class="mt-2 text-[10px] text-blue-600 font-semibold hidden"><i class="fas fa-info-circle mr-1"></i><span id="drawHintText"></span></div>
+        </div>
+        <div class="px-3 py-2 bg-white border-b border-gray-100 flex gap-2">
+            <button id="tab-annotations" onclick="setAnnTab('annotations')" class="ann-tab active flex items-center gap-1.5">
+                <i class="fas fa-layer-group text-[10px]"></i> Annotations
+            </button>
+        </div>
+        <div id="annFilterBar" class="px-3 py-2 border-b border-gray-100 bg-white flex gap-2 items-center">
+            <select id="annStatusFilter" onchange="loadAnnotations()" class="ann-form-input flex-1 text-xs py-1.5">
+                <option value="">All Statuses</option>
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+            </select>
+            <button onclick="loadAnnotations()" class="bg-blue-50 text-blue-700 border border-blue-200 rounded-lg px-3 py-1.5 text-xs font-bold hover:bg-blue-100"><i class="fas fa-sync-alt"></i></button>
+        </div>
+        <div id="annList" class="ann-list">
+            <div class="text-center text-gray-400 py-8 text-sm"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading...</div>
+        </div>
+    </div>
+
+    <div id="tasksPanel" class="sliding-panel" style="width: 380px;">
+        <div class="panel-resize-handle" id="tasksResizeHandle" title="Drag to resize"></div>
+        <div class="tasks-header">
+            <div>
+                <h2 class="text-base font-bold flex items-center gap-2"><i class="fas fa-tasks"></i> Tasks</h2>
+                <p class="text-xs mt-0.5" style="color: rgba(255,255,255,0.75);">Assigned to you & assigned by you</p>
+            </div>
+            <button onclick="toggleTasksPanel()" class="text-white hover:text-amber-200 text-xl"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="task-stats-row" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:0; padding:10px 12px;">
+            <div class="task-stat" style="text-align:center;"><div id="taskStatOpen" class="task-stat-num">0</div><div class="task-stat-label">Open</div></div>
+            <div class="task-stat" style="text-align:center;"><div id="taskStatInProgress" class="task-stat-num">0</div><div class="task-stat-label">In Progress</div></div>
+            <div class="task-stat" style="text-align:center;"><div id="taskStatResolved" class="task-stat-num">0</div><div class="task-stat-label">Resolved</div></div>
+            <div class="task-stat" style="text-align:center;"><div id="taskStatCritical" class="task-stat-num" style="color:#7c3aed;">0</div><div class="task-stat-label">Critical</div></div>
+        </div>
+        <div class="task-filter-bar" style="flex-wrap:wrap; gap:6px;">
+            <select id="taskStatusFilter" onchange="renderTasks()" class="ann-form-input text-xs py-1.5" style="flex:1; min-width:100px;">
+                <option value="">All Statuses</option>
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+            </select>
+            <select id="taskPriorityFilter" onchange="renderTasks()" class="ann-form-input text-xs py-1.5" style="flex:1; min-width:100px;">
+                <option value="">All Priorities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="normal">Normal</option>
+                <option value="low">Low</option>
+            </select>
+            <button onclick="loadTasks()" class="bg-amber-50 text-amber-700 border border-amber-200 rounded-lg px-3 py-1.5 text-xs font-bold hover:bg-amber-100 flex-shrink-0"><i class="fas fa-sync-alt"></i></button>
+        </div>
+        <div id="taskList" class="ann-list" style="background:#fffbeb;">
+            <div class="text-center text-gray-400 py-8 text-sm"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading tasks...</div>
+        </div>
+    </div>
+
+    <div id="notesPanel" class="sliding-panel">
+        <div class="panel-resize-handle" id="notesResizeHandle" title="Drag to resize"></div>
+        <div class="notes-panel-header">
+            <div>
+                <h2 class="text-base font-bold flex items-center gap-2"><i class="fas fa-sticky-note"></i> My Notes</h2>
+                <p class="text-xs mt-0.5" style="color:rgba(255,255,255,0.75);">Personal unassigned drawings</p>
+            </div>
+            <button onclick="toggleNotesPanel()" class="text-white hover:text-purple-200 text-xl"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="px-4 py-2 border-b border-purple-100 bg-purple-50 flex items-center gap-4 flex-shrink-0">
+            <div class="text-center">
+                <div id="noteStatTotal" class="text-lg font-black text-purple-700">0</div>
+                <div class="text-[10px] font-bold uppercase text-purple-500">Total</div>
+            </div>
+            <div class="text-center">
+                <div id="noteStatOpen" class="text-lg font-black text-purple-700">0</div>
+                <div class="text-[10px] font-bold uppercase text-purple-500">Open</div>
+            </div>
+            <div class="text-center">
+                <div id="noteStatResolved" class="text-lg font-black text-green-600">0</div>
+                <div class="text-[10px] font-bold uppercase text-green-500">Resolved</div>
+            </div>
+            <button onclick="loadNotes()" class="ml-auto bg-purple-100 text-purple-700 border border-purple-200 rounded-lg px-3 py-1.5 text-xs font-bold hover:bg-purple-200 flex-shrink-0"><i class="fas fa-sync-alt"></i></button>
+        </div>
+        <div id="noteList" class="ann-list" style="background:#fdfcff;">
+            <div class="text-center text-gray-400 py-8 text-sm"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading notes...</div>
+        </div>
+    </div>
 
     <!-- 3D Map Container (CesiumJS) -->
     <div id="map3dContainer" style="display:none; position:absolute; top:72px; bottom:0; left:0; right:0; overflow:hidden;">
@@ -1902,7 +1822,7 @@
     <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-[6000] flex items-center justify-center">
             <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden">
                 <div class="bg-gray-800 text-white p-3 flex justify-between items-center flex-shrink-0">
-                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> 3W Dashboard</h3>
+                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> NetAlytics Dashboard</h3>
                     <button onclick="closeMetabaseDashboard()" class="text-gray-300 hover:text-white text-xl transition-colors">
                         <i class="fas fa-times"></i>
                     </button>
@@ -2198,12 +2118,12 @@
 
     <div id="chatPanel" class="hidden fixed bottom-20 right-8 w-[600px] bg-white shadow-2xl rounded-2xl border border-gray-200 flex-col z-[6000] overflow-hidden">
         <div class="bg-blue-600 p-3 text-white font-bold flex justify-between items-center">
-            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> 3W AI Agent</span>
+            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> NetAlytics AI Agent</span>
             <button onclick="toggleChat()" class="hover:text-blue-200"><i class="fas fa-times"></i></button>
         </div>
         <div id="chatMessages" class="h-[550px] overflow-y-auto p-4 flex flex-col gap-3 bg-gray-50 text-sm">
             <div class="self-start bg-white border border-gray-200 text-gray-800 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl shadow-sm max-w-[95%] w-full">
-                Hello! I am your 3W capacity planning assistant. Ask me to find a site or analyze congestion.
+                Hello! I am your NetAlytics capacity planning assistant. Ask me to find a site or analyze congestion.
             </div>
         </div>
         <form onsubmit="handleChatSubmit(event)" class="p-3 border-t border-gray-200 bg-white flex gap-2">
@@ -2383,54 +2303,57 @@
     </div>
 
     <script>
-        function switchMainTab(tab) {
-            const dashboardView = document.getElementById('dashboardView');
-            const mapContainer = document.getElementById('mapContainer');
-            const map3dContainer = document.getElementById('map3dContainer');
-            const cctvContainer = document.getElementById('cctvContainer');
-            const bitcoinContainer = document.getElementById('bitcoinContainer');
-            const gensetContainer = document.getElementById('gensetContainer');
-            const pegmanControl = document.getElementById('pegmanControl');
+        // Helper to set a nav button active/inactive with the new corporate inline styling
+        function _navSetActive(btnId, active) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            if (active) {
+                btn.style.color = '#0f2d52';
+                btn.style.background = '#e2e8f0';
+                btn.classList.add('nav-active');
+            } else {
+                btn.style.color = '#64748b';
+                btn.style.background = 'transparent';
+                btn.classList.remove('nav-active');
+            }
+        }
 
-            const inactiveClass = 'text-white opacity-70 hover:opacity-100 font-semibold border-b-2 border-transparent hover:border-white pb-1 transition-all whitespace-nowrap text-sm px-3';
-            const activeClass = 'text-white font-semibold border-b-2 border-white pb-1 transition-all whitespace-nowrap text-sm px-3';
+        function switchMainTab(tab) {
+            const dashboardView  = document.getElementById('dashboardView');
+            const mapContainer   = document.getElementById('mapContainer');
+            const map3dContainer = document.getElementById('map3dContainer');
+            const cctvContainer  = document.getElementById('cctvContainer');
+            const bitcoinContainer = document.getElementById('bitcoinContainer');
+            const gensetContainer  = document.getElementById('gensetContainer');
+            const pegmanControl    = document.getElementById('pegmanControl');
 
             // Hide all views
-            if (dashboardView) dashboardView.style.display = 'none';
-            if (mapContainer) mapContainer.style.display = 'none';
-            if (map3dContainer) map3dContainer.style.display = 'none';
-            if (cctvContainer) cctvContainer.style.display = 'none';
+            if (dashboardView)   dashboardView.style.display   = 'none';
+            if (mapContainer)    mapContainer.style.display    = 'none';
+            if (map3dContainer)  map3dContainer.style.display  = 'none';
+            if (cctvContainer)   cctvContainer.style.display   = 'none';
             if (bitcoinContainer) bitcoinContainer.style.display = 'none';
-            if (gensetContainer) gensetContainer.style.display = 'none';
+            if (gensetContainer)  gensetContainer.style.display  = 'none';
 
-            // Reset all tab buttons
-            document.getElementById('tabBtnDashboard').className = inactiveClass;
-            document.getElementById('tabBtnMap').className = inactiveClass;
-            // Reset tools button
-            const toolsBtn = document.getElementById('tabBtnTools');
-            toolsBtn.className = toolsBtn.className.replace('border-white', 'border-transparent').replace(/(?<!\-)opacity-100/g, 'opacity-70');
-            // Reset ops button
-            const opsBtn = document.getElementById('tabBtnOps');
-            opsBtn.className = inactiveClass;
+            // Reset all nav buttons
+            ['tabBtnDashboard','tabBtnMap','tabBtnTools','tabBtnOps'].forEach(id => _navSetActive(id, false));
 
-            // Hide pegman by default; show only on map tab
+            // Hide pegman by default
             if (pegmanControl) pegmanControl.style.visibility = 'hidden';
 
             // Close dropdowns
-            const dd = document.getElementById('toolsDropdown');
-            if (dd) dd.classList.add('hidden');
-            const opsdd = document.getElementById('opsDropdown');
-            if (opsdd) opsdd.classList.add('hidden');
+            document.getElementById('toolsDropdown')?.classList.add('hidden');
+            document.getElementById('opsDropdown')?.classList.add('hidden');
 
             if (tab === 'dashboard') {
                 if (dashboardView) dashboardView.style.display = 'block';
-                document.getElementById('tabBtnDashboard').className = activeClass;
-                setTimeout(() => { if (window.dispatchEvent) window.dispatchEvent(new Event('resize')); }, 100);
+                _navSetActive('tabBtnDashboard', true);
+                setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100);
 
             } else if (tab === 'map') {
                 if (mapContainer) mapContainer.style.display = 'block';
                 if (pegmanControl) pegmanControl.style.visibility = 'visible';
-                document.getElementById('tabBtnMap').className = activeClass;
+                _navSetActive('tabBtnMap', true);
                 setTimeout(() => { if (typeof initMapIfNeeded === 'function') initMapIfNeeded(); }, 200);
 
             } else if (tab === '3d') {
@@ -2439,20 +2362,17 @@
 
             } else if (tab === 'cctv') {
                 if (cctvContainer) cctvContainer.style.display = 'block';
-                // Highlight tools button
-                toolsBtn.classList.remove('opacity-70', 'border-transparent');
-                toolsBtn.classList.add('opacity-100', 'border-white');
+                _navSetActive('tabBtnTools', true);
                 setTimeout(() => { if (typeof initCctvMap === 'function') initCctvMap(); }, 200);
 
             } else if (tab === 'bitcoin') {
                 if (bitcoinContainer) bitcoinContainer.style.display = 'block';
-                toolsBtn.classList.remove('opacity-70', 'border-transparent');
-                toolsBtn.classList.add('opacity-100', 'border-white');
+                _navSetActive('tabBtnTools', true);
                 setTimeout(() => { if (typeof initMinerHunter === 'function') initMinerHunter(); }, 200);
 
             } else if (tab === 'genset') {
                 if (gensetContainer) gensetContainer.style.display = 'block';
-                opsBtn.className = activeClass;
+                _navSetActive('tabBtnOps', true);
                 setTimeout(() => { if (typeof initGensetMap === 'function') initGensetMap(); }, 200);
             }
         }
