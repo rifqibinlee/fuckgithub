@@ -323,15 +323,24 @@
             fullName: "{{ full_name }}",
             role: "{{ role }}"
         };
+
+        // Global shims — delegate to the real functions once loaded
+        function openSettingsModal()  { if (window._openSettingsModal)  window._openSettingsModal();  else { const m=document.getElementById('settingsModal');  if(m) m.classList.remove('hidden'); } }
+        function closeSettingsModal() { if (window._closeSettingsModal) window._closeSettingsModal(); else { const m=document.getElementById('settingsModal');  if(m) m.classList.add('hidden');    } }
+        function openReviewModal()    { if (window._openReviewModal)    window._openReviewModal();    else { const m=document.getElementById('reviewModal');    if(m) m.classList.remove('hidden'); } }
+        function closeReviewModal()   { if (window._closeReviewModal)   window._closeReviewModal();   else { const m=document.getElementById('reviewModal');    if(m) m.classList.add('hidden');    } }
+        function openMessagingModal() { if (window._openMessagingModal) window._openMessagingModal(); else { const m=document.getElementById('messagingModal'); if(m) m.classList.remove('hidden'); } }
+        function closeMessagingModal(){ if (window._closeMessagingModal)window._closeMessagingModal();else { const m=document.getElementById('messagingModal'); if(m) m.classList.add('hidden');    } }
     </script>
 
     <nav style="background:#ffffff; z-index:10000; position:sticky; top:0; height:72px; box-shadow:0 1px 0 #e2e8f0, 0 2px 12px rgba(0,0,0,.06);" class="px-5 flex items-center">
     <div class="w-full flex justify-between items-center">
 
         <!-- ── LOGO — 3W centered above tagline ── -->
-        <div style="display:flex; flex-direction:column; align-items:center; line-height:1; gap:2px;">
+        <div style="display:flex; flex-direction:column; align-items:center; line-height:1; gap:1px;">
             <span style="font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.45rem; letter-spacing:-.5px; color:#0f2d52;">3W</span>
             <span style="font-family:'Montserrat',sans-serif; font-weight:700; font-size:0.48rem; letter-spacing:.28em; color:#94a3b8; text-transform:uppercase; white-space:nowrap;">What&nbsp;·&nbsp;Where&nbsp;·&nbsp;When</span>
+            <span style="font-family:'Montserrat',sans-serif; font-weight:800; font-size:0.42rem; letter-spacing:.14em; color:#0f2d52; text-transform:uppercase; white-space:nowrap;">Brought to you by Advanced Analytics</span>
         </div>
 
         <!-- ── NAV TABS ── -->
@@ -473,54 +482,60 @@
 
 
         <div id="resultsSection" class="hidden">
-            <div class="bg-white rounded-lg shadow-md p-5 mb-6 sticky top-0 z-40 border-b-4 border-blue-600 transition-all">
+            <div class="bg-white rounded-lg shadow-sm p-4 mb-6 sticky top-0 border-b border-gray-200" style="z-index:40;">
                 <!-- Row 1: Filters -->
-                <div class="flex flex-wrap gap-3 mb-4">
-                    <div class="flex-1 min-w-[160px]">
-                        <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Filter Region</label>
-                        <select id="globalFilterRegion" class="w-full p-2.5 border border-gray-300 rounded-lg font-semibold bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700">
+                <div class="flex flex-wrap gap-3 mb-3">
+                    <div class="flex-1 min-w-[130px]">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Region</label>
+                        <select id="globalFilterRegion" class="w-full p-2 border border-gray-200 rounded-md font-medium bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700">
                             <option value="All">All Regions</option>
                         </select>
                     </div>
-                    <div class="flex-1 min-w-[160px]">
-                        <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Filter Year</label>
-                        <select id="globalFilterYear" class="w-full p-2.5 border border-gray-300 rounded-lg font-semibold bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700"></select>
+                    <div class="flex-1 min-w-[100px]">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Year</label>
+                        <select id="globalFilterYear" class="w-full p-2 border border-gray-200 rounded-md font-medium bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700"></select>
                     </div>
-                    <div class="flex-1 min-w-[160px]">
-                        <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Filter Week</label>
-                        <select id="globalFilterWeek" class="w-full p-2.5 border border-gray-300 rounded-lg font-semibold bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700">
+                    <div class="flex-1 min-w-[100px]">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Week</label>
+                        <select id="globalFilterWeek" class="w-full p-2 border border-gray-200 rounded-md font-medium bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700">
                             <option value="All">All Weeks</option>
                         </select>
                     </div>
-                    <div class="flex-1 min-w-[160px]">
-                        <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Filter Operator</label>
-                        <select id="globalFilterOperator" class="w-full p-2.5 border border-gray-300 rounded-lg font-semibold bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700">
+                    <div class="flex-1 min-w-[130px]">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Operator</label>
+                        <select id="globalFilterOperator" class="w-full p-2 border border-gray-200 rounded-md font-medium bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700">
                             <option value="All">All Operators</option>
                             <option value="Celcom">Celcom</option>
                             <option value="Digi">Digi</option>
                         </select>
                     </div>
-                    <div class="flex-1 min-w-[160px]">
-                        <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Filter Cluster</label>
-                        <input type="text" id="globalFilterCluster" placeholder="e.g. KUL_01" class="w-full p-2.5 border border-gray-300 rounded-lg font-semibold bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700">
+                    <div class="flex-1 min-w-[130px]">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Cluster</label>
+                        <input type="text" id="globalFilterCluster" placeholder="e.g. KUL_01" class="w-full p-2 border border-gray-200 rounded-md font-medium bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700">
                     </div>
                 </div>
-                <!-- Row 2: Export button + stats cards -->
-                <div class="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-100">
-                    <a href="/download/cd_file" class="bg-gradient-to-r from-teal-500 to-teal-700 text-white px-6 py-2.5 rounded-lg hover:shadow-lg transition flex items-center gap-2 font-bold h-[42px] border border-teal-600" title="Download Unified CD File">
-                        <i class="fas fa-file-export"></i> <span>Export Unified CD</span>
+                <!-- Row 2: Stats + Export -->
+                <div class="flex flex-wrap items-center gap-3 pt-3 border-t border-gray-100">
+                    <a href="/download/cd_file" class="flex items-center gap-2 px-4 py-2 rounded-md font-bold text-sm text-white transition" style="background:#0f2d52;" onmouseover="this.style.background='#1e3a8a'" onmouseout="this.style.background='#0f2d52'" title="Download Unified CD File">
+                        <i class="fas fa-file-export"></i> Export Unified CD
                     </a>
-                    <div class="bg-blue-50 px-5 py-3 rounded-lg text-center border border-blue-100 min-w-[120px] shadow-sm">
-                        <div class="text-[10px] text-blue-500 font-bold uppercase tracking-wider mb-1">Total Sites</div>
-                        <div id="scoreTotalSectors" class="text-2xl font-bold text-blue-700">-</div>
+                    <div class="flex items-center gap-2 px-4 py-2 rounded-md border border-gray-200 bg-gray-50 text-center min-w-[110px]">
+                        <div>
+                            <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Total Sites</div>
+                            <div id="scoreTotalSectors" class="text-xl font-bold" style="color:#0f2d52;">-</div>
+                        </div>
                     </div>
-                    <div class="bg-red-50 px-5 py-3 rounded-lg text-center border border-red-100 min-w-[120px] shadow-sm">
-                        <div class="text-[10px] text-red-500 font-bold uppercase tracking-wider mb-1">Congested Sectors</div>
-                        <div id="scoreCongested" class="text-2xl font-bold text-red-700">-</div>
+                    <div class="flex items-center gap-2 px-4 py-2 rounded-md border border-red-100 bg-red-50 text-center min-w-[130px]">
+                        <div>
+                            <div class="text-[9px] text-red-400 font-bold uppercase tracking-wider">Congested Sectors</div>
+                            <div id="scoreCongested" class="text-xl font-bold text-red-700">-</div>
+                        </div>
                     </div>
-                    <div class="bg-green-50 px-5 py-3 rounded-lg text-center border border-green-100 min-w-[120px] shadow-sm">
-                        <div class="text-[10px] text-green-500 font-bold uppercase tracking-wider mb-1">Avg Vol (GB)</div>
-                        <div id="scoreAvgVol" class="text-2xl font-bold text-green-700">-</div>
+                    <div class="flex items-center gap-2 px-4 py-2 rounded-md border border-green-100 bg-green-50 text-center min-w-[110px]">
+                        <div>
+                            <div class="text-[9px] text-green-500 font-bold uppercase tracking-wider">Avg Vol (GB)</div>
+                            <div id="scoreAvgVol" class="text-xl font-bold text-green-700">-</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -622,6 +637,8 @@
             </div>
         </div>
     </div>
+
+
 
     <div id="mapContainer" style="position:absolute; top:72px; bottom:0; left:0; right:0; overflow:hidden;">
 
@@ -855,6 +872,7 @@
     </button>
 
     <div id="sidebar">
+
         <div>
             <h1 class="text-xl font-bold flex items-center gap-3 text-gray-800 mb-1"><i class="fas fa-satellite text-blue-600"></i> 3W</h1>
             <p class="text-xs text-gray-500">What • Where • When</p>
@@ -1195,21 +1213,24 @@
         </div>
 
         <!-- CCTV Sidebar -->
-        <div id="cctvSidebar" style="position:absolute; top:0; left:0; bottom:0; width:360px; background:#ffffff; color:#1e293b; z-index:150; padding:20px; box-shadow:1px 0 0 #e2e8f0, 4px 0 16px rgba(0,0,0,.06); display:flex; flex-direction:column; gap:14px; overflow-y:auto;">
+        <div id="cctvSidebar" style="position:absolute; top:0; left:0; bottom:0; width:360px; background:#fff; z-index:150; border-right:1px solid #e5e7eb; box-shadow:2px 0 15px rgba(0,0,0,0.08); display:flex; flex-direction:column; overflow-y:auto;">
             <!-- Header -->
-            <div>
-                <h1 style="font-size:1.1rem; font-weight:800; display:flex; align-items:center; gap:10px; color:#1e293b; margin-bottom:2px;"><i class="fas fa-video" style="color:#2563eb;"></i> CCTV Planning Tool</h1>
-                <p style="font-size:0.72rem; color:#64748b; margin:0;">Draw an AOI, upload building &amp; pole data, then generate optimal CCTV placement candidates.</p>
+            <div style="background:#0f2d52; color:white; padding:16px; flex-shrink:0;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                    <i class="fas fa-video" style="font-size:1.1rem;"></i>
+                    <h2 style="font-size:1.0rem; font-weight:800; margin:0; font-family:'Inter',sans-serif;">CCTV Planning Tool</h2>
+                </div>
+                <p style="font-size:0.68rem; color:#93c5fd; margin:0;">Draw an AOI, upload building &amp; pole data, then generate optimal CCTV placement candidates.</p>
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:14px; flex:1;">
+            <div style="padding:16px; display:flex; flex-direction:column; gap:14px; flex:1;">
                 <!-- Search -->
-                <div class="control-group" style="position:relative;">
-                    <label class="control-label">Search Sites</label>
+                <div style="position:relative;">
+                    <label style="font-size:0.68rem; font-weight:700; color:#4b5563; text-transform:uppercase; display:block; margin-bottom:4px;">Search Sites</label>
                     <div style="position:relative;">
                         <i class="fas fa-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.8rem;"></i>
                         <input id="cctvSearchInput" type="text" placeholder="Site ID or name…"
-                            class="light-input" style="padding-left:32px;"
+                            style="width:100%; padding:8px 12px 8px 32px; border:1px solid #d1d5db; border-radius:6px; font-size:0.82rem; outline:none; box-sizing:border-box;"
                             oninput="onCctvSearch(this.value)" autocomplete="off" />
                         <div id="cctvSearchResults" style="position:absolute; top:100%; left:0; right:0; background:white; border-radius:0 0 8px 8px; max-height:200px; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.15); display:none; z-index:201; border:1px solid #e5e7eb;"></div>
                     </div>
@@ -1353,48 +1374,47 @@
         <!-- CCTV Map -->
         <div id="cctvMap" style="position:absolute; top:0; left:360px; right:0; bottom:0;"></div>
 
-        <!-- Tool buttons — top-left, matching Coverage Map style -->
-        <button onclick="toggleAnnotationPanel()" title="Annotations"
-            style="position:absolute; top:10px; left:376px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
-            <i class="fas fa-draw-polygon"></i>
-        </button>
-        <button onclick="toggleNotesPanel()" title="My Notes"
-            style="position:absolute; top:10px; left:428px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
-            <i class="fas fa-sticky-note"></i>
-        </button>
-        <button onclick="toggleTasksPanel()" title="Tasks"
-            style="position:absolute; top:10px; left:480px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
-            <i class="fas fa-tasks"></i>
-        </button>
+        <!-- CCTV overlay buttons — mirror of Coverage Map -->
+        <button class="tool-icon-btn" onclick="toggleAnnotationPanel()" title="Annotations" style="top:10px; left:376px; background:#1e3a8a;"><i class="fas fa-draw-polygon"></i></button>
+        <button class="tool-icon-btn" onclick="toggleNotesPanel()"      title="My Notes"    style="top:10px; left:428px; background:#334155;"><i class="fas fa-sticky-note"></i></button>
+        <button class="tool-icon-btn" onclick="toggleTasksPanel()"      title="Tasks"       style="top:10px; left:480px; background:#1e3a8a;"><i class="fas fa-tasks"></i></button>
 
-        <!-- Layer / View Toggle — bottom left -->
-        <div style="position:absolute; bottom:24px; left:376px; z-index:1100; display:flex; align-items:flex-end; gap:8px;">
-            <button onclick="cctvToggleBaseMap()" id="cctvLayerBtn" title="Toggle Satellite/Street"
-                style="display:flex; align-items:center; gap:8px; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:7px 11px 7px 9px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.12); transition:box-shadow .2s;">
-                <div style="width:30px; height:30px; border-radius:5px; background:#0f2d52; display:flex; align-items:center; justify-content:center;">
-                    <i class="fas fa-satellite" style="color:white; font-size:0.75rem;"></i>
-                </div>
-                <div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px;">
-                    <span id="cctvLayerLabel" style="line-height:1.2;font-size:0.78rem;font-weight:600;color:#374151;">Satellite</span>
-                    <span style="font-size:0.65rem;color:#6b7280;">Base map</span>
-                </div>
-            </button>
+        <!-- CCTV Layer Toggle pill -->
+        <div style="position:absolute; bottom:24px; left:376px; z-index:1100; display:flex; gap:5px; background:white; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px; box-shadow:0 1px 4px rgba(0,0,0,.1);">
+            <button id="cctv-btn-sat" onclick="eofSetBaseMap('cctv','satellite')" title="Satellite"
+                style="width:28px;height:28px;border-radius:5px;border:none;background:#0f2d52;color:white;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-satellite"></i></button>
+            <button id="cctv-btn-street" onclick="eofSetBaseMap('cctv','street')" title="Street"
+                style="width:28px;height:28px;border-radius:5px;border:none;background:#e2e8f0;color:#475569;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-map"></i></button>
+            <button id="cctv-btn-dem" onclick="eofToggleDEM('cctv')" title="Hillshade"
+                style="width:28px;height:28px;border-radius:5px;border:none;background:#e2e8f0;color:#475569;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-mountain"></i></button>
+        </div>
+
+        <!-- CCTV compass -->
+        <div style="position:absolute;top:80px;right:10px;z-index:1200;width:44px;height:44px;background:rgba(255,255,255,.95);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 1px rgba(0,0,0,.07);display:flex;align-items:center;justify-content:center;pointer-events:none;">
+            <svg viewBox="0 0 68 68" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><circle cx="34" cy="34" r="32" fill="white" stroke="#e5e7eb" stroke-width="1.5"/><line x1="34" y1="4" x2="34" y2="9" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/><line x1="34" y1="59" x2="34" y2="64" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><line x1="4" y1="34" x2="9" y2="34" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><line x1="59" y1="34" x2="64" y2="34" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><text x="34" y="19" text-anchor="middle" dominant-baseline="middle" font-size="8.5" font-weight="900" fill="#dc2626" font-family="system-ui,sans-serif">N</text><text x="34" y="54" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">S</text><text x="14" y="34" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">W</text><text x="54" y="34" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">E</text><polygon points="34,11 30,34 34,31 38,34" fill="#dc2626" opacity=".95"/><polygon points="34,57 30,34 34,37 38,34" fill="#d1d5db"/><circle cx="34" cy="34" r="3.5" fill="#1f2937"/><circle cx="34" cy="34" r="1.5" fill="#fff"/></svg>
         </div>
     </div>
 
     <!-- Illegal Bitcoin Mining Analyser -->
     <div id="bitcoinContainer" style="display:none; position:absolute; top:72px; bottom:0; left:0; right:0; overflow:hidden; background:#f3f4f6;">
-        <!-- Sidebar (matches coverage map style) -->
-        <div id="mhSidebar" style="position:absolute; top:0; left:0; bottom:0; width:350px; background:#ffffff; color:#1e293b; z-index:150; padding:20px; box-shadow:1px 0 0 #e2e8f0, 4px 0 16px rgba(0,0,0,.06); display:flex; flex-direction:column; gap:14px; overflow-y:auto; font-family:'Inter',sans-serif;">
+        <!-- Sidebar (matches index.html style) -->
+        <div id="mhSidebar" style="position:absolute; top:0; left:0; bottom:0; width:350px; background:#ffffff; z-index:150; border-right:1px solid #e5e7eb; box-shadow:2px 0 15px rgba(0,0,0,0.08); display:flex; flex-direction:column; overflow-y:auto; font-family:'Inter',sans-serif;">
             <!-- Header -->
-            <div>
-                <h1 style="font-size:1.1rem; font-weight:800; display:flex; align-items:center; gap:10px; color:#1e293b; margin-bottom:2px;"><i class="fab fa-bitcoin" style="color:#d97706;"></i> Illegal Mining Analyser</h1>
-                <p style="font-size:0.72rem; color:#64748b; margin:0;">Select 2 or 3 cell sites to triangulate suspected illegal Bitcoin mining locations.</p>
+            <div style="background:#0f2d52; color:white; padding:16px; flex-shrink:0;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                    <i class="fab fa-bitcoin" style="font-size:1.1rem;"></i>
+                    <h2 style="font-size:1.0rem; font-weight:800; margin:0; font-family:'Inter',sans-serif;">Illegal Mining Analyser</h2>
+                </div>
+                <p style="font-size:0.68rem; color:#93c5fd; margin:0;">Select 2 or 3 cell sites to triangulate suspected illegal Bitcoin mining locations.</p>
             </div>
-            <div style="display:flex; flex-direction:column; gap:12px; flex:1;">
+            <div style="padding:14px; display:flex; flex-direction:column; gap:12px; flex:1;">
                 <!-- Mode Toggle -->
                 <div class="control-group">
                     <label class="control-label">Analysis Mode</label>
+                    <div style="display:flex; gap:6px;">
                         <button id="mh_btn2pt" onclick="mhSetMode(2)" style="flex:1; padding:7px; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer; background:#2563eb; color:white; border:none;">2-Point</button>
                         <button id="mh_btn3pt" onclick="mhSetMode(3)" style="flex:1; padding:7px; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer; background:#f3f4f6; color:#4b5563; border:1px solid #d1d5db;">3-Point</button>
                     </div>
@@ -1462,36 +1482,31 @@
         </div>
         <!-- Map hint -->
         <div id="mhMapHint" style="position:absolute; bottom:20px; left:calc(350px + 50%); transform:translateX(-50%); background:rgba(15,23,42,0.88); color:white; border-radius:8px; padding:8px 16px; font-size:0.78rem; font-weight:600; z-index:200; pointer-events:none;">Click a cell site to select Site 1</div>
+        <!-- Map -->
+        <div id="mhMap" style="position:absolute; top:0; left:350px; right:0; bottom:0;"></div>
 
-        <!-- Tool buttons — top-left, matching Coverage Map style -->
-        <button onclick="toggleAnnotationPanel()" title="Annotations"
-            style="position:absolute; top:10px; left:366px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
-            <i class="fas fa-draw-polygon"></i>
-        </button>
-        <button onclick="toggleNotesPanel()" title="My Notes"
-            style="position:absolute; top:10px; left:418px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
-            <i class="fas fa-sticky-note"></i>
-        </button>
-        <button onclick="toggleTasksPanel()" title="Tasks"
-            style="position:absolute; top:10px; left:470px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
-            <i class="fas fa-tasks"></i>
-        </button>
+        <!-- Bitcoin overlay buttons -->
+        <button class="tool-icon-btn" onclick="toggleAnnotationPanel()" title="Annotations" style="top:10px; left:366px; background:#1e3a8a;"><i class="fas fa-draw-polygon"></i></button>
+        <button class="tool-icon-btn" onclick="toggleNotesPanel()"      title="My Notes"    style="top:10px; left:418px; background:#334155;"><i class="fas fa-sticky-note"></i></button>
+        <button class="tool-icon-btn" onclick="toggleTasksPanel()"      title="Tasks"       style="top:10px; left:470px; background:#1e3a8a;"><i class="fas fa-tasks"></i></button>
 
-        <!-- Layer / View Toggle — bottom left -->
-        <div style="position:absolute; bottom:24px; left:366px; z-index:1100; display:flex; align-items:flex-end; gap:8px;">
-            <button onclick="mhToggleBaseMap()" id="mhLayerBtn" title="Toggle Satellite/Street"
-                style="display:flex; align-items:center; gap:8px; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:7px 11px 7px 9px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.12); transition:box-shadow .2s;">
-                <div style="width:30px; height:30px; border-radius:5px; background:#0f2d52; display:flex; align-items:center; justify-content:center;">
-                    <i class="fas fa-satellite" style="color:white; font-size:0.75rem;"></i>
-                </div>
-                <div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px;">
-                    <span id="mhLayerLabel" style="line-height:1.2;font-size:0.78rem;font-weight:600;color:#374151;">Satellite</span>
-                    <span style="font-size:0.65rem;color:#6b7280;">Base map</span>
-                </div>
-            </button>
+        <!-- Bitcoin Layer Toggle pill -->
+        <div style="position:absolute; bottom:24px; left:366px; z-index:1100; display:flex; gap:5px; background:white; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px; box-shadow:0 1px 4px rgba(0,0,0,.1);">
+            <button id="mh-btn-sat" onclick="eofSetBaseMap('mh','satellite')" title="Satellite"
+                style="width:28px;height:28px;border-radius:5px;border:none;background:#0f2d52;color:white;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-satellite"></i></button>
+            <button id="mh-btn-street" onclick="eofSetBaseMap('mh','street')" title="Street"
+                style="width:28px;height:28px;border-radius:5px;border:none;background:#e2e8f0;color:#475569;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-map"></i></button>
+            <button id="mh-btn-dem" onclick="eofToggleDEM('mh')" title="Hillshade"
+                style="width:28px;height:28px;border-radius:5px;border:none;background:#e2e8f0;color:#475569;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-mountain"></i></button>
         </div>
 
-        <div id="mhMap" style="position:absolute; top:0; left:350px; right:0; bottom:0;"></div>
+        <!-- Bitcoin compass -->
+        <div style="position:absolute;top:80px;right:10px;z-index:1200;width:44px;height:44px;background:rgba(255,255,255,.95);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 1px rgba(0,0,0,.07);display:flex;align-items:center;justify-content:center;pointer-events:none;">
+            <svg viewBox="0 0 68 68" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><circle cx="34" cy="34" r="32" fill="white" stroke="#e5e7eb" stroke-width="1.5"/><line x1="34" y1="4" x2="34" y2="9" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/><line x1="34" y1="59" x2="34" y2="64" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><line x1="4" y1="34" x2="9" y2="34" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><line x1="59" y1="34" x2="64" y2="34" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><text x="34" y="19" text-anchor="middle" dominant-baseline="middle" font-size="8.5" font-weight="900" fill="#dc2626" font-family="system-ui,sans-serif">N</text><text x="34" y="54" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">S</text><text x="14" y="34" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">W</text><text x="54" y="34" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">E</text><polygon points="34,11 30,34 34,31 38,34" fill="#dc2626" opacity=".95"/><polygon points="34,57 30,34 34,37 38,34" fill="#d1d5db"/><circle cx="34" cy="34" r="3.5" fill="#1f2937"/><circle cx="34" cy="34" r="1.5" fill="#fff"/></svg>
+        </div>
     </div>
 
     <!-- ════════════════════════════════════════
@@ -1500,22 +1515,27 @@
     <div id="gensetContainer" style="display:none; position:absolute; top:72px; bottom:0; left:0; right:0; overflow:hidden;">
 
         <!-- Sidebar -->
-        <div id="gensetSidebar" style="position:absolute; top:0; left:0; bottom:0; width:340px; background:#ffffff; color:#1e293b; z-index:150; padding:20px; box-shadow:1px 0 0 #e2e8f0, 4px 0 16px rgba(0,0,0,.06); display:flex; flex-direction:column; gap:14px; overflow-y:auto; font-family:'Inter',sans-serif;">
+        <div id="gensetSidebar" style="position:absolute; top:0; left:0; bottom:0; width:340px; background:#ffffff; z-index:150; border-right:1px solid #e5e7eb; box-shadow:2px 0 15px rgba(0,0,0,0.08); display:flex; flex-direction:column; overflow-y:auto; font-family:'Inter',sans-serif;">
 
             <!-- Header -->
-            <div>
-                <h1 style="font-size:1.1rem; font-weight:800; display:flex; align-items:center; gap:10px; color:#1e293b; margin-bottom:2px;"><i class="fas fa-bolt" style="color:#16a34a;"></i> Genset — TNB Finder</h1>
-                <p style="font-size:0.72rem; color:#64748b; margin:0;">Select a cell site to find the nearest TNB substation within 2 km via road.</p>
-                <!-- Live loading badge -->
-                <div id="gensetStatusBadge" style="display:none; margin-top:6px; align-items:center; gap:5px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:20px; padding:3px 9px; font-size:0.65rem; font-weight:700; letter-spacing:0.03em; width:fit-content;">
-                    <i id="gensetStatusIcon" class="fas fa-circle-notch fa-spin" style="font-size:0.6rem; color:#16a34a;"></i>
-                    <span id="gensetStatusText" style="color:#14532d;">Loading…</span>
+            <div style="background:linear-gradient(135deg,#14532d,#16a34a); color:white; padding:14px 16px 12px; flex-shrink:0;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <i class="fas fa-bolt" style="font-size:1.1rem;"></i>
+                        <h2 style="font-size:1.0rem; font-weight:800; margin:0;">Genset — TNB Finder</h2>
+                    </div>
+                    <!-- Live loading badge -->
+                    <div id="gensetStatusBadge" style="display:none; align-items:center; gap:5px; background:rgba(255,255,255,0.18); border-radius:20px; padding:3px 9px; font-size:0.65rem; font-weight:700; letter-spacing:0.03em;">
+                        <i id="gensetStatusIcon" class="fas fa-circle-notch fa-spin" style="font-size:0.6rem;"></i>
+                        <span id="gensetStatusText">Loading…</span>
+                    </div>
                 </div>
+                <p style="font-size:0.67rem; color:#bbf7d0; margin:0;">Select a cell site to find the nearest TNB substation within 2 km via road.</p>
             </div>
 
             <!-- Map Style Switcher -->
-            <div class="control-group" style="flex-shrink:0;">
-                <span class="control-label">Map Style</span>
+            <div style="padding:10px 12px; border-bottom:1px solid #f3f4f6; background:#fafafa; flex-shrink:0;">
+                <div style="font-size:0.6rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:6px;">Map Style</div>
                 <div style="display:flex; gap:5px; margin-bottom:6px;">
                     <!-- Satellite pill -->
                     <button id="gs-btn-sat" onclick="gsSetBaseMap('satellite')"
@@ -1547,12 +1567,11 @@
             </div>
 
             <!-- Search -->
-            <div class="control-group" style="flex-shrink:0;">
-                <span class="control-label">Search Site</span>
+            <div style="padding:10px 12px; border-bottom:1px solid #f3f4f6; flex-shrink:0;">
                 <div style="position:relative;">
                     <i class="fas fa-search" style="position:absolute; left:9px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.75rem;"></i>
                     <input id="gensetSearchInput" type="text" placeholder="Search site ID or name…"
-                        class="light-input" style="padding-left:28px;"
+                        style="width:100%; padding:7px 10px 7px 28px; border:1px solid #d1d5db; border-radius:6px; font-size:0.8rem; outline:none; box-sizing:border-box;"
                         oninput="gensetOnSearch(this.value)" autocomplete="off"/>
                     <div id="gensetSearchResults" style="position:absolute; top:100%; left:0; right:0; background:white; border-radius:0 0 8px 8px; max-height:200px; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.15); display:none; z-index:201; border:1px solid #e5e7eb;"></div>
                 </div>
@@ -1595,62 +1614,25 @@
 
             <!-- ── BULK EXCEL PROCESSING ── -->
             <div style="margin:10px 12px 0; border:1px solid #bbf7d0; border-radius:10px; overflow:hidden; flex-shrink:0;">
-                <!-- Section header / toggle -->
-                <div onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display==='none' ? 'block' : 'none'; this.querySelector('i.chevron').style.transform = this.nextElementSibling.style.display==='none' ? 'rotate(-90deg)' : 'rotate(0deg)';"
-                    style="display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:#f0fdf4; cursor:pointer; user-select:none;">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:#f0fdf4;">
                     <span style="font-size:0.68rem; font-weight:800; color:#14532d; display:flex; align-items:center; gap:6px;">
                         <i class="fas fa-file-excel" style="color:#16a34a;"></i> Bulk Site Processing
                     </span>
-                    <i class="fas fa-chevron-down chevron" style="font-size:0.6rem; color:#6b7280; transition:transform 0.2s;"></i>
+                    <button onclick="gensetClearBulk()" title="Clear" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:0.7rem;padding:2px 5px;border-radius:4px;" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#9ca3af'"><i class="fas fa-trash"></i></button>
                 </div>
 
-                <!-- Collapsible body -->
                 <div style="padding:10px 12px; background:white;">
+                    <p style="font-size:0.65rem; color:#6b7280; margin:0 0 8px;">Upload an Excel/CSV file with a <b>site_id</b> column. Each site will be checked for TNB substations within 2 km via road.</p>
 
-                    <!-- Mode tabs -->
-                    <div style="display:flex; gap:4px; margin-bottom:10px; background:#f3f4f6; border-radius:7px; padding:3px;">
-                        <button id="gsBulkTabSingle" onclick="gsSwitchBulkTab('single')"
-                            style="flex:1; padding:5px; border:none; border-radius:5px; font-size:0.7rem; font-weight:700; cursor:pointer; background:white; color:#16a34a; box-shadow:0 1px 3px rgba(0,0,0,0.1); transition:all 0.15s;">
-                            <i class="fas fa-crosshairs" style="margin-right:3px;"></i>Single
-                        </button>
-                        <button id="gsBulkTabExcel" onclick="gsSwitchBulkTab('excel')"
-                            style="flex:1; padding:5px; border:none; border-radius:5px; font-size:0.7rem; font-weight:700; cursor:pointer; background:transparent; color:#6b7280; transition:all 0.15s;">
-                            <i class="fas fa-file-excel" style="margin-right:3px;"></i>Excel
-                        </button>
-                    </div>
+                    <!-- File input -->
+                    <label id="gensetXlsxLabel" style="display:flex; align-items:center; gap:6px; padding:7px 10px; border:1.5px dashed #86efac; border-radius:7px; background:#f0fdf4; cursor:pointer; font-size:0.72rem; color:#16a34a; font-weight:700; margin-bottom:8px; transition:background 0.15s;"
+                        onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
+                        <i class="fas fa-upload"></i>
+                        <span id="gensetXlsxName">Choose .xlsx / .xls / .csv…</span>
+                        <input type="file" id="gensetXlsxInput" accept=".xlsx,.xls,.csv" onchange="gensetXlsxLoaded(this)" style="display:none;">
+                    </label>
 
-                    <!-- Single site entry -->
-                    <div id="gsBulkSinglePanel">
-                        <p style="font-size:0.65rem; color:#6b7280; margin:0 0 7px;">Type a Site ID and run a single TNB lookup.</p>
-                        <div style="display:flex; gap:5px; margin-bottom:8px;">
-                            <div style="position:relative; flex:1;">
-                                <input id="gsBulkSingleInput" type="text" placeholder="Enter Site ID…"
-                                    style="width:100%; padding:7px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:0.78rem; outline:none; box-sizing:border-box;"
-                                    oninput="gsBulkSingleSearch(this.value)"
-                                    onkeydown="if(event.key==='Enter') gensetRunSingle()"
-                                    autocomplete="off">
-                                <div id="gsBulkSingleResults" style="position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #e5e7eb; border-radius:0 0 7px 7px; max-height:160px; overflow-y:auto; z-index:300; box-shadow:0 8px 16px rgba(0,0,0,0.12); display:none;"></div>
-                            </div>
-                            <button onclick="gensetRunSingle()" id="gsBulkSingleRunBtn"
-                                style="padding:7px 10px; background:#16a34a; color:white; border:none; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer; white-space:nowrap; transition:background 0.15s;"
-                                onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
-                                <i class="fas fa-search-location"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Excel upload (hidden by default) -->
-                    <div id="gsBulkExcelPanel" style="display:none;">
-                        <p style="font-size:0.65rem; color:#6b7280; margin:0 0 7px;">Upload a file with a <b>site_id</b> column to batch-process all sites.</p>
-                        <label id="gensetXlsxLabel" style="display:flex; align-items:center; gap:6px; padding:7px 10px; border:1.5px dashed #86efac; border-radius:7px; background:#f0fdf4; cursor:pointer; font-size:0.72rem; color:#16a34a; font-weight:700; margin-bottom:8px; transition:background 0.15s;"
-                            onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
-                            <i class="fas fa-upload"></i>
-                            <span id="gensetXlsxName">Choose .xlsx / .xls / .csv…</span>
-                            <input type="file" id="gensetXlsxInput" accept=".xlsx,.xls,.csv" onchange="gensetXlsxLoaded(this)" style="display:none;">
-                        </label>
-                    </div>
-
-                    <!-- Progress bar (shared) -->
+                    <!-- Progress bar -->
                     <div id="gensetBulkProgress" style="display:none; margin-bottom:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
                             <span id="gensetBulkProgressLabel" style="font-size:0.65rem; font-weight:700; color:#16a34a;">Processing…</span>
@@ -1661,21 +1643,18 @@
                         </div>
                     </div>
 
-                    <!-- Run / Stop / Clear buttons (Excel mode only) -->
-                    <div id="gsBulkExcelBtns" style="display:none; gap:6px; margin-bottom:8px;">
+                    <!-- Run / Stop buttons -->
+                    <div style="display:flex; gap:6px; margin-bottom:8px;">
                         <button id="gensetBulkRunBtn" onclick="gensetRunBulk()" disabled
                             style="flex:1; padding:7px; background:#d1d5db; color:#9ca3af; border:none; border-radius:7px; font-size:0.75rem; font-weight:700; cursor:not-allowed; transition:all 0.15s;">
-                            <i class="fas fa-play" style="margin-right:4px;"></i>Run All
+                            <i class="fas fa-play" style="margin-right:4px;"></i>Run All Sites
                         </button>
                         <button id="gensetBulkStopBtn" onclick="gensetStopBulk()" style="display:none; padding:7px 12px; background:#fee2e2; color:#b91c1c; border:none; border-radius:7px; font-size:0.75rem; font-weight:700; cursor:pointer;">
                             <i class="fas fa-stop"></i>
                         </button>
-                        <button onclick="gensetClearBulk()" style="padding:7px 10px; background:#f3f4f6; color:#6b7280; border:none; border-radius:7px; font-size:0.75rem; font-weight:700; cursor:pointer;">
-                            <i class="fas fa-trash"></i>
-                        </button>
                     </div>
 
-                    <!-- Summary stats (shared) -->
+                    <!-- Summary stats -->
                     <div id="gensetBulkStats" style="display:none; grid-template-columns:repeat(3,1fr); gap:4px; margin-bottom:8px; text-align:center;">
                         <div style="background:#f0fdf4; border-radius:6px; padding:5px;">
                             <div id="gsBulkStatTotal" style="font-size:0.95rem; font-weight:900; color:#14532d;">0</div>
@@ -1691,8 +1670,41 @@
                         </div>
                     </div>
 
-                    <!-- Results list (shared) -->
-                    <div id="gensetBulkResults" style="display:none; max-height:220px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:7px; font-size:0.65rem;"></div>
+                    <!-- Total distance summary -->
+                    <div id="gsBulkTotalRow" style="display:none; background:#f0fdf4; border:1px solid #86efac; border-radius:7px; padding:8px 10px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem;">
+                            <span style="color:#14532d; font-weight:700;"><i class="fas fa-ruler" style="margin-right:4px;"></i>Total Cable Length</span>
+                            <span id="gsBulkTotalDist" style="font-weight:900; color:#16a34a; font-size:0.85rem;">0 km</span>
+                        </div>
+                    </div>
+
+                    <!-- Cable cost calculator -->
+                    <div id="gsBulkCostCalc" style="display:none; background:#fffbeb; border:1px solid #fde68a; border-radius:7px; padding:8px 10px; margin-bottom:8px;">
+                        <div style="font-size:0.62rem; font-weight:800; color:#92400e; text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px;"><i class="fas fa-calculator" style="margin-right:4px;"></i>Cost Estimator</div>
+                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                            <span style="font-size:0.68rem; color:#6b7280; white-space:nowrap;">RM per 100m:</span>
+                            <input id="gsBulkCostPer100m" type="number" min="0" step="0.01" placeholder="e.g. 100"
+                                style="flex:1; padding:5px 7px; border:1px solid #fde68a; border-radius:5px; font-size:0.78rem; outline:none; min-width:0;"
+                                oninput="gsBulkRecalcCost()">
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:5px; border-top:1px solid #fde68a;">
+                            <span style="font-size:0.68rem; color:#92400e; font-weight:700;">Estimated Total Cost</span>
+                            <span id="gsBulkTotalCost" style="font-weight:900; color:#d97706; font-size:0.9rem;">RM 0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Results list -->
+                    <div id="gensetBulkResults" style="display:none; max-height:220px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:7px; font-size:0.65rem; margin-bottom:8px;"></div>
+
+                    <!-- Export buttons -->
+                    <div id="gsBulkExportRow" style="display:none; display:none; gap:5px;">
+                        <button onclick="gensetBulkExport('xlsx')" style="flex:1; padding:6px; background:#0f2d52; color:white; border:none; border-radius:6px; font-size:0.7rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;">
+                            <i class="fas fa-file-excel"></i> XLSX
+                        </button>
+                        <button onclick="gensetBulkExport('csv')" style="flex:1; padding:6px; background:#334155; color:white; border:none; border-radius:6px; font-size:0.7rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;">
+                            <i class="fas fa-file-csv"></i> CSV
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1782,19 +1794,22 @@
         <button id="gensetAnnotationBtn"
             onclick="toggleAnnotationPanel()"
             title="Annotations"
-            style="position:absolute; top:10px; left:350px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
+            class="tool-icon-btn"
+            style="top:10px; left:350px; background:#1e3a8a;">
             <i class="fas fa-draw-polygon"></i>
         </button>
         <button id="gensetNotesBtn"
             onclick="toggleNotesPanel()"
             title="My Notes"
-            style="position:absolute; top:10px; left:402px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
+            class="tool-icon-btn"
+            style="top:10px; left:402px; background:#334155;">
             <i class="fas fa-sticky-note"></i>
         </button>
         <button id="gensetTasksBtn"
             onclick="toggleTasksPanel()"
             title="Tasks"
-            style="position:absolute; top:10px; left:454px; z-index:1200; width:40px; height:40px; border-radius:6px; background:#1e3a8a; color:white; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:all 0.2s;">
+            class="tool-icon-btn"
+            style="top:10px; left:454px; background:#1e3a8a;">
             <i class="fas fa-tasks"></i>
         </button>
 
@@ -1836,8 +1851,8 @@
         </div>
     </div>
 
-    <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-[6000] flex items-center justify-center" style="padding-top:72px;">
-            <div class="bg-white rounded-xl shadow-2xl w-[95vw] flex flex-col overflow-hidden" style="height:calc(95vh - 72px);">
+    <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center" style="z-index:11000; padding-top:80px;">
+            <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden">
                 <div class="bg-gray-800 text-white p-3 flex justify-between items-center flex-shrink-0">
                     <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> 3W Dashboard</h3>
                     <button onclick="closeMetabaseDashboard()" class="text-gray-300 hover:text-white text-xl transition-colors">
@@ -1864,7 +1879,7 @@
         </div>
     </div>
 
-    <div id="settingsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style="z-index:99999;">
+    <div id="settingsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style="z-index:11000;">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
             <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white flex items-center justify-between">
                 <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-cog"></i> Account Settings</h2>
@@ -1928,7 +1943,7 @@
     </div>
 
     <!-- Review Modal -->
-    <div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style="z-index:11000;">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
             <div class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 py-4 flex justify-between items-center">
                 <div>
@@ -1992,7 +2007,7 @@
     </div>
 
     <!-- Messaging Modal -->
-    <div id="messagingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div id="messagingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style="z-index:11000;">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden" style="height: 640px; display: flex; flex-direction: column;">
             <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white flex items-center justify-between flex-shrink-0">
                 <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments"></i> Messages</h2>
@@ -2362,8 +2377,8 @@
             document.getElementById('toolsDropdown')?.classList.add('hidden');
             document.getElementById('opsDropdown')?.classList.add('hidden');
 
-            // Close sliding panels unless staying on map or genset
-            if (tab !== 'map' && tab !== 'genset') {
+            // Close sliding panels unless on a map-based tab
+            if (tab !== 'map' && tab !== 'genset' && tab !== 'cctv' && tab !== 'bitcoin') {
                 ['annotationPanel','tasksPanel','notesPanel'].forEach(id => {
                     document.getElementById(id)?.classList.remove('open');
                 });
@@ -2647,7 +2662,7 @@
 
 
         // --- SETTINGS ---
-        async function openSettingsModal() {
+        window._openSettingsModal = async function() {
             document.getElementById('menuDropdown').classList.add('hidden');
             try {
                 const res = await fetch('/api/user/profile'); const data = await res.json();
@@ -2657,7 +2672,7 @@
             } catch(e) {}
             document.getElementById('settingsModal').classList.remove('hidden');
         }
-        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); document.getElementById('profileMsg').classList.add('hidden'); document.getElementById('passwordMsg').classList.add('hidden'); }
+        window._closeSettingsModal = function() { document.getElementById('settingsModal').classList.add('hidden'); document.getElementById('profileMsg').classList.add('hidden'); document.getElementById('passwordMsg').classList.add('hidden'); }
         async function saveProfileSettings() {
             const msgEl = document.getElementById('profileMsg'); msgEl.classList.add('hidden');
             try {
@@ -2679,8 +2694,8 @@
 
         // --- REVIEWS ---
         let _reviewRating = 0;
-        function openReviewModal() { document.getElementById('reviewModal').classList.remove('hidden'); switchReviewTab('write'); }
-        function closeReviewModal() { document.getElementById('reviewModal').classList.add('hidden'); resetReviewForm(); }
+        window._openReviewModal = function() { document.getElementById('reviewModal').classList.remove('hidden'); switchReviewTab('write'); }
+        window._closeReviewModal = function() { document.getElementById('reviewModal').classList.add('hidden'); resetReviewForm(); }
         function switchReviewTab(tab) {
             const write = document.getElementById('reviewPanelWrite'); const read = document.getElementById('reviewPanelRead');
             const tabW = document.getElementById('reviewTabWrite'); const tabR = document.getElementById('reviewTabRead');
@@ -2738,11 +2753,11 @@
         // --- MESSAGING ---
         let currentConversationId = null; let allMessages = []; let allConversations = []; let chatPollInterval = null;
         const EMOJIS = ['😀','😂','😍','🥰','😎','🤔','😅','😭','😤','🙏','👍','👎','❤️','🔥','✅','⚡','🎉','💯','🚀','👏','😊','🤣','😆','😁','😋','🤩','😇','😴','🤗','😏','😒','🙄','😑','🤐','😬','🥲','😓','😥','😢','😨','😰','😱','🤯','🤫','🫡','🫠','💀','👻'];
-        async function openMessagingModal() {
+        window._openMessagingModal = async function() {
             try { document.getElementById('menuDropdown').classList.add('hidden'); } catch(e) {}
             document.getElementById('messagingModal').classList.remove('hidden'); buildEmojiPicker(); await loadConversations(); await loadUsersForMessaging();
         }
-        function closeMessagingModal() { document.getElementById('messagingModal').classList.add('hidden'); if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null; } document.getElementById('emojiPicker').classList.add('hidden'); }
+        window._closeMessagingModal = function() { document.getElementById('messagingModal').classList.add('hidden'); if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null; } document.getElementById('emojiPicker').classList.add('hidden'); }
         function buildEmojiPicker() {
             const picker = document.querySelector('#emojiPicker > div'); if (picker.childElementCount > 0) return;
             EMOJIS.forEach(e => { const btn = document.createElement('button'); btn.textContent = e; btn.className = 'hover:bg-gray-100 rounded p-0.5 cursor-pointer'; btn.onclick = () => insertEmoji(e); picker.appendChild(btn); });
@@ -5246,19 +5261,16 @@
         function mhDefaultIcon(){return L.divIcon({className:'custom-pin',html:'<div style="width:8px;height:8px;border-radius:50%;background:#2563eb;border:1.5px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>',iconSize:[8,8],iconAnchor:[4,4]});}
         function mhSelectedIcon(c){return L.divIcon({className:'',html:'<div style="width:14px;height:14px;border-radius:50%;background:'+c+';border:2px solid white;box-shadow:0 0 10px '+c+';"></div>',iconSize:[14,14],iconAnchor:[7,7]});}
 
-        let mhSatLayer=null, mhStreetLayer=null, mhLabelLayer=null, mhSatMode=true;
         async function initMinerHunter(){
             if(mhInitialized){mhMap.invalidateSize();return;}
             mhInitialized=true;
             mhMap=L.map('mhMap',{zoomControl:true,preferCanvas:true}).setView([3.8,108.5],6);
-            mhSatLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'&copy; Esri',maxZoom:19});
-            mhStreetLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap',maxZoom:19});
-            mhLabelLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:0.7});
-            mhSatLayer.addTo(mhMap); mhLabelLayer.addTo(mhMap); mhSatMode=true;
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'&copy; Esri',maxZoom:19}).addTo(mhMap);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:0.7}).addTo(mhMap);
             let data;
             if(siteDataCache&&siteDataCache.length>0){data=siteDataCache;}else{try{const r=await fetch('/api/sites');data=await r.json();if(!Array.isArray(data))data=[];}catch(e){data=[];}}
             mhSitesData=data.filter(s=>s&&s.site_id&&!isNaN(parseFloat(s.lat))&&!isNaN(parseFloat(s.lng))).map(s=>({site_id:s.site_id,site_name:s.site_name||s.site_id,lat:parseFloat(s.lat),lon:parseFloat(s.lng),state:s.region||'',district:s.cluster||''}));
-            const cl=L.markerClusterGroup({disableClusteringAtZoom:14,maxClusterRadius:50,iconCreateFunction:c=>L.divIcon({html:`<div class="cluster-base cluster-normal"><span>${c.getChildCount()}</span></div>`,className:'marker-cluster',iconSize:[40,40]})});
+            const cl=L.markerClusterGroup({disableClusteringAtZoom:14,maxClusterRadius:50,iconCreateFunction:function(c){return new L.DivIcon({html:'<div class="cluster-base cluster-normal"><span>'+c.getChildCount()+'</span></div>',className:'marker-cluster',iconSize:new L.Point(40,40)});} });
             mhSitesData.forEach(s=>{const m=L.marker([s.lat,s.lon],{icon:mhDefaultIcon()}).on('click',()=>mhSelectSite(s));mhSiteMarkerMap[s.site_id]=m;cl.addLayer(m);});
             mhMap.addLayer(cl);
             // Coverage
@@ -5266,14 +5278,6 @@
             mhSetMode(2);
         }
 
-        function mhToggleBaseMap(){
-            if(!mhMap) return;
-            mhSatMode=!mhSatMode;
-            if(mhSatMode){mhStreetLayer.remove();mhSatLayer.addTo(mhMap);mhLabelLayer.addTo(mhMap);}
-            else{mhSatLayer.remove();mhLabelLayer.remove();mhStreetLayer.addTo(mhMap);}
-            const lbl=document.getElementById('mhLayerLabel');
-            if(lbl) lbl.textContent=mhSatMode?'Satellite':'Street';
-        }
         function mhSetMode(m){mhMode=m;document.getElementById('mh_btn2pt').style.background=m===2?'#2563eb':'#f3f4f6';document.getElementById('mh_btn2pt').style.color=m===2?'white':'#4b5563';document.getElementById('mh_btn2pt').style.border=m===2?'none':'1px solid #d1d5db';document.getElementById('mh_btn3pt').style.background=m===3?'#2563eb':'#f3f4f6';document.getElementById('mh_btn3pt').style.color=m===3?'white':'#4b5563';document.getElementById('mh_btn3pt').style.border=m===3?'none':'1px solid #d1d5db';document.getElementById('mhSlot3Wrapper').style.display=m===2?'none':'';document.getElementById('mhStep3').style.display=m===2?'none':'';document.getElementById('mhSep23').style.display=m===2?'none':'';mhResetAll();}
         function mhSelectSite(s){const max=mhMode===2?2:3;const slot=mhSelected.slice(0,max).findIndex(x=>x===null);if(slot===-1)return;if(mhSelected.some(x=>x&&x.site_id===s.site_id))return;mhSelected[slot]=s;mhUpdateUI();mhMap.panTo([s.lat,s.lon]);}
         function mhRemoveSite(i){mhSelected[i]=null;const f=mhSelected.filter(s=>s);mhSelected=[f[0]||null,f[1]||null,f[2]||null];mhUpdateUI();mhClearAnalysis();}
@@ -5486,26 +5490,14 @@
             if (autohide) setTimeout(() => { el.style.opacity = '0'; }, autohide);
         }
 
-        function cctvToggleBaseMap() {
-            if (!cctvMap) return;
-            window.cctvSatMode = !window.cctvSatMode;
-            if (window.cctvSatMode) { cctvStreetLayer.remove(); cctvSatLayer.addTo(cctvMap); cctvLabelLayer.addTo(cctvMap); }
-            else { cctvSatLayer.remove(); cctvLabelLayer.remove(); cctvStreetLayer.addTo(cctvMap); }
-            const lbl = document.getElementById('cctvLayerLabel');
-            if (lbl) lbl.textContent = window.cctvSatMode ? 'Satellite' : 'Street';
-        }
-
         async function initCctvMap() {
             if (cctvInitialized) { cctvMap.invalidateSize(); return; }
             cctvInitialized = true;
             setCctvStatus('Initializing map…', 'fas fa-circle-notch fa-spin');
 
             cctvMap = L.map('cctvMap', { center: [3.1390, 101.6869], zoom: 12, zoomControl: true });
-            window.cctvSatLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri', maxZoom: 19 });
-            window.cctvStreetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 });
-            window.cctvLabelLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, opacity: 0.7 });
-            window.cctvSatMode = true;
-            cctvSatLayer.addTo(cctvMap); cctvLabelLayer.addTo(cctvMap);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri', maxZoom: 19 }).addTo(cctvMap);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, opacity: 0.7 }).addTo(cctvMap);
 
             cctvCoverageGroup = L.layerGroup().addTo(cctvMap);
             cctvResultLayers = L.layerGroup().addTo(cctvMap);
@@ -5548,7 +5540,7 @@
                 setCctvStatus('Rendering ' + cctvSiteDataCache.length + ' sites…', 'fas fa-broadcast-tower fa-beat-fade');
                 await new Promise(r => setTimeout(r, 50));
 
-                cctvSiteMarkers = L.markerClusterGroup({ disableClusteringAtZoom: 14, maxClusterRadius: 50, iconCreateFunction: c => L.divIcon({ html: `<div class="cluster-base cluster-normal"><span>${c.getChildCount()}</span></div>`, className: 'marker-cluster', iconSize: [40, 40] }) });
+                cctvSiteMarkers = L.markerClusterGroup({ disableClusteringAtZoom: 14, maxClusterRadius: 50, iconCreateFunction: function(c) { return new L.DivIcon({ html: '<div class="cluster-base cluster-normal"><span>' + c.getChildCount() + '</span></div>', className: 'marker-cluster', iconSize: new L.Point(40, 40) }); } });
                 cctvSiteDataCache.forEach(site => {
                     const icon = L.divIcon({ className: 'custom-pin', html: '<div style="background:#2563eb; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>', iconSize: [12, 12] });
                     const popup = '<div style="padding:8px; min-width:180px;"><div style="font-weight:800; color:#1e3a8a;">' + site.site_id + '</div><div style="font-size:0.75rem; color:#64748b;">' + (site.site_name||'') + '</div></div>';
@@ -6347,6 +6339,80 @@
 
 
     // ================================================================
+    // EOF (CCTV & Bitcoin) LAYER CONTROLS
+    // ================================================================
+    const _eofState = {
+        cctv: { mode: 'satellite', dem: false, sat: null, labels: null, street: null, dem: null },
+        mh:   { mode: 'satellite', dem: false, sat: null, labels: null, street: null, demLayer: null }
+    };
+
+    function _eofGetMap(key) { return key === 'cctv' ? (typeof cctvMap !== 'undefined' ? cctvMap : null) : (typeof mhMap !== 'undefined' ? mhMap : null); }
+
+    function eofSetBaseMap(key, mode) {
+        const m = _eofGetMap(key);
+        if (!m) return;
+        const s = _eofState[key];
+
+        if (!s.sat) {
+            s.sat    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri', maxZoom: 19 });
+            s.labels = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { attribution: '&copy; CartoDB', subdomains: 'abcd', maxZoom: 19 });
+            s.street = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; CartoDB', subdomains: 'abcd', maxZoom: 19 });
+            s.demLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri', maxZoom: 19, opacity: 0.55, zIndex: 3 });
+        }
+
+        if (mode === 'satellite') {
+            if (m.hasLayer(s.street)) m.removeLayer(s.street);
+            s.sat.addTo(m); s.labels.addTo(m);
+        } else {
+            if (m.hasLayer(s.sat))    m.removeLayer(s.sat);
+            if (m.hasLayer(s.labels)) m.removeLayer(s.labels);
+            s.street.addTo(m);
+        }
+        s.mode = mode;
+        if (s.demActive && s.demLayer) { s.demLayer.bringToFront(); if (mode === 'satellite') s.labels.bringToFront(); }
+
+        // Update pill button active states
+        const satBtn    = document.getElementById(key + '-btn-sat');
+        const streetBtn = document.getElementById(key + '-btn-street');
+        if (satBtn && streetBtn) {
+            satBtn.style.background    = mode === 'satellite' ? '#0f2d52' : '#e2e8f0';
+            satBtn.style.color         = mode === 'satellite' ? 'white'   : '#475569';
+            streetBtn.style.background = mode === 'street'    ? '#0f2d52' : '#e2e8f0';
+            streetBtn.style.color      = mode === 'street'    ? 'white'   : '#475569';
+        }
+    }
+
+    function eofToggleDEM(key) {
+        const m = _eofGetMap(key);
+        if (!m) return;
+        const s = _eofState[key];
+        if (!s.sat) eofSetBaseMap(key, s.mode); // ensure layers created
+
+        const demBtn = document.getElementById(key + '-btn-dem');
+        if (s.demActive) {
+            m.removeLayer(s.demLayer);
+            s.demActive = false;
+            if (demBtn) { demBtn.style.background = '#e2e8f0'; demBtn.style.color = '#475569'; }
+        } else {
+            s.demLayer.addTo(m); s.demLayer.bringToFront();
+            if (s.mode === 'satellite' && s.labels) s.labels.bringToFront();
+            s.demActive = true;
+            if (demBtn) { demBtn.style.background = '#0f2d52'; demBtn.style.color = 'white'; }
+        }
+    }
+
+    // Bootstrap EOF tile layers once each map is initialised
+    (function waitForEofMaps() {
+        let cctvReady = false, mhReady = false;
+        function tryInit() {
+            if (!cctvReady && typeof cctvMap !== 'undefined' && cctvMap) { eofSetBaseMap('cctv', 'satellite'); cctvReady = true; }
+            if (!mhReady   && typeof mhMap   !== 'undefined' && mhMap)   { eofSetBaseMap('mh',   'satellite'); mhReady   = true; }
+            if (!cctvReady || !mhReady) setTimeout(tryInit, 500);
+        }
+        setTimeout(tryInit, 800);
+    })();
+
+    // ================================================================
     // BASE MAP TOGGLE — Satellite ↔ Street
     // ================================================================
     function toggleBaseMap() {
@@ -6694,9 +6760,20 @@
     async function gensetLoadSites() {
         gsSetStatus('Loading sites…');
         try {
-            const res  = await fetch('/api/sites');
-            const data = await res.json();
-            gensetSitesData = data.filter(s => {
+            let raw;
+
+            // Reuse the Coverage Map cache if already loaded — avoids a redundant heavy API call
+            if (typeof siteDataCache !== 'undefined' && siteDataCache && siteDataCache.length > 0) {
+                raw = siteDataCache;
+                gsSetStatus('Using cached sites…');
+            } else {
+                // Fall back to the lightweight basic endpoint (coords + region only)
+                const res = await fetch('/api/sites/basic');
+                raw = await res.json();
+                if (!Array.isArray(raw)) raw = [];
+            }
+
+            gensetSitesData = raw.filter(s => {
                 const lat = parseFloat(s.lat), lng = parseFloat(s.lng);
                 return s.site_id && !isNaN(lat) && !isNaN(lng) && (lat !== 0 || lng !== 0);
             });
@@ -6704,8 +6781,8 @@
             const clusterGroup = L.markerClusterGroup({
                 maxClusterRadius: 50,
                 iconCreateFunction: c => L.divIcon({
-                    html: `<div class="cluster-base cluster-normal"><span>${c.getChildCount()}</span></div>`,
-                    className: 'marker-cluster', iconSize: [40, 40]
+                    html: `<div style="width:34px;height:34px;border-radius:50%;background:#16a34a;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.25);">${c.getChildCount()}</div>`,
+                    className: '', iconSize: [34, 34]
                 })
             });
 
@@ -6972,9 +7049,10 @@ out center;`;
 
     // ── Bulk Excel processing ──
     let gsBulkSiteIds  = [];
-    let gsBulkResults  = [];
+    let gsBulkResults  = [];   // { siteId, status, subName, distM, routeGeom, lat, lng }
     let gsBulkRunning  = false;
     let gsBulkAbort    = false;
+    let gsBulkRouteLines = []; // polylines drawn on map
 
     function gensetXlsxLoaded(input) {
         const file = input.files[0];
@@ -6993,11 +7071,9 @@ out center;`;
                 const btn = document.getElementById('gensetBulkRunBtn');
                 if (gsBulkSiteIds.length) {
                     btn.disabled = false; btn.style.background = '#16a34a'; btn.style.color = 'white'; btn.style.cursor = 'pointer';
-                    gsSetStatus(`${gsBulkSiteIds.length} sites loaded from Excel`, false);
+                    gsSetStatus(gsBulkSiteIds.length + ' sites loaded from file', false);
                     setTimeout(() => gsSetStatus(null), 2500);
-                } else {
-                    alert('No site_id values found in the first sheet.');
-                }
+                } else { alert('No site_id values found in the first sheet.'); }
             } catch(err) { alert('Could not read file: ' + err.message); }
         };
         reader.readAsArrayBuffer(file);
@@ -7007,73 +7083,96 @@ out center;`;
         if (!gsBulkSiteIds.length || gsBulkRunning) return;
         if (!gensetSitesData.length) { alert('Sites not loaded yet — please wait.'); return; }
         gsBulkRunning = true; gsBulkAbort = false; gsBulkResults = [];
+        gsBulkRouteLines.forEach(l => { try { gensetMap.removeLayer(l); } catch(e) {} });
+        gsBulkRouteLines = [];
 
-        const total       = gsBulkSiteIds.length;
-        const progress    = document.getElementById('gensetBulkProgress');
+        const total = gsBulkSiteIds.length;
+        const progress = document.getElementById('gensetBulkProgress');
         const progressBar = document.getElementById('gensetBulkProgressBar');
         const progressLbl = document.getElementById('gensetBulkProgressLabel');
         const progressPct = document.getElementById('gensetBulkProgressPct');
-        const resultsEl   = document.getElementById('gensetBulkResults');
-        const statsEl     = document.getElementById('gensetBulkStats');
-        const runBtn      = document.getElementById('gensetBulkRunBtn');
-        const stopBtn     = document.getElementById('gensetBulkStopBtn');
+        const resultsEl = document.getElementById('gensetBulkResults');
+        const statsEl = document.getElementById('gensetBulkStats');
+        const runBtn = document.getElementById('gensetBulkRunBtn');
+        const stopBtn = document.getElementById('gensetBulkStopBtn');
 
-        progress.style.display = 'block'; resultsEl.style.display = 'block'; statsEl.style.display = 'grid';
-        stopBtn.style.display = 'inline-flex'; runBtn.style.display = 'none'; resultsEl.innerHTML = '';
-        let found = 0, none = 0;
+        progress.style.display = 'block'; resultsEl.style.display = 'block';
+        statsEl.style.display = 'grid';
+        stopBtn.style.display = 'inline-flex'; runBtn.style.display = 'none';
+        resultsEl.innerHTML = '';
+        resultsEl.insertAdjacentHTML('afterbegin',
+            '<div style="display:grid;grid-template-columns:1fr 1.4fr 0.7fr;gap:4px;padding:4px 8px;background:#f1f5f9;font-weight:800;font-size:0.6rem;color:#475569;text-transform:uppercase;border-bottom:1px solid #e2e8f0;"><span>Site ID</span><span>Substation</span><span>Distance</span></div>');
+
+        let found = 0, none = 0, totalDistM = 0;
 
         for (let i = 0; i < total; i++) {
             if (gsBulkAbort) break;
             const siteId = gsBulkSiteIds[i];
             const pct = Math.round((i / total) * 100);
             progressBar.style.width = pct + '%'; progressPct.textContent = pct + '%';
-            progressLbl.textContent = `Processing ${i+1}/${total}: ${siteId}`;
-            gsSetStatus(`${i+1}/${total} — ${siteId}`);
+            progressLbl.textContent = 'Processing ' + (i+1) + '/' + total + ': ' + siteId;
+            gsSetStatus((i+1) + '/' + total + ' — ' + siteId);
 
             const site = gensetSitesData.find(s => s.site_id.toUpperCase() === siteId.toUpperCase());
             if (!site) {
-                const row = { siteId, status:'not_found', subName:'Site not in DB', dist:'—', time:'—' };
+                const row = { siteId, status:'not_found', subName:'Site not in DB', distM:null, routeGeom:null, lat:null, lng:null };
                 gsBulkResults.push(row); none++;
-                gensetBulkAppendRow(resultsEl, row, i); gensetBulkUpdateStats(total, found, none); continue;
-            }
-            try {
-                const result = await gensetFindTNBSilent(site.lat, site.lng);
-                if (result) {
-                    found++;
-                    const row = { siteId, status:'found', subName: result.sub.name, dist:(result.roadDist/1000).toFixed(3)+' km', time:Math.ceil(result.duration/60)+' min' };
-                    gsBulkResults.push(row); gensetBulkAppendRow(resultsEl, row, i);
-                } else {
+                gensetBulkAppendRow(resultsEl, row, i);
+            } else {
+                try {
+                    const result = await gensetFindTNBSilentFull(site.lat, site.lng);
+                    if (result) {
+                        found++; totalDistM += result.roadDist;
+                        const row = { siteId, status:'found', subName: result.sub.name, distM: result.roadDist, routeGeom: result.geometry, lat: site.lat, lng: site.lng };
+                        gsBulkResults.push(row);
+                        gensetBulkAppendRow(resultsEl, row, i);
+                        const coords = result.geometry.coordinates.map(c => [c[1], c[0]]);
+                        const line = L.polyline(coords, { color:'#f59e0b', weight:4, opacity:0.8, lineCap:'round', pane:'routePane' }).addTo(gensetMap);
+                        gsBulkRouteLines.push(line);
+                    } else {
+                        none++;
+                        const row = { siteId, status:'none', subName:'None within 2 km', distM:null, routeGeom:null, lat: site.lat, lng: site.lng };
+                        gsBulkResults.push(row); gensetBulkAppendRow(resultsEl, row, i);
+                    }
+                } catch {
                     none++;
-                    const row = { siteId, status:'none', subName:'None within 2 km', dist:'—', time:'—' };
+                    const row = { siteId, status:'error', subName:'Error', distM:null, routeGeom:null, lat: site.lat, lng: site.lng };
                     gsBulkResults.push(row); gensetBulkAppendRow(resultsEl, row, i);
                 }
-            } catch {
-                none++;
-                const row = { siteId, status:'error', subName:'Error', dist:'—', time:'—' };
-                gsBulkResults.push(row); gensetBulkAppendRow(resultsEl, row, i);
             }
-            gensetBulkUpdateStats(total, found, none);
-            await new Promise(r => setTimeout(r, 700)); // rate-limit Overpass/OSRM
+            gensetBulkUpdateStats(total, found, none, totalDistM);
+            await new Promise(r => setTimeout(r, 700));
         }
 
         progressBar.style.width = '100%'; progressPct.textContent = '100%';
         progressLbl.textContent = gsBulkAbort ? 'Stopped.' : 'Complete!';
-        gsSetStatus(gsBulkAbort ? 'Stopped' : `Done — ${found}/${total} found`, false);
+        gsSetStatus(gsBulkAbort ? 'Stopped' : 'Done — ' + found + '/' + total + ' found', false);
         setTimeout(() => gsSetStatus(null), 3000);
         gsBulkRunning = false;
         runBtn.style.display = 'inline-flex'; stopBtn.style.display = 'none';
+
+        if (gsBulkRouteLines.length > 0) {
+            const group = L.featureGroup(gsBulkRouteLines);
+            gensetMap.fitBounds(group.getBounds(), { padding: [40, 40] });
+        }
+        if (found > 0) {
+            document.getElementById('gsBulkTotalRow').style.display  = 'block';
+            document.getElementById('gsBulkCostCalc').style.display  = 'block';
+            document.getElementById('gsBulkExportRow').style.display = 'flex';
+        }
+        gsBulkRecalcCost();
     }
 
-    async function gensetFindTNBSilent(lat, lng) {
-        const q = `[out:json][timeout:20];(node["power"="substation"](around:2000,${lat},${lng});way["power"="substation"](around:2000,${lat},${lng});relation["power"="substation"](around:2000,${lat},${lng}););out center;`;
+    async function gensetFindTNBSilentFull(lat, lng) {
+        const q = '[out:json][timeout:20];(node["power"="substation"](around:2000,' + lat + ',' + lng + ');way["power"="substation"](around:2000,' + lat + ',' + lng + ');relation["power"="substation"](around:2000,' + lat + ',' + lng + '););out center;';
         const ovData = await (await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:q })).json();
-        const subs = (ovData.elements||[]).map(el=>({ name:el.tags?.name||el.tags?.operator||'TNB Substation', lat:el.type==='node'?el.lat:el.center?.lat, lng:el.type==='node'?el.lon:el.center?.lon })).filter(s=>s.lat&&s.lng);
+        const subs = (ovData.elements||[]).map(el=>({ name:el.tags&&(el.tags.name||el.tags.operator)||'TNB Substation', lat:el.type==='node'?el.lat:el.center&&el.center.lat, lng:el.type==='node'?el.lon:el.center&&el.center.lon })).filter(s=>s.lat&&s.lng);
         if (!subs.length) return null;
         const routes = await Promise.all(subs.map(async sub => {
             try {
-                const d = await (await fetch(`https://router.project-osrm.org/route/v1/driving/${lng},${lat};${sub.lng},${sub.lat}?overview=false`)).json();
-                if (d.code!=='Ok'||!d.routes?.length) return null;
-                return { sub, roadDist:d.routes[0].distance, duration:d.routes[0].duration };
+                const d = await (await fetch('https://router.project-osrm.org/route/v1/driving/' + lng + ',' + lat + ';' + sub.lng + ',' + sub.lat + '?overview=full&geometries=geojson')).json();
+                if (d.code!=='Ok'||!d.routes||!d.routes.length) return null;
+                return { sub, roadDist:d.routes[0].distance, geometry:d.routes[0].geometry };
             } catch { return null; }
         }));
         const valid = routes.filter(r=>r&&r.roadDist<=2000).sort((a,b)=>a.roadDist-b.roadDist);
@@ -7081,169 +7180,81 @@ out center;`;
     }
 
     function gensetBulkAppendRow(container, row, idx) {
-        const bg    = idx%2===0?'#ffffff':'#f9fafb';
-        const color = row.status==='found'?'#16a34a':row.status==='none'?'#dc2626':'#9ca3af';
-        const icon  = row.status==='found'?'fa-check-circle':row.status==='none'?'fa-times-circle':'fa-question-circle';
-        const el    = document.createElement('div');
-        el.style.cssText = `display:grid;grid-template-columns:1fr 1.4fr 0.7fr 0.6fr;gap:4px;align-items:center;padding:5px 8px;background:${bg};border-bottom:1px solid #f3f4f6;`;
-        el.innerHTML = `<span style="font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${row.siteId}">${row.siteId}</span><span style="color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${row.subName}">${row.subName}</span><span style="font-weight:700;color:#d97706;">${row.dist}</span><span style="display:flex;align-items:center;gap:3px;color:${color};"><i class="fas ${icon}" style="font-size:0.65rem;"></i>${row.time}</span>`;
+        const bg    = idx%2===0 ? '#ffffff' : '#f9fafb';
+        const color = row.status==='found' ? '#16a34a' : row.status==='none' ? '#dc2626' : '#9ca3af';
+        const icon  = row.status==='found' ? 'fa-check-circle' : row.status==='none' ? 'fa-times-circle' : 'fa-question-circle';
+        const distStr = row.distM ? (row.distM/1000).toFixed(3)+' km' : '—';
+        const el = document.createElement('div');
+        el.style.cssText = 'display:grid;grid-template-columns:1fr 1.4fr 0.7fr;gap:4px;align-items:center;padding:5px 8px;background:'+bg+';border-bottom:1px solid #f3f4f6;cursor:'+(row.lat?'pointer':'default')+';';
+        el.title = row.lat ? 'Click to fly to site' : '';
+        if (row.lat) { const lat=row.lat, lng=row.lng; el.onclick = () => gensetMap.flyTo([lat, lng], 15, { animate:true, duration:1.2 }); }
+        el.innerHTML = '<span style="font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+row.siteId+'">'+row.siteId+'</span><span style="color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+row.subName+'">'+row.subName+'</span><span style="font-weight:700;color:'+(row.distM?'#d97706':color)+';display:flex;align-items:center;gap:3px;"><i class="fas '+icon+'" style="font-size:0.6rem;color:'+color+';"></i>'+distStr+'</span>';
         container.appendChild(el);
         container.scrollTop = container.scrollHeight;
     }
 
-    function gensetBulkUpdateStats(total, found, none) {
+    function gensetBulkUpdateStats(total, found, none, totalDistM) {
         document.getElementById('gsBulkStatTotal').textContent = total;
         document.getElementById('gsBulkStatFound').textContent = found;
         document.getElementById('gsBulkStatNone').textContent  = none;
-    }
-
-    // ── Bulk tab switcher ──
-    let gsBulkMode = 'single'; // 'single' | 'excel'
-
-    function gsSwitchBulkTab(mode) {
-        gsBulkMode = mode;
-        const singlePanel = document.getElementById('gsBulkSinglePanel');
-        const excelPanel  = document.getElementById('gsBulkExcelPanel');
-        const excelBtns   = document.getElementById('gsBulkExcelBtns');
-        const tabSingle   = document.getElementById('gsBulkTabSingle');
-        const tabExcel    = document.getElementById('gsBulkTabExcel');
-
-        if (mode === 'single') {
-            singlePanel.style.display = 'block';
-            excelPanel.style.display  = 'none';
-            excelBtns.style.display   = 'none';
-            tabSingle.style.background = 'white'; tabSingle.style.color = '#16a34a'; tabSingle.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-            tabExcel.style.background  = 'transparent'; tabExcel.style.color = '#6b7280'; tabExcel.style.boxShadow = 'none';
-        } else {
-            singlePanel.style.display = 'none';
-            excelPanel.style.display  = 'block';
-            excelBtns.style.display   = 'flex';
-            tabExcel.style.background = 'white'; tabExcel.style.color = '#16a34a'; tabExcel.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-            tabSingle.style.background = 'transparent'; tabSingle.style.color = '#6b7280'; tabSingle.style.boxShadow = 'none';
+        if (totalDistM > 0) {
+            document.getElementById('gsBulkTotalRow').style.display = 'block';
+            document.getElementById('gsBulkTotalDist').textContent  = (totalDistM/1000).toFixed(3) + ' km';
         }
+        gsBulkRecalcCost();
     }
 
-    function gsBulkSingleSearch(val) {
-        const box = document.getElementById('gsBulkSingleResults');
-        if (!val || val.length < 2) { box.style.display = 'none'; return; }
-        const q    = val.toLowerCase();
-        const hits = gensetSitesData.filter(s =>
-            s.site_id.toLowerCase().includes(q) || (s.site_name && s.site_name.toLowerCase().includes(q))
-        ).slice(0, 8);
-        if (!hits.length) { box.style.display = 'none'; return; }
-        box.innerHTML = hits.map(s =>
-            `<div onclick="document.getElementById('gsBulkSingleInput').value='${s.site_id}'; document.getElementById('gsBulkSingleResults').style.display='none';"
-                  style="padding:6px 10px; cursor:pointer; font-size:0.78rem; color:#374151; border-bottom:1px solid #f3f4f6;"
-                  onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
-                <b>${s.site_id}</b>${s.site_name ? ' — ' + s.site_name : ''}
-             </div>`
-        ).join('');
-        box.style.display = 'block';
+    function gsBulkRecalcCost() {
+        const totalDistM = gsBulkResults.filter(r=>r.distM).reduce((s,r)=>s+r.distM, 0);
+        const per100m    = parseFloat(document.getElementById('gsBulkCostPer100m') && document.getElementById('gsBulkCostPer100m').value) || 0;
+        const cost       = (totalDistM / 100) * per100m;
+        const costEl     = document.getElementById('gsBulkTotalCost');
+        if (costEl) costEl.textContent = 'RM ' + cost.toLocaleString('en-MY', {minimumFractionDigits:2, maximumFractionDigits:2});
     }
 
-    async function gensetRunSingle() {
-        const siteId = document.getElementById('gsBulkSingleInput').value.trim();
-        if (!siteId) return;
-        document.getElementById('gsBulkSingleResults').style.display = 'none';
-
-        if (!gensetSitesData.length) { alert('Sites not loaded yet — please wait.'); return; }
-
-        const site = gensetSitesData.find(s => s.site_id.toUpperCase() === siteId.toUpperCase());
-
-        const resultsEl = document.getElementById('gensetBulkResults');
-        const statsEl   = document.getElementById('gensetBulkStats');
-        const progress  = document.getElementById('gensetBulkProgress');
-        const progressBar = document.getElementById('gensetBulkProgressBar');
-        const progressLbl = document.getElementById('gensetBulkProgressLabel');
-        const progressPct = document.getElementById('gensetBulkProgressPct');
-
-        resultsEl.style.display = 'block';
-        statsEl.style.display   = 'grid';
-        progress.style.display  = 'block';
-        progressBar.style.width = '30%';
-        progressPct.textContent = '';
-        progressLbl.textContent = `Looking up ${siteId}…`;
-        gsSetStatus(`Looking up ${siteId}…`);
-
-        // Keep existing rows, append new one
-        const rowIdx = resultsEl.children.length;
-
-        if (!site) {
-            progressBar.style.width = '100%';
-            progressLbl.textContent = 'Done';
-            const row = { siteId, status: 'not_found', subName: 'Site not in DB', dist: '—', time: '—' };
-            gsBulkResults.push(row);
-            gensetBulkAppendRow(resultsEl, row, rowIdx);
-            gensetBulkUpdateStats(gsBulkResults.length,
-                gsBulkResults.filter(r=>r.status==='found').length,
-                gsBulkResults.filter(r=>r.status!=='found').length);
-            gsSetStatus(null);
-            setTimeout(() => { progress.style.display = 'none'; progressBar.style.width = '0%'; }, 1500);
-            return;
-        }
-
-        // Fly to site on map
-        gensetSelectSite(site, gensetSiteMarkers[site.site_id] || { setIcon: () => {} });
-
-        try {
-            progressBar.style.width = '60%';
-            const result = await gensetFindTNBSilent(site.lat, site.lng);
-            progressBar.style.width = '100%';
-            progressLbl.textContent = 'Done';
-
-            let row;
-            if (result) {
-                row = { siteId, status: 'found', subName: result.sub.name, dist: (result.roadDist/1000).toFixed(3)+' km', time: Math.ceil(result.duration/60)+' min' };
-                // Also draw the route on the map
-                gensetClearResults();
-                const ovData = await (await fetch('https://overpass-api.de/api/interpreter', {
-                    method: 'POST',
-                    body: `[out:json][timeout:20];(node["power"="substation"](around:2000,${site.lat},${site.lng});way["power"="substation"](around:2000,${site.lat},${site.lng});relation["power"="substation"](around:2000,${site.lat},${site.lng}););out center;`
-                })).json();
-                const subs = (ovData.elements||[]).map(el=>({name:el.tags?.name||'TNB Substation',lat:el.type==='node'?el.lat:el.center?.lat,lng:el.type==='node'?el.lon:el.center?.lon,tags:el.tags||{}})).filter(s=>s.lat&&s.lng);
-                subs.forEach(sub => {
-                    const m = L.marker([sub.lat, sub.lng], { icon: GENSET_TNB_ICON }).bindPopup(`<b style="color:#d97706;">${sub.name}</b>`).addTo(gensetMap);
-                    gensetTnbMarkers.push(m);
-                });
-                gensetNearbyCircle = L.circle([site.lat, site.lng], { radius:2000, color:'#16a34a', weight:1.5, fillColor:'#16a34a', fillOpacity:0.06, dashArray:'6,4', pane:'ringPane' }).addTo(gensetMap);
-                const routeRes = await (await fetch(`https://router.project-osrm.org/route/v1/driving/${site.lng},${site.lat};${result.sub.lng},${result.sub.lat}?overview=full&geometries=geojson`)).json();
-                if (routeRes.code === 'Ok') {
-                    const coords = routeRes.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
-                    gensetRouteLine = L.polyline(coords, { color:'#f59e0b', weight:6, opacity:0.95, lineCap:'round', lineJoin:'round', pane:'routePane' }).addTo(gensetMap);
-                    gensetMap.fitBounds(gensetRouteLine.getBounds(), { padding:[60,60] });
-                }
-            } else {
-                row = { siteId, status: 'none', subName: 'None within 2 km', dist: '—', time: '—' };
-            }
-            gsBulkResults.push(row);
-            gensetBulkAppendRow(resultsEl, row, rowIdx);
-            gensetBulkUpdateStats(gsBulkResults.length,
-                gsBulkResults.filter(r=>r.status==='found').length,
-                gsBulkResults.filter(r=>r.status!=='found').length);
-        } catch(err) {
-            const row = { siteId, status:'error', subName:'Error', dist:'—', time:'—' };
-            gsBulkResults.push(row); gensetBulkAppendRow(resultsEl, row, rowIdx);
-        }
-
-        gsSetStatus(null);
-        setTimeout(() => { progress.style.display = 'none'; progressBar.style.width = '0%'; }, 1500);
-    }
-
-    function gensetStopBulk()  { gsBulkAbort = true; }
+    function gensetStopBulk() { gsBulkAbort = true; }
 
     function gensetClearBulk() {
         gsBulkAbort = true; gsBulkRunning = false; gsBulkSiteIds = []; gsBulkResults = [];
-        document.getElementById('gensetXlsxName').textContent   = 'Choose .xlsx / .xls file…';
-        document.getElementById('gensetXlsxInput').value        = '';
-        document.getElementById('gensetBulkProgress').style.display = 'none';
-        document.getElementById('gensetBulkResults').style.display  = 'none';
-        document.getElementById('gensetBulkStats').style.display    = 'none';
-        document.getElementById('gensetBulkResults').innerHTML       = '';
+        gsBulkRouteLines.forEach(l => { try { gensetMap.removeLayer(l); } catch(e) {} });
+        gsBulkRouteLines = [];
+        const ids = ['gensetXlsxName','gensetBulkProgress','gensetBulkResults','gensetBulkStats','gsBulkTotalRow','gsBulkCostCalc','gsBulkExportRow'];
+        document.getElementById('gensetXlsxName').textContent = 'Choose .xlsx / .xls / .csv…';
+        document.getElementById('gensetXlsxInput').value = '';
+        ['gensetBulkProgress','gensetBulkResults','gensetBulkStats','gsBulkTotalRow','gsBulkCostCalc','gsBulkExportRow'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
+        document.getElementById('gensetBulkResults').innerHTML = '';
         document.getElementById('gensetBulkProgressBar').style.width = '0%';
+        const cpi = document.getElementById('gsBulkCostPer100m'); if(cpi) cpi.value = '';
+        const tce = document.getElementById('gsBulkTotalCost'); if(tce) tce.textContent = 'RM 0.00';
         const btn = document.getElementById('gensetBulkRunBtn');
         btn.disabled = true; btn.style.background='#d1d5db'; btn.style.color='#9ca3af'; btn.style.cursor='not-allowed';
         btn.style.display='inline-flex'; document.getElementById('gensetBulkStopBtn').style.display='none';
+        gsSetStatus(null);
     }
+
+    function gensetBulkExport(format) {
+        const per100m = parseFloat(document.getElementById('gsBulkCostPer100m').value) || 0;
+        const applicable = gsBulkResults.filter(r => r.status === 'found' && r.distM);
+        const rows = applicable.map(r => ({
+            site_id: r.siteId,
+            substation: r.subName,
+            length_to_substation_km: (r.distM/1000).toFixed(3),
+            cost_rm: ((r.distM/100)*per100m).toFixed(2)
+        }));
+        const totalDistM = applicable.reduce((s,r)=>s+r.distM, 0);
+        rows.push({ site_id:'TOTAL', substation:'', length_to_substation_km:(totalDistM/1000).toFixed(3), cost_rm:((totalDistM/100)*per100m).toFixed(2) });
+        if (format === 'csv') {
+            const header = 'site_id,substation,length_to_substation_km,cost_rm\n';
+            const body   = rows.map(r => r.site_id+','+r.substation+','+r.length_to_substation_km+','+r.cost_rm).join('\n');
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([header+body],{type:'text/csv'})); a.download = 'genset_bulk_results.csv'; a.click();
+        } else {
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'TNB Results');
+            XLSX.writeFile(wb, 'genset_bulk_results.xlsx');
+        }
+    }
+
 
     </script>
 </body>
