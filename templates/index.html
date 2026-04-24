@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>3W</title>
+  <title>3W - Unified Platfor</title>
 
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -1533,39 +1533,6 @@
                 <p style="font-size:0.67rem; color:#bbf7d0; margin:0;">Select a cell site to find the nearest TNB substation within 2 km via road.</p>
             </div>
 
-            <!-- Map Style Switcher -->
-            <div style="padding:10px 12px; border-bottom:1px solid #f3f4f6; background:#fafafa; flex-shrink:0;">
-                <div style="font-size:0.6rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:6px;">Map Style</div>
-                <div style="display:flex; gap:5px; margin-bottom:6px;">
-                    <!-- Satellite pill -->
-                    <button id="gs-btn-sat" onclick="gsSetBaseMap('satellite')"
-                        style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:6px 4px; border-radius:7px; border:1.5px solid #16a34a; background:#dcfce7; color:#14532d; font-size:0.7rem; font-weight:700; cursor:pointer; transition:all 0.15s;">
-                        <i class="fas fa-satellite" style="font-size:0.65rem;"></i> Satellite
-                    </button>
-                    <!-- Street pill -->
-                    <button id="gs-btn-street" onclick="gsSetBaseMap('street')"
-                        style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:6px 4px; border-radius:7px; border:1.5px solid #e5e7eb; background:#f9fafb; color:#6b7280; font-size:0.7rem; font-weight:700; cursor:pointer; transition:all 0.15s;">
-                        <i class="fas fa-map" style="font-size:0.65rem;"></i> Street
-                    </button>
-                </div>
-                <!-- DEM toggle row -->
-                <div style="display:flex; align-items:center; justify-content:space-between; padding:5px 8px; background:#fff7ed; border-radius:7px; border:1px solid #fed7aa; cursor:pointer;" onclick="gsToggleDEM()">
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <i class="fas fa-mountain" style="color:#c2410c; font-size:0.7rem;"></i>
-                        <span style="font-size:0.7rem; font-weight:700; color:#9a3412;">DEM / Hillshade</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <input id="gsDemOpacitySlider" type="range" min="10" max="100" value="55"
-                            oninput="gsSetDemOpacity(this.value)" onclick="event.stopPropagation()"
-                            style="display:none; width:60px; accent-color:#c2410c; height:3px; cursor:pointer;">
-                        <span id="gsDemOpacityVal" style="display:none; font-size:0.62rem; font-weight:700; color:#c2410c; min-width:26px; text-align:right;">55%</span>
-                        <div id="gsDemSwitch" style="width:32px; height:17px; border-radius:9px; background:#d1d5db; position:relative; transition:background 0.2s; pointer-events:none; flex-shrink:0;">
-                            <div style="position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:white; box-shadow:0 1px 3px rgba(0,0,0,0.25); transition:left 0.2s;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Search -->
             <div style="padding:10px 12px; border-bottom:1px solid #f3f4f6; flex-shrink:0;">
                 <div style="position:relative;">
@@ -1813,8 +1780,8 @@
             <i class="fas fa-tasks"></i>
         </button>
 
-        <!-- True North Compass for Genset map -->
-        <div id="gensetCompass" title="True North" style="position:absolute; top:80px; right:10px; z-index:300; width:44px; height:44px; background:rgba(255,255,255,0.95); border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.2),0 0 0 1px rgba(0,0,0,0.07); display:flex; align-items:center; justify-content:center; pointer-events:none;">
+        <!-- True North Compass — below zoom buttons, z-index above all map panes -->
+        <div id="gensetCompass" title="True North" style="position:absolute; top:80px; right:10px; z-index:1200; width:44px; height:44px; background:rgba(255,255,255,0.95); border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.2),0 0 0 1px rgba(0,0,0,0.07); display:flex; align-items:center; justify-content:center; pointer-events:none;">
             <svg viewBox="0 0 68 68" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="34" cy="34" r="32" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
                 <line x1="34" y1="4"  x2="34" y2="9"  stroke="#dc2626" stroke-width="2"   stroke-linecap="round"/>
@@ -1830,6 +1797,19 @@
                 <circle cx="34" cy="34" r="3.5" fill="#1f2937"/>
                 <circle cx="34" cy="34" r="1.5" fill="#ffffff"/>
             </svg>
+        </div>
+
+        <!-- Layer Toggle pill — identical to CCTV / Bitcoin style -->
+        <div style="position:absolute; bottom:24px; left:356px; z-index:1100; display:flex; gap:5px; background:white; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px; box-shadow:0 1px 4px rgba(0,0,0,.1);">
+            <button id="gs-btn-sat" onclick="gsSetBaseMap('satellite')" title="Satellite"
+                style="width:28px;height:28px;border-radius:5px;border:none;background:#0f2d52;color:white;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-satellite"></i></button>
+            <button id="gs-btn-street" onclick="gsSetBaseMap('street')" title="Street"
+                style="width:28px;height:28px;border-radius:5px;border:none;background:#e2e8f0;color:#475569;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-map"></i></button>
+            <button id="gs-btn-dem" onclick="gsToggleDEM()" title="Hillshade"
+                style="width:28px;height:28px;border-radius:5px;border:none;background:#e2e8f0;color:#475569;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-mountain"></i></button>
         </div>
 
         <!-- Map -->
@@ -1854,7 +1834,7 @@
     <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center" style="z-index:11000; padding-top:80px;">
             <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden">
                 <div class="bg-gray-800 text-white p-3 flex justify-between items-center flex-shrink-0">
-                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> 3W Dashboard</h3>
+                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> NetAlytics Dashboard</h3>
                     <button onclick="closeMetabaseDashboard()" class="text-gray-300 hover:text-white text-xl transition-colors">
                         <i class="fas fa-times"></i>
                     </button>
@@ -2150,12 +2130,12 @@
 
     <div id="chatPanel" class="hidden fixed bottom-20 right-8 w-[600px] bg-white shadow-2xl rounded-2xl border border-gray-200 flex-col z-[6000] overflow-hidden">
         <div class="bg-blue-600 p-3 text-white font-bold flex justify-between items-center">
-            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> 3W AI Agent</span>
+            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> NetAlytics AI Agent</span>
             <button onclick="toggleChat()" class="hover:text-blue-200"><i class="fas fa-times"></i></button>
         </div>
         <div id="chatMessages" class="h-[550px] overflow-y-auto p-4 flex flex-col gap-3 bg-gray-50 text-sm">
             <div class="self-start bg-white border border-gray-200 text-gray-800 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl shadow-sm max-w-[95%] w-full">
-                Hello! I am your 3W capacity planning assistant. Ask me to find a site or analyze congestion.
+                Hello! I am your NetAlytics capacity planning assistant. Ask me to find a site or analyze congestion.
             </div>
         </div>
         <form onsubmit="handleChatSubmit(event)" class="p-3 border-t border-gray-200 bg-white flex gap-2">
@@ -6718,36 +6698,32 @@
         }
         if (gsDemActive) { gsDemLayer.bringToFront(); if (mode === 'satellite') gsLabelsLayer.bringToFront(); }
 
-        // Update pill buttons
+        // Update pill button states
         const satBtn    = document.getElementById('gs-btn-sat');
         const streetBtn = document.getElementById('gs-btn-street');
-        if (mode === 'satellite') {
-            satBtn.style.borderColor    = '#16a34a'; satBtn.style.background    = '#dcfce7'; satBtn.style.color    = '#14532d';
-            streetBtn.style.borderColor = '#e5e7eb'; streetBtn.style.background = '#f9fafb'; streetBtn.style.color = '#6b7280';
-        } else {
-            streetBtn.style.borderColor = '#2563eb'; streetBtn.style.background = '#dbeafe'; streetBtn.style.color = '#1e3a8a';
-            satBtn.style.borderColor    = '#e5e7eb'; satBtn.style.background    = '#f9fafb'; satBtn.style.color    = '#6b7280';
+        if (satBtn) {
+            satBtn.style.background    = mode === 'satellite' ? '#0f2d52' : '#e2e8f0';
+            satBtn.style.color         = mode === 'satellite' ? 'white'   : '#475569';
+        }
+        if (streetBtn) {
+            streetBtn.style.background = mode === 'street' ? '#0f2d52' : '#e2e8f0';
+            streetBtn.style.color      = mode === 'street' ? 'white'   : '#475569';
         }
     }
 
     function gsToggleDEM() {
         if (!gensetMap) return;
-        const sw        = document.getElementById('gsDemSwitch');
-        const knob      = sw.querySelector('div');
-        const slider    = document.getElementById('gsDemOpacitySlider');
-        const valLabel  = document.getElementById('gsDemOpacityVal');
+        const demBtn = document.getElementById('gs-btn-dem');
 
         if (gsDemActive) {
             gensetMap.removeLayer(gsDemLayer);
             gsDemActive = false;
-            sw.style.background = '#d1d5db'; knob.style.left = '2px';
-            slider.style.display = 'none'; valLabel.style.display = 'none';
+            if (demBtn) { demBtn.style.background = '#e2e8f0'; demBtn.style.color = '#475569'; }
         } else {
             gsDemLayer.addTo(gensetMap); gsDemLayer.bringToFront();
             if (gsBaseMode === 'satellite') gsLabelsLayer.bringToFront();
             gsDemActive = true;
-            sw.style.background = '#c2410c'; knob.style.left = '17px';
-            slider.style.display = 'inline-block'; valLabel.style.display = 'inline-block';
+            if (demBtn) { demBtn.style.background = '#0f2d52'; demBtn.style.color = 'white'; }
         }
     }
 
@@ -7083,6 +7059,8 @@ out center;`;
         if (!gsBulkSiteIds.length || gsBulkRunning) return;
         if (!gensetSitesData.length) { alert('Sites not loaded yet — please wait.'); return; }
         gsBulkRunning = true; gsBulkAbort = false; gsBulkResults = [];
+        // Reset UI for re-run
+        ['gsBulkTotalRow','gsBulkCostCalc','gsBulkExportRow'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
         gsBulkRouteLines.forEach(l => { try { gensetMap.removeLayer(l); } catch(e) {} });
         gsBulkRouteLines = [];
 
@@ -7105,6 +7083,7 @@ out center;`;
 
         let found = 0, none = 0, totalDistM = 0;
 
+        try {
         for (let i = 0; i < total; i++) {
             if (gsBulkAbort) break;
             const siteId = gsBulkSiteIds[i];
@@ -7143,12 +7122,18 @@ out center;`;
             gensetBulkUpdateStats(total, found, none, totalDistM);
             await new Promise(r => setTimeout(r, 700));
         }
+        } finally {
+            gsBulkRunning = false;
+        }
 
         progressBar.style.width = '100%'; progressPct.textContent = '100%';
         progressLbl.textContent = gsBulkAbort ? 'Stopped.' : 'Complete!';
         gsSetStatus(gsBulkAbort ? 'Stopped' : 'Done — ' + found + '/' + total + ' found', false);
         setTimeout(() => gsSetStatus(null), 3000);
         gsBulkRunning = false;
+        // Re-enable run button so user can run again
+        runBtn.disabled = false;
+        runBtn.style.background = '#16a34a'; runBtn.style.color = 'white'; runBtn.style.cursor = 'pointer';
         runBtn.style.display = 'inline-flex'; stopBtn.style.display = 'none';
 
         if (gsBulkRouteLines.length > 0) {
