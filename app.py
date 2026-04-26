@@ -1227,6 +1227,66 @@ def api_congestion_data():
         })
     except Exception as e: return jsonify({'error': str(e)}), 500
 
+
+@app.route('/api/forecast_by_site')
+def api_forecast_by_site():
+    """
+    Returns forecast_results rows for all sectors of a given site_id,
+    for a specific quarterly week snapshot (13, 26, 39, or 52).
+    Also returns the latest actual week from sector_calculations for comparison.
+    """
+    site_id  = request.args.get('site_id', '').strip().upper()
+    week     = request.args.get('week', '52')
+    year     = request.args.get('year', str(datetime.now().year))
+
+    if not site_id:
+        return jsonify({'error': 'site_id required'}), 400
+
+    try:
+        # Forecast rows for this site's sectors
+        sql_fr = f"""
+            SELECT zoom_sector_id, week, year, month, operator,
+                   CAST(ROUND(predicted_eric_data_volume_ul_dl, 2) AS DOUBLE) as pred_vol,
+                   CAST(ROUND(predicted_eric_prb_util_rate,     2) AS DOUBLE) as pred_prb,
+                   CAST(ROUND(predicted_eric_dl_user_ip_thpt,   2) AS DOUBLE) as pred_thpt,
+                   congested
+            FROM forecast_results
+            WHERE UPPER(split_part(zoom_sector_id, '_', 1)) = '{site_id}'
+              AND CAST(year AS VARCHAR) = '{year}'
+              AND CAST(week AS VARCHAR) = '{week}'
+        """
+        df_fr = get_cached_dataframe(sql_fr)
+
+        # Latest actual week for this site
+        sql_ac = f"""
+            SELECT zoom_sector_id, week, year,
+                   CAST(eric_data_volume_ul_dl AS DOUBLE) as actual_vol,
+                   CAST(eric_prb_util_rate     AS DOUBLE) as actual_prb,
+                   CAST(eric_dl_user_ip_thpt   AS DOUBLE) as actual_thpt,
+                   congested
+            FROM congestion_analysis
+            WHERE UPPER(split_part(zoom_sector_id, '_', 1)) = '{site_id}'
+              AND CAST(year AS VARCHAR) = '{year}'
+              AND week = (
+                  SELECT MAX(week) FROM congestion_analysis
+                  WHERE UPPER(split_part(zoom_sector_id, '_', 1)) = '{site_id}'
+                    AND CAST(year AS VARCHAR) = '{year}'
+              )
+        """
+        df_ac = get_cached_dataframe(sql_ac)
+
+        return jsonify({
+            'site_id':  site_id,
+            'year':     year,
+            'forecast_week': int(week),
+            'actual':   df_ac.replace({np.nan: None}).to_dict('records'),
+            'forecast': df_fr.replace({np.nan: None}).to_dict('records'),
+        })
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/sites')
 def api_sites():
     selected_week = request.args.get('week')
