@@ -3322,29 +3322,24 @@
             const qLabels = { 13:'Q1 Wk 13', 26:'Q2 Wk 26', 39:'Q3 Wk 39', 52:'Q4 Wk 52' };
 
             try {
-                // Fetch forecast congestion flags for all sectors at chosen quarter
-                const res  = await fetch(`/api/forecast_data?year=${year}&week=${splitQuarter}&length=99999&start=0`);
+                // Use the lightweight endpoint — returns congested site IDs only
+                const res  = await fetch(`/api/forecast_congestion?year=${year}&week=${splitQuarter}`);
                 const json = await res.json();
-                const rows = (json.data || []);
 
-                // Build site-level congestion lookup from sector rows
-                const congestedSites = new Set();
-                rows.forEach(r => {
-                    if (r.congested) {
-                        const sid = String(r.zoom_sector_id || '').split('_')[0].toUpperCase();
-                        congestedSites.add(sid);
-                    }
-                });
-                window._splitCongestedSet = congestedSites; // expose for split dashboard
+                if (json.error) throw new Error(json.error);
+
+                // Build congested set from the returned site_id list
+                const congestedSites = new Set((json.congested_sites || []).map(s => s.toUpperCase()));
+                window._splitCongestedSet = congestedSites;
 
                 // Rebuild right-map markers
                 splitCluster.clearLayers();
                 splitCongestedCluster.clearLayers();
 
                 siteDataCache.forEach(site => {
-                    const sid        = site.site_id.toUpperCase();
+                    const sid         = site.site_id.toUpperCase();
                     const isCongested = congestedSites.has(sid);
-                    const color      = isCongested ? '#dc2626' : '#2563eb';
+                    const color       = isCongested ? '#dc2626' : '#2563eb';
 
                     const icon = L.divIcon({
                         className: 'custom-pin',
@@ -3363,17 +3358,12 @@
                             </div>
                         </div>`);
 
-                    if (isCongested) {
-                        splitCongestedCluster.addLayer(marker);
-                    } else {
-                        splitCluster.addLayer(marker);
-                    }
+                    if (isCongested) splitCongestedCluster.addLayer(marker);
+                    else             splitCluster.addLayer(marker);
                 });
 
-                const found   = rows.length > 0;
-                const noData  = !found ? ' · <span style="color:#f59e0b">No forecast data for this quarter</span>' : '';
+                const noData = congestedSites.size === 0 ? ' · <span style="color:#f59e0b">No forecast data for this quarter</span>' : '';
                 splitSetStatus(qLabels[splitQuarter] + ' · ' + year + noData);
-                // Refresh split dashboard with new congestion data
                 setTimeout(() => updateSplitMainDashboard(), 200);
 
             } catch(e) {
