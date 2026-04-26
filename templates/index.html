@@ -202,41 +202,43 @@
         #sidebar.collapsed ~ #splitScreenBtn { left: 290px !important; }
 
         /* ── SPLIT SCREEN ── */
-        #splitContainer {
-            display: none; position: absolute; top: 0; left: 350px; right: 0; bottom: 0;
-            flex-direction: row;
-        }
-        #splitContainer.active { display: flex; }
-        #map.split { left: 350px; right: 50%; }
+        #map.split { right: 50% !important; }
         #splitRightPane {
+            display: none;
             position: absolute; top: 0; right: 0; bottom: 0; width: 50%;
-            display: flex; flex-direction: column;
+            flex-direction: column;
             border-left: 2px solid #0f2d52;
+            overflow: hidden;
         }
-        #splitMapRight { flex: 1; }
+        #splitRightPane.active { display: flex; }
         #splitToolbar {
-            position: absolute; top: 0; right: 0; width: 50%; z-index: 1100;
-            display: flex; align-items: center; gap: 8px;
-            padding: 8px 12px;
-            background: rgba(255,255,255,.95);
+            flex-shrink: 0;
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 12px;
+            background: rgba(255,255,255,.97);
             border-bottom: 1px solid #e2e8f0;
-            border-left: 2px solid #0f2d52;
-            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            box-shadow: 0 2px 6px rgba(0,0,0,.07);
+            z-index: 10;
+            height: 40px;
+        }
+        #splitMapRight {
+            flex: 1;
+            min-height: 0;
         }
         .split-q-btn {
-            padding: 4px 10px; border: 1.5px solid #e2e8f0; border-radius: 5px;
-            background: white; color: #475569; font-size: .72rem; font-weight: 700;
-            cursor: pointer; transition: all .15s;
+            padding: 3px 9px; border: 1.5px solid #e2e8f0; border-radius: 5px;
+            background: white; color: #475569; font-size: .7rem; font-weight: 700;
+            cursor: pointer; transition: all .15s; white-space: nowrap;
         }
         .split-q-btn:hover    { background: #dbeafe; border-color: #93c5fd; color: #1e3a8a; }
         .split-q-btn.active   { background: #0f2d52; border-color: #0f2d52; color: white; }
         #splitYearSelect {
-            padding: 4px 8px; border: 1.5px solid #e2e8f0; border-radius: 5px;
-            font-size: .72rem; font-weight: 600; color: #374151; outline: none;
+            padding: 3px 7px; border: 1.5px solid #e2e8f0; border-radius: 5px;
+            font-size: .7rem; font-weight: 600; color: #374151; outline: none;
         }
         #splitStatusBar {
-            font-size: .68rem; color: #64748b; font-weight: 600; margin-left: auto;
-            display: flex; align-items: center; gap: 6px;
+            font-size: .66rem; color: #64748b; font-weight: 600; margin-left: auto;
+            white-space: nowrap; display: flex; align-items: center; gap: 5px;
         }
 
         /* ── IFRAME ── */
@@ -1042,27 +1044,26 @@
         <i class="fas fa-columns"></i>
     </button>
 
-    <!-- Split-screen forecast toolbar (shown above right pane) -->
-    <div id="splitToolbar" style="display:none;">
-        <i class="fas fa-chart-line" style="color:#0f2d52; font-size:.85rem;"></i>
-        <span style="font-size:.72rem; font-weight:800; color:#0f2d52; white-space:nowrap;">Forecast — Q</span>
-        <button class="split-q-btn" id="sq1" onclick="setSplitQuarter(13)">Q1 W13</button>
-        <button class="split-q-btn" id="sq2" onclick="setSplitQuarter(26)">Q2 W26</button>
-        <button class="split-q-btn active" id="sq3" onclick="setSplitQuarter(39)">Q3 W39</button>
-        <button class="split-q-btn" id="sq4" onclick="setSplitQuarter(52)">Q4 W52</button>
-        <select id="splitYearSelect" onchange="refreshSplitMarkers()">
-            <option>2026</option><option>2025</option><option>2027</option>
-        </select>
-        <div id="splitStatusBar">
-            <i class="fas fa-circle-notch fa-spin" id="splitSpinner" style="display:none;"></i>
-            <span id="splitStatusText">Click a site to compare</span>
-        </div>
-    </div>
-
     <div id="map"></div>
 
     <!-- Right pane — forecast map (only shown in split mode) -->
-    <div id="splitRightPane" style="display:none;">
+    <div id="splitRightPane">
+        <!-- Toolbar sits inside the pane as a flex header -->
+        <div id="splitToolbar">
+            <i class="fas fa-chart-line" style="color:#0f2d52; font-size:.82rem; flex-shrink:0;"></i>
+            <span style="font-size:.7rem; font-weight:800; color:#0f2d52; white-space:nowrap; flex-shrink:0;">Forecast</span>
+            <button class="split-q-btn" id="sq1" onclick="setSplitQuarter(13)">Q1 W13</button>
+            <button class="split-q-btn" id="sq2" onclick="setSplitQuarter(26)">Q2 W26</button>
+            <button class="split-q-btn active" id="sq3" onclick="setSplitQuarter(39)">Q3 W39</button>
+            <button class="split-q-btn" id="sq4" onclick="setSplitQuarter(52)">Q4 W52</button>
+            <select id="splitYearSelect" onchange="refreshSplitMarkers()">
+                <option>2026</option><option>2025</option><option>2027</option>
+            </select>
+            <div id="splitStatusBar">
+                <span id="splitStatusText">Initialising…</span>
+            </div>
+        </div>
+        <!-- Map fills all remaining height -->
         <div id="splitMapRight"></div>
     </div>
 
@@ -2978,20 +2979,22 @@
             if (splitActive) {
                 splitActive = false;
                 btn.classList.remove('active');
-                document.getElementById('map').style.right = '0';
-                document.getElementById('splitRightPane').style.display = 'none';
-                document.getElementById('splitToolbar').style.display = 'none';
-                if (map) { map.off('moveend zoomend', _syncLeftToRight); }
+                document.getElementById('map').classList.remove('split');
+                document.getElementById('splitRightPane').classList.remove('active');
+                map.off('moveend zoomend', _syncLeftToRight);
                 if (splitMap) { splitMap.remove(); splitMap = null; }
+                setTimeout(() => { if (map) map.invalidateSize(); }, 50);
             } else {
                 splitActive = true;
                 btn.classList.add('active');
-                document.getElementById('map').style.right = '50%';
-                document.getElementById('splitRightPane').style.display = 'block';
-                document.getElementById('splitToolbar').style.display = 'flex';
-                _initSplitMap();
+                document.getElementById('map').classList.add('split');
+                document.getElementById('splitRightPane').classList.add('active');
+                // Wait for CSS layout to settle before init
+                setTimeout(() => {
+                    _initSplitMap();
+                    if (map) map.invalidateSize();
+                }, 100);
             }
-            setTimeout(() => { if (map) map.invalidateSize(); }, 320);
         }
 
         function _syncLeftToRight() {
@@ -3013,6 +3016,9 @@
 
             splitMap = L.map('splitMapRight', { zoomControl: false, preferCanvas: false })
                         .setView(map.getCenter(), map.getZoom());
+
+            // Force tile render after Leaflet measures the container
+            setTimeout(() => splitMap.invalidateSize(), 50);
 
             L.control.zoom({ position: 'topright' }).addTo(splitMap);
 
