@@ -2961,43 +2961,54 @@
         function escapeHtml(text) { const div = document.createElement('div'); div.appendChild(document.createTextNode(text)); return div.innerHTML; }
 
         // ================================================================
-        // SPLIT SCREEN — Actual vs Forecast
+        // SPLIT SCREEN — Actual (left) vs Forecast (right)
+        // Both maps show ALL sites. Left = actual congestion colours.
+        // Right = forecast congestion colours for chosen quarterly snapshot.
+        // Pan/zoom is synced between both maps.
         // ================================================================
-        let splitMap        = null;
-        let splitActive     = false;
-        let splitQuarter    = 39;   // default Q3 W39
-        let splitSiteCache  = {};   // site_id → forecast data
-        let splitMarkers    = {};   // site_id → right-pane marker
-        let splitNormalMarkers = []; // all right-pane site markers
-        let splitCluster    = null;
+        let splitMap              = null;
+        let splitActive           = false;
+        let splitQuarter          = 39;
+        let splitSyncLock         = false;
+        let splitCluster          = null;
         let splitCongestedCluster = null;
-        let splitSyncLock   = false;  // prevents recursive sync loops
-        let splitPopupOpen  = null;   // track open popup site
 
         function toggleSplitScreen() {
             const btn = document.getElementById('splitScreenBtn');
             if (splitActive) {
-                // Close split
                 splitActive = false;
                 btn.classList.remove('active');
                 document.getElementById('map').style.right = '0';
                 document.getElementById('splitRightPane').style.display = 'none';
                 document.getElementById('splitToolbar').style.display = 'none';
-                if (splitMap) { splitMap.remove(); splitMap = null; splitMarkers = {}; splitCluster = null; splitCongestedCluster = null; }
+                if (map) { map.off('moveend zoomend', _syncLeftToRight); }
+                if (splitMap) { splitMap.remove(); splitMap = null; }
             } else {
-                // Open split
                 splitActive = true;
                 btn.classList.add('active');
                 document.getElementById('map').style.right = '50%';
                 document.getElementById('splitRightPane').style.display = 'block';
                 document.getElementById('splitToolbar').style.display = 'flex';
-                initSplitMap();
+                _initSplitMap();
             }
-            // Re-trigger map resize so tiles fill correctly
             setTimeout(() => { if (map) map.invalidateSize(); }, 320);
         }
 
-        function initSplitMap() {
+        function _syncLeftToRight() {
+            if (splitSyncLock || !splitActive || !splitMap) return;
+            splitSyncLock = true;
+            splitMap.setView(map.getCenter(), map.getZoom(), { animate: false });
+            splitSyncLock = false;
+        }
+
+        function _syncRightToLeft() {
+            if (splitSyncLock || !splitActive) return;
+            splitSyncLock = true;
+            map.setView(splitMap.getCenter(), splitMap.getZoom(), { animate: false });
+            splitSyncLock = false;
+        }
+
+        function _initSplitMap() {
             if (splitMap) return;
 
             splitMap = L.map('splitMapRight', { zoomControl: false, preferCanvas: false })
@@ -3005,129 +3016,91 @@
 
             L.control.zoom({ position: 'topright' }).addTo(splitMap);
 
-            // Mirror the same tile layers as the left map
+            // Same basemap as left
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                 { attribution: '&copy; Esri', maxZoom: 19 }).addTo(splitMap);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
                 { attribution: '&copy; CartoDB', subdomains: 'abcd', maxZoom: 19 }).addTo(splitMap);
 
             splitCluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 60,
-                iconCreateFunction: function(c) {
-                    return new L.DivIcon({ html: '<div class="cluster-base cluster-normal"><span>' + c.getChildCount() + '</span></div>',
-                        className: 'marker-cluster', iconSize: new L.Point(40, 40) });
-                }
+                iconCreateFunction: c => new L.DivIcon({ html: '<div class="cluster-base cluster-normal"><span>' + c.getChildCount() + '</span></div>', className: 'marker-cluster', iconSize: new L.Point(40,40) })
             });
             splitCongestedCluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 60,
-                iconCreateFunction: function(c) {
-                    return new L.DivIcon({ html: '<div class="cluster-base cluster-congested"><span>' + c.getChildCount() + '</span></div>',
-                        className: 'marker-cluster', iconSize: new L.Point(40, 40) });
-                }
+                iconCreateFunction: c => new L.DivIcon({ html: '<div class="cluster-base cluster-congested"><span>' + c.getChildCount() + '</span></div>', className: 'marker-cluster', iconSize: new L.Point(40,40) })
             });
             splitMap.addLayer(splitCluster);
             splitMap.addLayer(splitCongestedCluster);
 
-            // Sync: left → right
-            map.on('moveend zoomend', function() {
-                if (splitSyncLock || !splitActive || !splitMap) return;
-                splitSyncLock = true;
-                splitMap.setView(map.getCenter(), map.getZoom(), { animate: false });
-                splitSyncLock = false;
-            });
-            // Sync: right → left
-            splitMap.on('moveend zoomend', function() {
-                if (splitSyncLock || !splitActive) return;
-                splitSyncLock = true;
-                map.setView(splitMap.getCenter(), splitMap.getZoom(), { animate: false });
-                splitSyncLock = false;
-            });
+            map.on('moveend zoomend', _syncLeftToRight);
+            splitMap.on('moveend zoomend', _syncRightToLeft);
 
-            loadSplitMarkers();
+            _loadForecastMarkers();
         }
 
-        async function loadSplitMarkers() {
-            if (!siteDataCache || !siteDataCache.length) return;
-            splitSetStatus('<i class="fas fa-circle-notch fa-spin"></i> Loading forecast markers…');
+        async function _loadForecastMarkers() {
+            if (!siteDataCache || !siteDataCache.length) {
+                splitSetStatus('Waiting for site data…'); return;
+            }
+            splitSetStatus('<i class="fas fa-circle-notch fa-spin"></i> Loading forecast…');
 
             const year = document.getElementById('splitYearSelect').value;
+            const qLabels = { 13:'Q1 Wk 13', 26:'Q2 Wk 26', 39:'Q3 Wk 39', 52:'Q4 Wk 52' };
 
-            // Fetch forecast data for all sites in a single call — batch by prefetching
-            // We use a lightweight call: just the congested flag per site for the chosen quarter
             try {
-                // Use the forecast_data endpoint to get congestion flags for all sites at chosen week
-                const res = await fetch(`/api/forecast_data?year=${year}&week=${splitQuarter}&length=99999&start=0`);
+                // Fetch forecast congestion flags for all sectors at chosen quarter
+                const res  = await fetch(`/api/forecast_data?year=${year}&week=${splitQuarter}&length=99999&start=0`);
                 const json = await res.json();
-                const rows = json.data || [];
+                const rows = (json.data || []);
 
-                // Build a lookup: site_id → congested flag + KPIs (aggregate by site)
-                const siteForecastMap = {};
+                // Build site-level congestion lookup from sector rows
+                const congestedSites = new Set();
                 rows.forEach(r => {
-                    const sid = String(r.zoom_sector_id || '').split('_')[0].toUpperCase();
-                    if (!siteForecastMap[sid]) siteForecastMap[sid] = { congested: false, prbs: [], vols: [], thpts: [] };
-                    if (r.congested) siteForecastMap[sid].congested = true;
-                    if (r.predicted_eric_prb_util_rate)  siteForecastMap[sid].prbs.push(parseFloat(r.predicted_eric_prb_util_rate));
-                    if (r.predicted_eric_data_volume_ul_dl) siteForecastMap[sid].vols.push(parseFloat(r.predicted_eric_data_volume_ul_dl));
-                    if (r.predicted_eric_dl_user_ip_thpt) siteForecastMap[sid].thpts.push(parseFloat(r.predicted_eric_dl_user_ip_thpt));
+                    if (r.congested) {
+                        const sid = String(r.zoom_sector_id || '').split('_')[0].toUpperCase();
+                        congestedSites.add(sid);
+                    }
                 });
 
-                splitSiteCache = siteForecastMap;
+                // Rebuild right-map markers
                 splitCluster.clearLayers();
                 splitCongestedCluster.clearLayers();
-                splitMarkers = {};
 
                 siteDataCache.forEach(site => {
-                    const sid = site.site_id.toUpperCase();
-                    const fc = siteForecastMap[sid];
-                    const isCongested = fc ? fc.congested : false;
-                    const color = isCongested ? '#dc2626' : '#2563eb';
+                    const sid        = site.site_id.toUpperCase();
+                    const isCongested = congestedSites.has(sid);
+                    const color      = isCongested ? '#dc2626' : '#2563eb';
 
                     const icon = L.divIcon({
                         className: 'custom-pin',
                         html: `<div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:900;color:#1e293b;text-shadow:2px 2px 0 #fff,-2px -2px 0 #fff,2px -2px 0 #fff,-2px 2px 0 #fff;white-space:nowrap;pointer-events:none;">${site.site_id}</div>
                                <div style="background-color:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>`,
-                        iconSize: [14, 14], iconAnchor: [7, 7]
+                        iconSize: [14,14], iconAnchor: [7,7]
                     });
 
-                    const avgPrb  = fc && fc.prbs.length  ? (fc.prbs.reduce((a,b)=>a+b,0)/fc.prbs.length).toFixed(1)  : '—';
-                    const avgVol  = fc && fc.vols.length  ? (fc.vols.reduce((a,b)=>a+b,0)/fc.vols.length).toFixed(1)  : '—';
-                    const avgThpt = fc && fc.thpts.length ? (fc.thpts.reduce((a,b)=>a+b,0)/fc.thpts.length).toFixed(1) : '—';
-
-                    const popup = L.popup({ maxWidth: 320, className: '' }).setContent(
-                        `<div style="font-family:'Inter',sans-serif;">
-                            <div style="background:#0f2d52;color:white;padding:10px 14px;border-radius:6px 6px 0 0;margin:-1px -1px 0;">
-                                <div style="font-weight:800;font-size:.95rem;">${site.site_id}</div>
-                                <div style="font-size:.65rem;color:#93c5fd;margin-top:2px;">
-                                    Forecast — Q${[13,26,39,52].indexOf(splitQuarter)+1} Week ${splitQuarter} · ${year}
-                                </div>
+                    const marker = L.marker([site.lat, site.lng], { icon })
+                        .bindPopup(`<div style="font-family:'Inter',sans-serif;min-width:180px;">
+                            <div style="background:#0f2d52;color:white;padding:8px 12px;border-radius:6px 6px 0 0;margin:-1px -1px 0;font-weight:800;">${site.site_id}</div>
+                            <div style="padding:8px 12px;font-size:.78rem;">
+                                <div style="margin-bottom:4px;"><span style="color:#64748b;">Region:</span> <b>${site.region||'—'}</b></div>
+                                <div style="margin-bottom:4px;"><span style="color:#64748b;">Quarter:</span> <b>${qLabels[splitQuarter]} · ${year}</b></div>
+                                <div><span style="color:#64748b;">Forecast Status:</span> <b style="color:${isCongested?'#dc2626':'#16a34a'}">${isCongested?'⚠ Congested':'✓ Normal'}</b></div>
                             </div>
-                            <div style="padding:10px 14px;background:white;">
-                                <table style="width:100%;font-size:.75rem;border-collapse:collapse;">
-                                    <tr style="background:#f8fafc;"><th style="padding:4px 8px;text-align:left;color:#475569;font-weight:700;">Metric</th><th style="padding:4px 8px;text-align:right;color:#475569;font-weight:700;">Forecast Avg</th></tr>
-                                    <tr><td style="padding:4px 8px;color:#64748b;">PRB Util (%)</td><td style="padding:4px 8px;text-align:right;font-weight:800;color:${parseFloat(avgPrb)>80?'#dc2626':'#16a34a'}">${avgPrb}</td></tr>
-                                    <tr style="background:#f8fafc;"><td style="padding:4px 8px;color:#64748b;">Data Vol (GB)</td><td style="padding:4px 8px;text-align:right;font-weight:800;color:#0f2d52">${avgVol}</td></tr>
-                                    <tr><td style="padding:4px 8px;color:#64748b;">Throughput (Mbps)</td><td style="padding:4px 8px;text-align:right;font-weight:800;color:#0f2d52">${avgThpt}</td></tr>
-                                    <tr style="background:#f8fafc;"><td style="padding:4px 8px;color:#64748b;">Congested</td><td style="padding:4px 8px;text-align:right;font-weight:800;color:${isCongested?'#dc2626':'#16a34a'}">${isCongested?'⚠ Yes':'✓ No'}</td></tr>
-                                </table>
-                                ${!fc ? '<div style="font-size:.68rem;color:#9ca3af;padding:4px 0;text-align:center;">No forecast data for this quarter</div>' : ''}
-                            </div>
-                        </div>`
-                    );
+                        </div>`);
 
-                    const m = L.marker([site.lat, site.lng], { icon }).bindPopup(popup);
-                    splitMarkers[sid] = m;
                     if (isCongested) {
-                        splitCongestedCluster.addLayer(m);
+                        splitCongestedCluster.addLayer(marker);
                     } else {
-                        splitCluster.addLayer(m);
+                        splitCluster.addLayer(marker);
                     }
                 });
 
-                const qLabel = ['Q1 W13','Q2 W26','Q3 W39','Q4 W52'];
-                const qi = [13,26,39,52].indexOf(splitQuarter);
-                splitSetStatus(`Showing ${qLabel[qi]} · ${year} forecast`);
+                const found   = rows.length > 0;
+                const noData  = !found ? ' · <span style="color:#f59e0b">No forecast data for this quarter</span>' : '';
+                splitSetStatus(qLabels[splitQuarter] + ' · ' + year + noData);
 
             } catch(e) {
                 console.error('Split screen forecast error:', e);
-                splitSetStatus('Failed to load forecast data');
+                splitSetStatus('<span style="color:#dc2626">Failed to load forecast</span>');
             }
         }
 
@@ -3138,29 +3111,16 @@
 
         function setSplitQuarter(week) {
             splitQuarter = week;
-            // Update button active states
-            [13,26,39,52].forEach((w, i) => {
-                const btn = document.getElementById('sq' + (i+1));
-                if (btn) btn.classList.toggle('active', w === week);
+            [13,26,39,52].forEach((w,i) => {
+                const b = document.getElementById('sq'+(i+1));
+                if (b) b.classList.toggle('active', w === week);
             });
-            if (splitActive) refreshSplitMarkers();
+            if (splitActive && splitMap) _loadForecastMarkers();
         }
 
         function refreshSplitMarkers() {
-            if (!splitActive || !splitMap) return;
-            loadSplitMarkers();
+            if (splitActive && splitMap) _loadForecastMarkers();
         }
-
-        // When user clicks a marker on the LEFT map, also open the popup on the RIGHT map
-        map.on('popupopen', function(e) {
-            if (!splitActive || !splitMap) return;
-            // Find which site this popup belongs to
-            const siteId = Object.keys(siteMarkerMap).find(k => siteMarkerMap[k].getPopup() === e.popup);
-            if (siteId && splitMarkers[siteId]) {
-                splitMap.panTo(splitMarkers[siteId].getLatLng(), { animate: false });
-                splitMarkers[siteId].openPopup();
-            }
-        });
 
     </script>
 
