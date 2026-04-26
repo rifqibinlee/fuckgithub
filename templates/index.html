@@ -6748,15 +6748,16 @@
         try {
             let raw;
 
-            // Reuse the Coverage Map cache if already loaded — avoids a redundant heavy API call
-            if (typeof siteDataCache !== 'undefined' && siteDataCache && siteDataCache.length > 0) {
+            // Use the shared siteDataCache — same source as CCTV and Bitcoin tabs
+            if (typeof siteDataCache !== 'undefined' && Array.isArray(siteDataCache) && siteDataCache.length > 0) {
                 raw = siteDataCache;
-                gsSetStatus('Using cached sites…');
             } else {
-                // Fall back to the lightweight basic endpoint (coords + region only)
-                const res = await fetch('/api/sites/basic');
+                // Cache miss — fetch from the same /api/sites endpoint and populate
+                // the shared cache so Coverage Map / CCTV / Bitcoin also benefit
+                const res = await fetch('/api/sites');
                 raw = await res.json();
                 if (!Array.isArray(raw)) raw = [];
+                if (typeof siteDataCache !== 'undefined') siteDataCache = raw;
             }
 
             gensetSitesData = raw.filter(s => {
@@ -6766,10 +6767,13 @@
 
             const clusterGroup = L.markerClusterGroup({
                 maxClusterRadius: 50,
-                iconCreateFunction: c => L.divIcon({
-                    html: `<div style="width:34px;height:34px;border-radius:50%;background:#16a34a;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.25);">${c.getChildCount()}</div>`,
-                    className: '', iconSize: [34, 34]
-                })
+                iconCreateFunction: function(c) {
+                    return new L.DivIcon({
+                        html: '<div class="cluster-base cluster-normal"><span>' + c.getChildCount() + '</span></div>',
+                        className: 'marker-cluster',
+                        iconSize: new L.Point(40, 40)
+                    });
+                }
             });
 
             gensetSitesData.forEach(site => {
@@ -6782,7 +6786,7 @@
             });
 
             gensetMap.addLayer(clusterGroup);
-            gsSetStatus(`${gensetSitesData.length} sites loaded`, false);
+            gsSetStatus(gensetSitesData.length + ' sites loaded', false);
             setTimeout(() => gsSetStatus(null), 2500);
         } catch(e) {
             console.error('Genset: failed to load sites', e);
