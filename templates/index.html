@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>3W - Unified Platfor</title>
+  <title>3W</title>
 
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -212,11 +212,17 @@
         }
         #sidebar.collapsed ~ #splitWrapper { left: 0; }
         #splitWrapper.active { display: flex; }
-        #splitMapLeft  { flex: 1; position: relative; overflow: hidden; }
-        #splitMapRight { flex: 1; position: relative; overflow: hidden; border-left: 2px solid #0f2d52; display: flex; flex-direction: column; }
+        #splitMapLeft  { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+        #splitMapRight { flex: 1; overflow: hidden; border-left: 2px solid #0f2d52; display: flex; flex-direction: column; }
+        #splitMapLeftCanvas { flex: 1; min-height: 0; }
         #map.split { display: none !important; }
         /* Inner forecast map canvas fills remaining height after toolbar */
         #splitForecastMap { flex: 1; min-height: 0; }
+        /* Shared split dashboard style */
+        .split-dash-panel { flex-shrink:0; background:white; height:240px; min-height:150px; display:none; flex-direction:column; overflow:hidden; }
+        .split-dash-panel.active { display:flex; }
+        #splitDashLeft  { border-top:2px solid #0f2d52; }
+        #splitDashRight { border-top:2px solid #1e3a8a; }
         #splitToolbar {
             flex-shrink: 0;
             display: flex; align-items: center; gap: 6px;
@@ -356,6 +362,36 @@
 
         /* True North Compass */
         #northCompass { position: absolute; top: 130px; right: 10px; z-index: 1000; width: 44px; height: 44px; background: rgba(255,255,255,.96); border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06); display: flex; align-items: center; justify-content: center; pointer-events: none; }
+
+
+        /* ── BOTTOM DASHBOARD PANEL ── */
+        #mapDashboardPanel { position:absolute; bottom:0; left:350px; right:0; background:white; border-top:2px solid #e2e8f0; z-index:1200; box-shadow:0 -4px 16px rgba(0,0,0,.07); height:280px; min-height:180px; max-height:65vh; display:flex; flex-direction:column; transition:left .3s cubic-bezier(.4,0,.2,1); }
+        #sidebar.collapsed ~ #mapDashboardPanel { left:0; }
+        #mapDashboardPanel.dash-hidden { display:none; }
+        /* Reopen pill shown when panel is collapsed */
+        #dashReopenBtn { position:absolute; bottom:0; left:50%; transform:translateX(-50%); z-index:1200; background:#0f2d52; color:white; border:none; border-radius:6px 6px 0 0; padding:4px 18px; font-size:.68rem; font-weight:700; cursor:pointer; box-shadow:0 -2px 8px rgba(0,0,0,.15); display:none; transition:background .2s; white-space:nowrap; }
+        #dashReopenBtn:hover { background:#1e3a8a; }
+        .dash-resize-handle { height:5px; background:#e2e8f0; cursor:ns-resize; flex-shrink:0; transition:background .2s; }
+        .dash-resize-handle:hover { background:#1e3a8a; }
+        .dash-toggle-btn { position:absolute; top:-14px; left:50%; transform:translateX(-50%); width:44px; height:14px; background:#0f2d52; border:none; border-radius:5px 5px 0 0; color:white; cursor:pointer; z-index:2; font-size:.6rem; display:flex; align-items:center; justify-content:center; box-shadow:0 -2px 6px rgba(0,0,0,.12); transition:background .2s; }
+        .dash-toggle-btn:hover { background:#1e3a8a; }
+        .dash-tabs { display:flex; background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:0 12px; flex-shrink:0; }
+        .dash-tab { padding:7px 14px; font-size:.75rem; font-weight:600; cursor:pointer; border-bottom:2px solid transparent; color:#64748b; transition:all .2s; white-space:nowrap; user-select:none; }
+        .dash-tab.active { color:#0f2d52; border-bottom-color:#0f2d52; }
+        .dash-tab:hover:not(.active) { color:#1e3a8a; background:#f1f5f9; }
+        .dash-content { flex:1; overflow-y:auto; padding:10px 14px; min-height:0; }
+        .dash-tab-pane { display:none; }
+        .dash-tab-pane.active { display:block; }
+        .dash-kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px; }
+        .dash-kpi-card { padding:8px 10px; border-radius:6px; text-align:center; }
+        .dash-kpi-label { font-size:.62rem; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px; }
+        .dash-kpi-val   { font-size:1.3rem; font-weight:900; line-height:1; }
+        .dash-charts-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:8px; }
+        .dash-chart-label { font-size:.65rem; font-weight:700; color:#475569; margin-bottom:4px; }
+        .dash-site-table { width:100%; font-size:.72rem; border-collapse:collapse; }
+        .dash-site-table th { background:#f1f5f9; padding:5px 8px; text-align:center; font-weight:700; font-size:.65rem; color:#475569; }
+        .dash-site-table td { padding:4px 8px; border-bottom:1px solid #f1f5f9; text-align:center; }
+        #splitDashPanel { flex-shrink:0; background:white; border-top:2px solid #1e3a8a; height:280px; min-height:180px; display:none; flex-direction:column; overflow:hidden; }
 
         /* Geo Tools */
         .geo-pick-btn   { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 3px; border: none; cursor: pointer; transition: background .15s; }
@@ -1048,12 +1084,99 @@
 
     <div id="map"></div>
 
+    <!-- ══ BOTTOM DASHBOARD PANEL ══ -->
+    <div id="mapDashboardPanel">
+        <div style="position:relative; flex-shrink:0;">
+            <button class="dash-toggle-btn" onclick="toggleMapDashboard()" title="Collapse / Expand">
+                <i class="fas fa-chevron-down" id="dashToggleIcon"></i>
+            </button>
+        </div>
+        <div class="dash-resize-handle" id="dashResizeHandle"></div>
+        <div class="dash-tabs">
+            <div class="dash-tab active" data-panel="main" onclick="switchDashTab(this,'main','mapDashboardPanel')">Main Dashboard</div>
+            <div class="dash-tab" data-panel="capex" onclick="switchDashTab(this,'capex','mapDashboardPanel')">CAPEX</div>
+            <div class="dash-tab" data-panel="cnes" onclick="switchDashTab(this,'cnes','mapDashboardPanel')">CNES</div>
+        </div>
+        <div class="dash-content">
+            <!-- Main tab -->
+            <div id="mdash-main" class="dash-tab-pane active">
+                <div class="dash-kpi-grid">
+                    <div class="dash-kpi-card" style="background:#eff6ff;"><div class="dash-kpi-label">Sites in View</div><div class="dash-kpi-val" id="md-sites" style="color:#1e3a8a;">—</div></div>
+                    <div class="dash-kpi-card" style="background:#fef2f2;"><div class="dash-kpi-label">Congested</div><div class="dash-kpi-val" id="md-cong" style="color:#dc2626;">—</div></div>
+                    <div class="dash-kpi-card" style="background:#fffbeb;"><div class="dash-kpi-label">Upgrade Cases</div><div class="dash-kpi-val" id="md-upgrade" style="color:#d97706;">—</div></div>
+                    <div class="dash-kpi-card" style="background:#faf5ff;"><div class="dash-kpi-label">Avg PRB %</div><div class="dash-kpi-val" id="md-prb" style="color:#7c3aed;">—</div></div>
+                </div>
+                <div class="dash-charts-row">
+                    <div><div class="dash-chart-label">Top Congested Sectors</div><canvas id="md-leaderChart" height="130"></canvas></div>
+                    <div><div class="dash-chart-label">Site Health</div><canvas id="md-healthChart" height="130"></canvas></div>
+                </div>
+            </div>
+            <!-- CAPEX tab -->
+            <div id="mdash-capex" class="dash-tab-pane">
+                <div style="background:#f0fdf4; padding:10px; border-radius:6px; text-align:center; margin-bottom:10px; border:1px solid #bbf7d0;">
+                    <div style="font-size:.65rem; color:#64748b; font-weight:700; text-transform:uppercase; margin-bottom:2px;">Total CAPEX — Visible Sites</div>
+                    <div id="md-capexTotal" style="font-size:1.4rem; font-weight:900; color:#16a34a;">RM 0</div>
+                </div>
+                <div class="dash-chart-label">Top Upgrade Candidates</div>
+                <div id="md-capexList" style="max-height:120px; overflow-y:auto; margin-bottom:8px;"></div>
+                <div class="dash-chart-label">Cost Distribution</div>
+                <canvas id="md-capexChart" height="130"></canvas>
+            </div>
+            <!-- CNES tab (empty) -->
+            <div id="mdash-cnes" class="dash-tab-pane">
+                <div style="display:flex; align-items:center; justify-content:center; height:160px; color:#94a3b8; font-size:.82rem;">
+                    <div style="text-align:center;"><i class="fas fa-clock" style="font-size:2rem; margin-bottom:10px; display:block; color:#cbd5e1;"></i>CNES data coming soon</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button id="dashReopenBtn" onclick="toggleMapDashboard()">
+        <i class="fas fa-chart-bar" style="margin-right:5px;"></i>Dashboard
+    </button>
+
     <!-- Split wrapper — shown instead of #map when split is active.
          Both halves are equal flex children so they're always 50/50. -->
     <div id="splitWrapper">
-        <!-- Left half: a second Leaflet instance mirroring the actual-state map -->
-        <div id="splitMapLeft"></div>
-        <!-- Right half: toolbar + forecast map -->
+        <!-- Left half: actual-state map + its own dashboard -->
+        <div id="splitMapLeft">
+            <div id="splitMapLeftCanvas"></div>
+            <div id="splitDashLeft" class="split-dash-panel">
+                <div class="dash-resize-handle" id="splitDashLeftHandle"></div>
+                <div class="dash-tabs">
+                    <div class="dash-tab active" onclick="switchDashTab(this,'main','splitDashLeft')">Main Dashboard</div>
+                    <div class="dash-tab" onclick="switchDashTab(this,'capex','splitDashLeft')">CAPEX</div>
+                    <div class="dash-tab" onclick="switchDashTab(this,'cnes','splitDashLeft')">CNES</div>
+                </div>
+                <div class="dash-content">
+                    <div id="splitDashLeft-main" class="dash-tab-pane active">
+                        <div class="dash-kpi-grid">
+                            <div class="dash-kpi-card" style="background:#eff6ff;"><div class="dash-kpi-label">Sites in View</div><div class="dash-kpi-val" id="sdl-sites" style="color:#1e3a8a;">—</div></div>
+                            <div class="dash-kpi-card" style="background:#fef2f2;"><div class="dash-kpi-label">Congested</div><div class="dash-kpi-val" id="sdl-cong" style="color:#dc2626;">—</div></div>
+                            <div class="dash-kpi-card" style="background:#fffbeb;"><div class="dash-kpi-label">Upgrade Cases</div><div class="dash-kpi-val" id="sdl-upgrade" style="color:#d97706;">—</div></div>
+                            <div class="dash-kpi-card" style="background:#faf5ff;"><div class="dash-kpi-label">Avg PRB %</div><div class="dash-kpi-val" id="sdl-prb" style="color:#7c3aed;">—</div></div>
+                        </div>
+                        <div class="dash-charts-row">
+                            <div><div class="dash-chart-label">Top Congested</div><canvas id="sdl-leaderChart" height="110"></canvas></div>
+                            <div><div class="dash-chart-label">Site Health</div><canvas id="sdl-healthChart" height="110"></canvas></div>
+                        </div>
+                    </div>
+                    <div id="splitDashLeft-capex" class="dash-tab-pane">
+                        <div style="background:#f0fdf4;padding:8px;border-radius:6px;text-align:center;margin-bottom:8px;border:1px solid #bbf7d0;">
+                            <div style="font-size:.6rem;color:#64748b;font-weight:700;text-transform:uppercase;">Total CAPEX — Visible</div>
+                            <div id="sdl-capexTotal" style="font-size:1.2rem;font-weight:900;color:#16a34a;">RM 0</div>
+                        </div>
+                        <div id="sdl-capexList" style="max-height:90px;overflow-y:auto;margin-bottom:6px;"></div>
+                        <canvas id="sdl-capexChart" height="100"></canvas>
+                    </div>
+                    <div id="splitDashLeft-cnes" class="dash-tab-pane">
+                        <div style="display:flex;align-items:center;justify-content:center;height:120px;color:#94a3b8;font-size:.75rem;text-align:center;">
+                            <div><i class="fas fa-clock" style="font-size:1.5rem;display:block;margin-bottom:8px;color:#cbd5e1;"></i>CNES coming soon</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Right half: forecast toolbar + forecast map + forecast dashboard -->
         <div id="splitMapRight">
             <div id="splitToolbar">
                 <i class="fas fa-chart-line" style="color:#0f2d52; font-size:.82rem; flex-shrink:0;"></i>
@@ -1065,11 +1188,44 @@
                 <select id="splitYearSelect" onchange="refreshSplitMarkers()">
                     <option>2026</option><option>2025</option><option>2027</option>
                 </select>
-                <div id="splitStatusBar">
-                    <span id="splitStatusText">Initialising…</span>
-                </div>
+                <div id="splitStatusBar"><span id="splitStatusText">Initialising…</span></div>
             </div>
             <div id="splitForecastMap"></div>
+            <div id="splitDashRight" class="split-dash-panel">
+                <div class="dash-resize-handle" id="splitDashRightHandle"></div>
+                <div class="dash-tabs">
+                    <div class="dash-tab active" onclick="switchDashTab(this,'main','splitDashRight')">Main Dashboard</div>
+                    <div class="dash-tab" onclick="switchDashTab(this,'capex','splitDashRight')">CAPEX</div>
+                    <div class="dash-tab" onclick="switchDashTab(this,'cnes','splitDashRight')">CNES</div>
+                </div>
+                <div class="dash-content">
+                    <div id="splitDashRight-main" class="dash-tab-pane active">
+                        <div class="dash-kpi-grid">
+                            <div class="dash-kpi-card" style="background:#eff6ff;"><div class="dash-kpi-label">Sites (Forecast)</div><div class="dash-kpi-val" id="sdr-sites" style="color:#1e3a8a;">—</div></div>
+                            <div class="dash-kpi-card" style="background:#fef2f2;"><div class="dash-kpi-label">Congested</div><div class="dash-kpi-val" id="sdr-cong" style="color:#dc2626;">—</div></div>
+                            <div class="dash-kpi-card" style="background:#fffbeb;"><div class="dash-kpi-label">Upgrade Cases</div><div class="dash-kpi-val" id="sdr-upgrade" style="color:#d97706;">—</div></div>
+                            <div class="dash-kpi-card" style="background:#faf5ff;"><div class="dash-kpi-label">Quarter</div><div class="dash-kpi-val" id="sdr-quarter" style="color:#7c3aed;font-size:.85rem;">—</div></div>
+                        </div>
+                        <div class="dash-charts-row">
+                            <div><div class="dash-chart-label">Forecast Congested</div><canvas id="sdr-leaderChart" height="110"></canvas></div>
+                            <div><div class="dash-chart-label">Forecast Health</div><canvas id="sdr-healthChart" height="110"></canvas></div>
+                        </div>
+                    </div>
+                    <div id="splitDashRight-capex" class="dash-tab-pane">
+                        <div style="background:#f0fdf4;padding:8px;border-radius:6px;text-align:center;margin-bottom:8px;border:1px solid #bbf7d0;">
+                            <div style="font-size:.6rem;color:#64748b;font-weight:700;text-transform:uppercase;">Forecast CAPEX — Visible</div>
+                            <div id="sdr-capexTotal" style="font-size:1.2rem;font-weight:900;color:#16a34a;">RM 0</div>
+                        </div>
+                        <div id="sdr-capexList" style="max-height:90px;overflow-y:auto;margin-bottom:6px;"></div>
+                        <canvas id="sdr-capexChart" height="100"></canvas>
+                    </div>
+                    <div id="splitDashRight-cnes" class="dash-tab-pane">
+                        <div style="display:flex;align-items:center;justify-content:center;height:120px;color:#94a3b8;font-size:.75rem;text-align:center;">
+                            <div><i class="fas fa-clock" style="font-size:1.5rem;display:block;margin-bottom:8px;color:#cbd5e1;"></i>CNES coming soon</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1116,11 +1272,11 @@
         <i class="fas fa-tasks"></i>
         <span id="tasksBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-0.5 font-bold">0</span>
     </button>
-    <button id="dashboardBtn" class="tool-icon-btn" onclick="openMetabaseDashboard()" title="NetAlytics Dashboard">
+    <button id="dashboardBtn" class="tool-icon-btn" onclick="openMetabaseDashboard()" title="3W Dashboard">
         <i class="fas fa-chart-pie"></i>
     </button>
 
-    <div class="absolute bottom-8 right-8 bg-white rounded-lg shadow-xl z-[1000] border border-gray-200 w-56 pointer-events-auto overflow-hidden" style="transition: all 0.25s ease;">
+    <div class="absolute bottom-6 right-8 bg-white rounded-lg shadow-xl z-[1100] border border-gray-200 w-56 pointer-events-auto overflow-hidden" style="transition: all 0.25s ease;">
         <button onclick="toggleMapLegend()" class="w-full flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors" style="border:none; background:none;">
             <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Legend</h4>
             <i id="legendChevron" class="fas fa-chevron-down text-gray-400 transition-transform duration-200" style="font-size:0.6rem;"></i>
@@ -1918,7 +2074,7 @@
     <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center" style="z-index:11000; padding-top:80px;">
             <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden">
                 <div class="bg-gray-800 text-white p-3 flex justify-between items-center flex-shrink-0">
-                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> NetAlytics Dashboard</h3>
+                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> 3W Dashboard</h3>
                     <button onclick="closeMetabaseDashboard()" class="text-gray-300 hover:text-white text-xl transition-colors">
                         <i class="fas fa-times"></i>
                     </button>
@@ -2214,12 +2370,12 @@
 
     <div id="chatPanel" class="hidden fixed bottom-20 right-8 w-[600px] bg-white shadow-2xl rounded-2xl border border-gray-200 flex-col z-[6000] overflow-hidden">
         <div class="bg-blue-600 p-3 text-white font-bold flex justify-between items-center">
-            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> NetAlytics AI Agent</span>
+            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> 3W AI Agent</span>
             <button onclick="toggleChat()" class="hover:text-blue-200"><i class="fas fa-times"></i></button>
         </div>
         <div id="chatMessages" class="h-[550px] overflow-y-auto p-4 flex flex-col gap-3 bg-gray-50 text-sm">
             <div class="self-start bg-white border border-gray-200 text-gray-800 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl shadow-sm max-w-[95%] w-full">
-                Hello! I am your NetAlytics capacity planning assistant. Ask me to find a site or analyze congestion.
+                Hello! I am your 3W capacity planning assistant. Ask me to find a site or analyze congestion.
             </div>
         </div>
         <form onsubmit="handleChatSubmit(event)" class="p-3 border-t border-gray-200 bg-white flex gap-2">
@@ -2992,6 +3148,8 @@
                 if (splitActualMap) { splitActualMap.remove(); splitActualMap = null; }
                 splitSatLayer = splitLabelsLayer = splitStreetLayer = splitDemLayer = null;
                 splitActualSatLayer = splitActualLabelsLayer = splitActualStreetLayer = splitActualDemLayer = null;
+                document.getElementById('splitDashLeft')?.classList.remove('active');
+                document.getElementById('splitDashRight')?.classList.remove('active');
                 setTimeout(() => { if (map) map.invalidateSize(); }, 50);
                 // Restore compass to original position
                 const c = document.getElementById('northCompass');
@@ -3035,7 +3193,7 @@
 
             // ── LEFT PANE — mirror of actual-state map ──
             if (!splitActualMap) {
-                splitActualMap = L.map('splitMapLeft', { zoomControl: false, preferCanvas: false })
+                splitActualMap = L.map('splitMapLeftCanvas', { zoomControl: false, preferCanvas: false })
                                   .setView(center, zoom);
                 setTimeout(() => splitActualMap.invalidateSize(), 50);
                 L.control.zoom({ position: 'topright' }).addTo(splitActualMap);
@@ -3074,11 +3232,6 @@
                     splitActualMap.addLayer(actualCong);
                 }
 
-                // Label overlay
-                const lblLeft = L.control({ position: 'topleft' });
-                lblLeft.onAdd = () => { const d = L.DomUtil.create('div'); d.innerHTML = '<div style="background:#0f2d52;color:white;padding:4px 10px;border-radius:0 0 6px 0;font-size:.72rem;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.2);">📍 Current Status</div>'; return d; };
-                lblLeft.addTo(splitActualMap);
-
                 splitActualMap.on('moveend zoomend', _syncRightToLeft);
             }
 
@@ -3089,11 +3242,6 @@
                 setTimeout(() => { splitMap.invalidateSize(); _ensureSplitLayers(); }, 50);
                 L.control.zoom({ position: 'topright' }).addTo(splitMap);
 
-                // Label overlay
-                const lblRight = L.control({ position: 'topleft' });
-                lblRight.onAdd = () => { const d = L.DomUtil.create('div'); d.innerHTML = '<div style="background:#1e3a8a;color:white;padding:4px 10px;border-radius:0 0 6px 0;font-size:.72rem;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.2);">🔮 Forecast</div>'; return d; };
-                lblRight.addTo(splitMap);
-
                 splitCluster = L.markerClusterGroup({ chunkedLoading:true, maxClusterRadius:60,
                     iconCreateFunction: c => new L.DivIcon({ html:'<div class="cluster-base cluster-normal"><span>'+c.getChildCount()+'</span></div>', className:'marker-cluster', iconSize:new L.Point(40,40) }) });
                 splitCongestedCluster = L.markerClusterGroup({ chunkedLoading:true, maxClusterRadius:60,
@@ -3103,6 +3251,13 @@
 
                 map.on('moveend zoomend', _syncLeftToRight);
                 splitMap.on('moveend zoomend', _syncRightToLeft);
+
+                // Show split dashboard and hook refresh
+                // Show both split dashboards
+                document.getElementById('splitDashLeft')?.classList.add('active');
+                document.getElementById('splitDashRight')?.classList.add('active');
+                splitActualMap.on('moveend zoomend', () => updateSplitLeftDashboard());
+                splitMap.on('moveend zoomend', () => updateSplitMainDashboard());
 
                 _loadForecastMarkers();
                 // Sync current layer visibility to both split maps immediately
@@ -3133,6 +3288,7 @@
                         congestedSites.add(sid);
                     }
                 });
+                window._splitCongestedSet = congestedSites; // expose for split dashboard
 
                 // Rebuild right-map markers
                 splitCluster.clearLayers();
@@ -3170,6 +3326,8 @@
                 const found   = rows.length > 0;
                 const noData  = !found ? ' · <span style="color:#f59e0b">No forecast data for this quarter</span>' : '';
                 splitSetStatus(qLabels[splitQuarter] + ' · ' + year + noData);
+                // Refresh split dashboard with new congestion data
+                setTimeout(() => updateSplitMainDashboard(), 200);
 
             } catch(e) {
                 console.error('Split screen forecast error:', e);
@@ -7662,6 +7820,351 @@ out center;`;
         }
     }
 
+
+    // ================================================================
+    // BOTTOM DASHBOARD PANEL
+    // ================================================================
+    let mdLeaderChart = null, mdHealthChart = null, mdCapexChart = null;
+    let sdrLeaderChart = null, sdrHealthChart = null, sdrCapexChart = null;
+    let dashPanelOpen = true;
+
+    function _setMapBottomPad(px) {
+        const mapEl    = document.getElementById('map');
+        const layerCtrl = document.getElementById('mapLayerControl');
+        const pegman   = document.getElementById('pegmanControl');
+        const wrapper  = document.getElementById('splitWrapper');
+        if (mapEl)     mapEl.style.bottom     = px + 'px';
+        if (layerCtrl) layerCtrl.style.bottom  = (px + 18) + 'px';
+        if (pegman)    pegman.style.bottom     = (px + 20) + 'px';
+        if (wrapper)   wrapper.style.bottom    = px + 'px';
+        if (map) setTimeout(() => map.invalidateSize(), 50);
+        if (splitActualMap) setTimeout(() => splitActualMap.invalidateSize(), 50);
+    }
+
+    function toggleMapDashboard() {
+        const panel    = document.getElementById('mapDashboardPanel');
+        const icon     = document.getElementById('dashToggleIcon');
+        const reopenBtn = document.getElementById('dashReopenBtn');
+        if (!panel) return;
+        dashPanelOpen = !dashPanelOpen;
+        if (dashPanelOpen) {
+            panel.classList.remove('dash-hidden');
+            if (reopenBtn) reopenBtn.style.display = 'none';
+            _setMapBottomPad(panel.offsetHeight);
+            if (icon) icon.style.transform = 'rotate(0deg)';
+        } else {
+            _setMapBottomPad(0);
+            panel.classList.add('dash-hidden');
+            if (reopenBtn) reopenBtn.style.display = 'block';
+            if (icon) icon.style.transform = 'rotate(180deg)';
+        }
+        setTimeout(() => map && map.invalidateSize(), 320);
+    }
+
+    function switchDashTab(el, tab, panelId) {
+        const panel = document.getElementById(panelId);
+        if (!panel) return;
+        // pane IDs are: mapDashboardPanel → mdash-X, splitDashLeft → splitDashLeft-X, splitDashRight → splitDashRight-X
+        const prefix = panelId === 'mapDashboardPanel' ? 'mdash' : panelId;
+        panel.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+        panel.querySelectorAll('.dash-tab-pane').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        const pane = document.getElementById(prefix + '-' + tab);
+        if (pane) pane.classList.add('active');
+        if (panelId === 'mapDashboardPanel') {
+            if (tab === 'main')  updateMainDashboard();
+            if (tab === 'capex') updateCapexDashboard();
+        } else if (panelId === 'splitDashLeft') {
+            if (tab === 'main')  updateSplitLeftDashboard();
+            if (tab === 'capex') updateSplitLeftCapexDashboard();
+        } else {
+            if (tab === 'main')  updateSplitMainDashboard();
+            if (tab === 'capex') updateSplitCapexDashboard();
+        }
+    }
+
+    // Resize handle for main dashboard
+    (function() {
+        const handle = document.getElementById('dashResizeHandle');
+        if (!handle) return;
+        let dragging = false, startY, startH;
+        handle.addEventListener('mousedown', e => { dragging = true; startY = e.clientY; startH = document.getElementById('mapDashboardPanel').offsetHeight; e.preventDefault(); });
+        document.addEventListener('mousemove', e => {
+            if (!dragging) return;
+            const panel = document.getElementById('mapDashboardPanel');
+            const delta = startY - e.clientY;
+            const newH  = Math.min(window.innerHeight * 0.65, Math.max(150, startH + delta));
+            panel.style.height = newH + 'px';
+            _setMapBottomPad(newH);
+        });
+        document.addEventListener('mouseup', () => { if (dragging) { dragging = false; if (map) map.invalidateSize(); } });
+    })();
+
+    // Resize handle for split dashboard
+    (function() {
+        const handle = document.getElementById('splitDashResizeHandle');
+        if (!handle) return;
+        let dragging = false, startY, startH;
+        handle.addEventListener('mousedown', e => { dragging = true; startY = e.clientY; startH = document.getElementById('splitDashRight').offsetHeight; e.preventDefault(); });
+        document.addEventListener('mousemove', e => {
+            if (!dragging) return;
+            const panel = document.getElementById('splitDashRight');
+            const delta = startY - e.clientY;
+            const newH  = Math.min(window.innerHeight * 0.65, Math.max(150, startH + delta));
+            panel.style.height = newH + 'px';
+            if (splitMap) setTimeout(() => splitMap.invalidateSize(), 50);
+        });
+        document.addEventListener('mouseup', () => { if (dragging) { dragging = false; if (splitMap) splitMap.invalidateSize(); } });
+    })();
+
+    function _getSitesInView(leafletMap) {
+        if (!leafletMap || !siteDataCache) return [];
+        try {
+            const b = leafletMap.getBounds();
+            return siteDataCache.filter(s => s.lat && s.lng && b.contains([s.lat, s.lng]));
+        } catch(e) { return []; }
+    }
+
+    function _avgPrb(sites) {
+        const vals = sites.flatMap(s => (s.sectors || []).map(sec => parseFloat(sec.prb || 0))).filter(v => !isNaN(v) && v > 0);
+        return vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : '—';
+    }
+
+    async function updateMainDashboard() {
+        const sites = _getSitesInView(map);
+        const total = sites.length;
+        const week  = document.getElementById('weekSelect')?.value || '';
+        let congested = 0, upgradeCount = 0;
+
+        sites.forEach(s => {
+            if (s.congested || s.max_cong > 0) congested++;
+        });
+
+        // Upgrade cases
+        let upgradeSites = [];
+        try {
+            const res = await fetch(`/api/map/upgrade-cases?week=${week}`);
+            const all = await res.json();
+            const ids = new Set(sites.map(s => s.site_id));
+            upgradeSites = all.filter(u => ids.has(u.site_id));
+            upgradeCount = upgradeSites.length;
+        } catch(e) {}
+
+        document.getElementById('md-sites').textContent   = total;
+        document.getElementById('md-cong').textContent    = congested;
+        document.getElementById('md-upgrade').textContent = upgradeCount;
+        document.getElementById('md-prb').textContent     = _avgPrb(sites);
+
+        // Top congested chart
+        let leaderData = [];
+        try {
+            const res = await fetch(`/api/map/top_congested?week=${week}&region=All`);
+            const all = await res.json();
+            const ids = new Set(sites.map(s => s.site_id));
+            leaderData = all.filter(d => ids.has(String(d.zoom_sector_id||'').split('_')[0])).slice(0,5);
+        } catch(e) {}
+
+        if (mdLeaderChart) mdLeaderChart.destroy();
+        const lbCtx = document.getElementById('md-leaderChart')?.getContext('2d');
+        if (lbCtx) mdLeaderChart = new Chart(lbCtx, {
+            type: 'bar',
+            data: { labels: leaderData.map(d=>String(d.zoom_sector_id||'').split('_')[0]), datasets: [{ label:'Congested Weeks', data: leaderData.map(d=>d.congested_weeks||0), backgroundColor:'#ef4444' }] },
+            options: { responsive:true, maintainAspectRatio:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+        });
+
+        // Health donut
+        if (mdHealthChart) mdHealthChart.destroy();
+        const hCtx = document.getElementById('md-healthChart')?.getContext('2d');
+        if (hCtx) mdHealthChart = new Chart(hCtx, {
+            type: 'doughnut',
+            data: { labels:['Healthy','Congested'], datasets:[{data:[total-congested, congested], backgroundColor:['#10b981','#ef4444']}] },
+            options: { plugins:{legend:{position:'bottom', labels:{font:{size:10}}}} }
+        });
+    }
+
+    async function updateCapexDashboard() {
+        const sites = _getSitesInView(map);
+        const week  = document.getElementById('weekSelect')?.value || '';
+        let upgradeSites = [], totalCost = 0;
+        try {
+            const res = await fetch(`/api/map/upgrade-cases?week=${week}`);
+            const all = await res.json();
+            const ids = new Set(sites.map(s => s.site_id));
+            upgradeSites = all.filter(u => ids.has(u.site_id));
+            totalCost = upgradeSites.reduce((s,u) => s + (u.total_capex||0), 0);
+        } catch(e) {}
+
+        document.getElementById('md-capexTotal').textContent = 'RM ' + totalCost.toLocaleString('en-MY',{minimumFractionDigits:2});
+        const listEl = document.getElementById('md-capexList');
+        listEl.innerHTML = upgradeSites.slice(0,5).map(u =>
+            `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:#f8fafc;border-radius:5px;border:1px solid #e2e8f0;margin-bottom:4px;font-size:.72rem;">
+                <span style="font-weight:700;">${u.site_id}</span>
+                <span style="color:#16a34a;font-weight:800;">RM ${(u.total_capex||0).toLocaleString('en-MY',{minimumFractionDigits:2})}</span>
+             </div>`
+        ).join('') || '<div style="font-size:.72rem;color:#94a3b8;text-align:center;padding:12px;">No upgrade candidates in view</div>';
+
+        if (mdCapexChart) mdCapexChart.destroy();
+        const ctx = document.getElementById('md-capexChart')?.getContext('2d');
+        const top = upgradeSites.sort((a,b)=>(b.total_capex||0)-(a.total_capex||0)).slice(0,5);
+        if (ctx) mdCapexChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels:top.map(u=>u.site_id), datasets:[{label:'CAPEX (RM)', data:top.map(u=>u.total_capex||0), backgroundColor:'#10b981'}] },
+            options: { responsive:true, maintainAspectRatio:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+        });
+    }
+
+    // Split (forecast) dashboard
+    async function updateSplitMainDashboard() {
+        if (!splitMap) return;
+        // Use the forecast congestion data already loaded into splitSiteCache
+        const sites = _getSitesInView(splitMap);
+        const total = sites.length;
+        let congested = 0, upgradeCount = 0;
+        const year  = document.getElementById('splitYearSelect')?.value || '';
+
+        sites.forEach(s => {
+            const sid = s.site_id.toUpperCase();
+            if (window._splitCongestedSet && window._splitCongestedSet.has(sid)) congested++;
+        });
+
+        // Forecast upgrade cases
+        let upgradeSites = [];
+        try {
+            const res = await fetch(`/api/map/upgrade-cases?week=${splitQuarter}&year=${year}`);
+            const all = await res.json();
+            const ids = new Set(sites.map(s => s.site_id));
+            upgradeSites = all.filter(u => ids.has(u.site_id));
+            upgradeCount = upgradeSites.length;
+        } catch(e) {}
+
+        document.getElementById('sdr-sites').textContent   = total;
+        document.getElementById('sdr-cong').textContent    = congested;
+        document.getElementById('sdr-upgrade').textContent = upgradeCount;
+        const qMap = {13:'Q1 Wk13', 26:'Q2 Wk26', 39:'Q3 Wk39', 52:'Q4 Wk52'};
+        document.getElementById('sdr-quarter').textContent = (qMap[splitQuarter]||splitQuarter) + ' · ' + year;
+
+        if (sdrLeaderChart) sdrLeaderChart.destroy();
+        const lbCtx = document.getElementById('sdr-leaderChart')?.getContext('2d');
+        const congSites = sites.filter(s => window._splitCongestedSet && window._splitCongestedSet.has(s.site_id.toUpperCase())).slice(0,5);
+        if (lbCtx) sdrLeaderChart = new Chart(lbCtx, {
+            type: 'bar',
+            data: { labels: congSites.map(s=>s.site_id), datasets:[{label:'Congested (Forecast)', data:congSites.map(()=>1), backgroundColor:'#f97316'}] },
+            options: { responsive:true, maintainAspectRatio:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, max:2}} }
+        });
+
+        if (sdrHealthChart) sdrHealthChart.destroy();
+        const hCtx = document.getElementById('sdr-healthChart')?.getContext('2d');
+        if (hCtx) sdrHealthChart = new Chart(hCtx, {
+            type: 'doughnut',
+            data: { labels:['Forecast Normal','Forecast Congested'], datasets:[{data:[total-congested, congested], backgroundColor:['#3b82f6','#ef4444']}] },
+            options: { plugins:{legend:{position:'bottom', labels:{font:{size:10}}}} }
+        });
+    }
+
+    async function updateSplitCapexDashboard() {
+        if (!splitMap) return;
+        const sites = _getSitesInView(splitMap);
+        const year  = document.getElementById('splitYearSelect')?.value || '';
+        let upgradeSites = [], totalCost = 0;
+        try {
+            const res = await fetch(`/api/map/upgrade-cases?week=${splitQuarter}&year=${year}`);
+            const all = await res.json();
+            const ids = new Set(sites.map(s => s.site_id));
+            upgradeSites = all.filter(u => ids.has(u.site_id));
+            totalCost = upgradeSites.reduce((s,u) => s + (u.total_capex||0), 0);
+        } catch(e) {}
+
+        document.getElementById('sdr-capexTotal').textContent = 'RM ' + totalCost.toLocaleString('en-MY',{minimumFractionDigits:2});
+        const listEl = document.getElementById('sdr-capexList');
+        listEl.innerHTML = upgradeSites.slice(0,5).map(u =>
+            `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:#f8fafc;border-radius:5px;border:1px solid #e2e8f0;margin-bottom:4px;font-size:.72rem;">
+                <span style="font-weight:700;">${u.site_id}</span>
+                <span style="color:#16a34a;font-weight:800;">RM ${(u.total_capex||0).toLocaleString('en-MY',{minimumFractionDigits:2})}</span>
+             </div>`
+        ).join('') || '<div style="font-size:.72rem;color:#94a3b8;text-align:center;padding:12px;">No forecast upgrade candidates in view</div>';
+
+        if (sdrCapexChart) sdrCapexChart.destroy();
+        const ctx = document.getElementById('sdr-capexChart')?.getContext('2d');
+        const top = upgradeSites.sort((a,b)=>(b.total_capex||0)-(a.total_capex||0)).slice(0,5);
+        if (ctx) sdrCapexChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels:top.map(u=>u.site_id), datasets:[{label:'Forecast CAPEX (RM)', data:top.map(u=>u.total_capex||0), backgroundColor:'#f97316'}] },
+            options: { responsive:true, maintainAspectRatio:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+        });
+    }
+
+    // Hook dashboard refresh to map move/zoom
+    (function waitForMapDash() {
+        if (typeof map === 'undefined' || !map) { setTimeout(waitForMapDash, 400); return; }
+        const panel = document.getElementById('mapDashboardPanel');
+        if (panel) { _setMapBottomPad(panel.offsetHeight); }
+        map.on('moveend zoomend', () => { if (dashPanelOpen) updateMainDashboard(); });
+        setTimeout(() => updateMainDashboard(), 1500);
+    })();
+
+    // Split LEFT (actual-state) dashboard
+    async function updateSplitLeftDashboard() {
+        if (!splitActualMap) return;
+        const sites = _getSitesInView(splitActualMap);
+        const total = sites.length;
+        const week  = document.getElementById('weekSelect')?.value || '';
+        let congested = 0; let upgradeCount = 0;
+        sites.forEach(s => { if (s.congested || s.max_cong > 0) congested++; });
+        let upgradeSites = [];
+        try {
+            const all = await (await fetch(`/api/map/upgrade-cases?week=${week}`)).json();
+            const ids = new Set(sites.map(s => s.site_id));
+            upgradeSites = all.filter(u => ids.has(u.site_id));
+            upgradeCount = upgradeSites.length;
+        } catch(e) {}
+        document.getElementById('sdl-sites').textContent   = total;
+        document.getElementById('sdl-cong').textContent    = congested;
+        document.getElementById('sdl-upgrade').textContent = upgradeCount;
+        document.getElementById('sdl-prb').textContent     = _avgPrb(sites);
+        let leaderData = [];
+        try {
+            const all = await (await fetch(`/api/map/top_congested?week=${week}&region=All`)).json();
+            const ids = new Set(sites.map(s => s.site_id));
+            leaderData = all.filter(d => ids.has(String(d.zoom_sector_id||'').split('_')[0])).slice(0,5);
+        } catch(e) {}
+        if (sdlLeaderChart) sdlLeaderChart.destroy();
+        const lbCtx = document.getElementById('sdl-leaderChart')?.getContext('2d');
+        if (lbCtx) sdlLeaderChart = new Chart(lbCtx, { type:'bar',
+            data:{ labels:leaderData.map(d=>String(d.zoom_sector_id||'').split('_')[0]),
+                datasets:[{label:'Congested Weeks',data:leaderData.map(d=>d.congested_weeks||0),backgroundColor:'#ef4444'}]},
+            options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+        });
+        if (sdlHealthChart) sdlHealthChart.destroy();
+        const hCtx = document.getElementById('sdl-healthChart')?.getContext('2d');
+        if (hCtx) sdlHealthChart = new Chart(hCtx, { type:'doughnut',
+            data:{labels:['Healthy','Congested'],datasets:[{data:[total-congested,congested],backgroundColor:['#10b981','#ef4444']}]},
+            options:{plugins:{legend:{position:'bottom',labels:{font:{size:9}}}}}
+        });
+    }
+
+    async function updateSplitLeftCapexDashboard() {
+        if (!splitActualMap) return;
+        const sites = _getSitesInView(splitActualMap);
+        const week  = document.getElementById('weekSelect')?.value || '';
+        let upgradeSites = [], totalCost = 0;
+        try {
+            const all = await (await fetch(`/api/map/upgrade-cases?week=${week}`)).json();
+            const ids = new Set(sites.map(s => s.site_id));
+            upgradeSites = all.filter(u => ids.has(u.site_id));
+            totalCost = upgradeSites.reduce((s,u)=>s+(u.total_capex||0),0);
+        } catch(e) {}
+        document.getElementById('sdl-capexTotal').textContent = 'RM '+totalCost.toLocaleString('en-MY',{minimumFractionDigits:2});
+        document.getElementById('sdl-capexList').innerHTML = upgradeSites.slice(0,5).map(u =>
+            `<div style="display:flex;justify-content:space-between;padding:4px 8px;background:#f8fafc;border-radius:4px;border:1px solid #e2e8f0;margin-bottom:3px;font-size:.68rem;"><span style="font-weight:700;">${u.site_id}</span><span style="color:#16a34a;font-weight:800;">RM ${(u.total_capex||0).toLocaleString('en-MY',{minimumFractionDigits:2})}</span></div>`
+        ).join('') || '<div style="font-size:.68rem;color:#94a3b8;text-align:center;padding:10px;">No upgrade candidates</div>';
+        if (sdlCapexChart) sdlCapexChart.destroy();
+        const ctx = document.getElementById('sdl-capexChart')?.getContext('2d');
+        const top = upgradeSites.sort((a,b)=>(b.total_capex||0)-(a.total_capex||0)).slice(0,5);
+        if (ctx) sdlCapexChart = new Chart(ctx, { type:'bar',
+            data:{labels:top.map(u=>u.site_id),datasets:[{label:'CAPEX (RM)',data:top.map(u=>u.total_capex||0),backgroundColor:'#10b981'}]},
+            options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+        });
+    }
 
     </script>
 </body>
