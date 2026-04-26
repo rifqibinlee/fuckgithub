@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>3W</title>
+  <title>3W - Unified Platfor</title>
 
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -202,15 +202,21 @@
         #sidebar.collapsed ~ #splitScreenBtn { left: 290px !important; }
 
         /* ── SPLIT SCREEN ── */
-        #map.split { right: 50% !important; }
-        #splitRightPane {
+        /* #splitWrapper sits in the same space as #map (left:350px, right:0).
+           In split mode it becomes a flex row; each child is exactly 50% of
+           that space, so both maps are always equal width regardless of sidebar. */
+        #splitWrapper {
+            position: absolute; top: 0; right: 0; bottom: 0; left: 350px;
             display: none;
-            position: absolute; top: 0; right: 0; bottom: 0; width: 50%;
-            flex-direction: column;
-            border-left: 2px solid #0f2d52;
-            overflow: hidden;
+            transition: left .3s cubic-bezier(.4,0,.2,1);
         }
-        #splitRightPane.active { display: flex; }
+        #sidebar.collapsed ~ #splitWrapper { left: 0; }
+        #splitWrapper.active { display: flex; }
+        #splitMapLeft  { flex: 1; position: relative; overflow: hidden; }
+        #splitMapRight { flex: 1; position: relative; overflow: hidden; border-left: 2px solid #0f2d52; display: flex; flex-direction: column; }
+        #map.split { display: none !important; }
+        /* Inner forecast map canvas fills remaining height after toolbar */
+        #splitForecastMap { flex: 1; min-height: 0; }
         #splitToolbar {
             flex-shrink: 0;
             display: flex; align-items: center; gap: 6px;
@@ -220,10 +226,6 @@
             box-shadow: 0 2px 6px rgba(0,0,0,.07);
             z-index: 10;
             height: 40px;
-        }
-        #splitMapRight {
-            flex: 1;
-            min-height: 0;
         }
         .split-q-btn {
             padding: 3px 9px; border: 1.5px solid #e2e8f0; border-radius: 5px;
@@ -353,7 +355,7 @@
         .comment-bubble .time   { font-size: .6rem; color: #94a3b8; }
 
         /* True North Compass */
-        #northCompass { position: absolute; top: 80px; right: 10px; z-index: 1000; width: 44px; height: 44px; background: rgba(255,255,255,.96); border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06); display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        #northCompass { position: absolute; top: 130px; right: 10px; z-index: 1000; width: 44px; height: 44px; background: rgba(255,255,255,.96); border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06); display: flex; align-items: center; justify-content: center; pointer-events: none; }
 
         /* Geo Tools */
         .geo-pick-btn   { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 3px; border: none; cursor: pointer; transition: background .15s; }
@@ -1046,25 +1048,29 @@
 
     <div id="map"></div>
 
-    <!-- Right pane — forecast map (only shown in split mode) -->
-    <div id="splitRightPane">
-        <!-- Toolbar sits inside the pane as a flex header -->
-        <div id="splitToolbar">
-            <i class="fas fa-chart-line" style="color:#0f2d52; font-size:.82rem; flex-shrink:0;"></i>
-            <span style="font-size:.7rem; font-weight:800; color:#0f2d52; white-space:nowrap; flex-shrink:0;">Forecast</span>
-            <button class="split-q-btn" id="sq1" onclick="setSplitQuarter(13)">Q1 W13</button>
-            <button class="split-q-btn" id="sq2" onclick="setSplitQuarter(26)">Q2 W26</button>
-            <button class="split-q-btn active" id="sq3" onclick="setSplitQuarter(39)">Q3 W39</button>
-            <button class="split-q-btn" id="sq4" onclick="setSplitQuarter(52)">Q4 W52</button>
-            <select id="splitYearSelect" onchange="refreshSplitMarkers()">
-                <option>2026</option><option>2025</option><option>2027</option>
-            </select>
-            <div id="splitStatusBar">
-                <span id="splitStatusText">Initialising…</span>
+    <!-- Split wrapper — shown instead of #map when split is active.
+         Both halves are equal flex children so they're always 50/50. -->
+    <div id="splitWrapper">
+        <!-- Left half: a second Leaflet instance mirroring the actual-state map -->
+        <div id="splitMapLeft"></div>
+        <!-- Right half: toolbar + forecast map -->
+        <div id="splitMapRight">
+            <div id="splitToolbar">
+                <i class="fas fa-chart-line" style="color:#0f2d52; font-size:.82rem; flex-shrink:0;"></i>
+                <span style="font-size:.7rem; font-weight:800; color:#0f2d52; white-space:nowrap; flex-shrink:0;">Forecast</span>
+                <button class="split-q-btn" id="sq1" onclick="setSplitQuarter(13)">Q1 W13</button>
+                <button class="split-q-btn" id="sq2" onclick="setSplitQuarter(26)">Q2 W26</button>
+                <button class="split-q-btn active" id="sq3" onclick="setSplitQuarter(39)">Q3 W39</button>
+                <button class="split-q-btn" id="sq4" onclick="setSplitQuarter(52)">Q4 W52</button>
+                <select id="splitYearSelect" onchange="refreshSplitMarkers()">
+                    <option>2026</option><option>2025</option><option>2027</option>
+                </select>
+                <div id="splitStatusBar">
+                    <span id="splitStatusText">Initialising…</span>
+                </div>
             </div>
+            <div id="splitForecastMap"></div>
         </div>
-        <!-- Map fills all remaining height -->
-        <div id="splitMapRight"></div>
     </div>
 
     <!-- ══ TRUE NORTH COMPASS ══ -->
@@ -1110,7 +1116,7 @@
         <i class="fas fa-tasks"></i>
         <span id="tasksBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-0.5 font-bold">0</span>
     </button>
-    <button id="dashboardBtn" class="tool-icon-btn" onclick="openMetabaseDashboard()" title="3W Dashboard">
+    <button id="dashboardBtn" class="tool-icon-btn" onclick="openMetabaseDashboard()" title="NetAlytics Dashboard">
         <i class="fas fa-chart-pie"></i>
     </button>
 
@@ -1471,7 +1477,7 @@
         </div>
 
         <!-- CCTV compass -->
-        <div style="position:absolute;top:80px;right:10px;z-index:1200;width:44px;height:44px;background:rgba(255,255,255,.95);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 1px rgba(0,0,0,.07);display:flex;align-items:center;justify-content:center;pointer-events:none;">
+        <div style="position:absolute;top:130px;right:10px;z-index:1200;width:44px;height:44px;background:rgba(255,255,255,.95);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 1px rgba(0,0,0,.07);display:flex;align-items:center;justify-content:center;pointer-events:none;">
             <svg viewBox="0 0 68 68" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><circle cx="34" cy="34" r="32" fill="white" stroke="#e5e7eb" stroke-width="1.5"/><line x1="34" y1="4" x2="34" y2="9" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/><line x1="34" y1="59" x2="34" y2="64" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><line x1="4" y1="34" x2="9" y2="34" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><line x1="59" y1="34" x2="64" y2="34" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><text x="34" y="19" text-anchor="middle" dominant-baseline="middle" font-size="8.5" font-weight="900" fill="#dc2626" font-family="system-ui,sans-serif">N</text><text x="34" y="54" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">S</text><text x="14" y="34" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">W</text><text x="54" y="34" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">E</text><polygon points="34,11 30,34 34,31 38,34" fill="#dc2626" opacity=".95"/><polygon points="34,57 30,34 34,37 38,34" fill="#d1d5db"/><circle cx="34" cy="34" r="3.5" fill="#1f2937"/><circle cx="34" cy="34" r="1.5" fill="#fff"/></svg>
         </div>
     </div>
@@ -1582,7 +1588,7 @@
         </div>
 
         <!-- Bitcoin compass -->
-        <div style="position:absolute;top:80px;right:10px;z-index:1200;width:44px;height:44px;background:rgba(255,255,255,.95);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 1px rgba(0,0,0,.07);display:flex;align-items:center;justify-content:center;pointer-events:none;">
+        <div style="position:absolute;top:130px;right:10px;z-index:1200;width:44px;height:44px;background:rgba(255,255,255,.95);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 1px rgba(0,0,0,.07);display:flex;align-items:center;justify-content:center;pointer-events:none;">
             <svg viewBox="0 0 68 68" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><circle cx="34" cy="34" r="32" fill="white" stroke="#e5e7eb" stroke-width="1.5"/><line x1="34" y1="4" x2="34" y2="9" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/><line x1="34" y1="59" x2="34" y2="64" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><line x1="4" y1="34" x2="9" y2="34" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><line x1="59" y1="34" x2="64" y2="34" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><text x="34" y="19" text-anchor="middle" dominant-baseline="middle" font-size="8.5" font-weight="900" fill="#dc2626" font-family="system-ui,sans-serif">N</text><text x="34" y="54" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">S</text><text x="14" y="34" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">W</text><text x="54" y="34" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="700" fill="#9ca3af" font-family="system-ui,sans-serif">E</text><polygon points="34,11 30,34 34,31 38,34" fill="#dc2626" opacity=".95"/><polygon points="34,57 30,34 34,37 38,34" fill="#d1d5db"/><circle cx="34" cy="34" r="3.5" fill="#1f2937"/><circle cx="34" cy="34" r="1.5" fill="#fff"/></svg>
         </div>
     </div>
@@ -1859,7 +1865,7 @@
         </button>
 
         <!-- True North Compass — below zoom buttons, z-index above all map panes -->
-        <div id="gensetCompass" title="True North" style="position:absolute; top:80px; right:10px; z-index:1200; width:44px; height:44px; background:rgba(255,255,255,0.95); border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.2),0 0 0 1px rgba(0,0,0,0.07); display:flex; align-items:center; justify-content:center; pointer-events:none;">
+        <div id="gensetCompass" title="True North" style="position:absolute; top:130px; right:10px; z-index:1200; width:44px; height:44px; background:rgba(255,255,255,0.95); border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.2),0 0 0 1px rgba(0,0,0,0.07); display:flex; align-items:center; justify-content:center; pointer-events:none;">
             <svg viewBox="0 0 68 68" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="34" cy="34" r="32" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
                 <line x1="34" y1="4"  x2="34" y2="9"  stroke="#dc2626" stroke-width="2"   stroke-linecap="round"/>
@@ -1912,7 +1918,7 @@
     <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center" style="z-index:11000; padding-top:80px;">
             <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden">
                 <div class="bg-gray-800 text-white p-3 flex justify-between items-center flex-shrink-0">
-                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> 3W Dashboard</h3>
+                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> NetAlytics Dashboard</h3>
                     <button onclick="closeMetabaseDashboard()" class="text-gray-300 hover:text-white text-xl transition-colors">
                         <i class="fas fa-times"></i>
                     </button>
@@ -2208,12 +2214,12 @@
 
     <div id="chatPanel" class="hidden fixed bottom-20 right-8 w-[600px] bg-white shadow-2xl rounded-2xl border border-gray-200 flex-col z-[6000] overflow-hidden">
         <div class="bg-blue-600 p-3 text-white font-bold flex justify-between items-center">
-            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> 3W AI Agent</span>
+            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> NetAlytics AI Agent</span>
             <button onclick="toggleChat()" class="hover:text-blue-200"><i class="fas fa-times"></i></button>
         </div>
         <div id="chatMessages" class="h-[550px] overflow-y-auto p-4 flex flex-col gap-3 bg-gray-50 text-sm">
             <div class="self-start bg-white border border-gray-200 text-gray-800 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl shadow-sm max-w-[95%] w-full">
-                Hello! I am your 3W capacity planning assistant. Ask me to find a site or analyze congestion.
+                Hello! I am your NetAlytics capacity planning assistant. Ask me to find a site or analyze congestion.
             </div>
         </div>
         <form onsubmit="handleChatSubmit(event)" class="p-3 border-t border-gray-200 bg-white flex gap-2">
@@ -2980,27 +2986,38 @@
                 splitActive = false;
                 btn.classList.remove('active');
                 document.getElementById('map').classList.remove('split');
-                document.getElementById('splitRightPane').classList.remove('active');
+                document.getElementById('splitWrapper').classList.remove('active');
                 map.off('moveend zoomend', _syncLeftToRight);
-                if (splitMap) { splitMap.remove(); splitMap = null; }
+                if (splitMap)      { splitMap.remove();      splitMap      = null; }
+                if (splitActualMap) { splitActualMap.remove(); splitActualMap = null; }
+                splitSatLayer = splitLabelsLayer = splitStreetLayer = splitDemLayer = null;
+                splitActualSatLayer = splitActualLabelsLayer = splitActualStreetLayer = splitActualDemLayer = null;
                 setTimeout(() => { if (map) map.invalidateSize(); }, 50);
+                // Restore compass to original position
+                const c = document.getElementById('northCompass');
+                if (c) c.style.top = '80px';
             } else {
                 splitActive = true;
                 btn.classList.add('active');
                 document.getElementById('map').classList.add('split');
-                document.getElementById('splitRightPane').classList.add('active');
-                // Wait for CSS layout to settle before init
+                document.getElementById('splitWrapper').classList.add('active');
+                // Lower compass so it clears zoom buttons on right pane
+                const c = document.getElementById('northCompass');
+                if (c) c.style.top = '130px';
                 setTimeout(() => {
-                    _initSplitMap();
+                    _initSplitMaps();
                     if (map) map.invalidateSize();
                 }, 100);
             }
         }
 
+        let splitActualMap = null; // left pane Leaflet instance
+
         function _syncLeftToRight() {
             if (splitSyncLock || !splitActive || !splitMap) return;
             splitSyncLock = true;
             splitMap.setView(map.getCenter(), map.getZoom(), { animate: false });
+            if (splitActualMap) splitActualMap.setView(map.getCenter(), map.getZoom(), { animate: false });
             splitSyncLock = false;
         }
 
@@ -3008,39 +3025,89 @@
             if (splitSyncLock || !splitActive) return;
             splitSyncLock = true;
             map.setView(splitMap.getCenter(), splitMap.getZoom(), { animate: false });
+            if (splitActualMap) splitActualMap.setView(splitMap.getCenter(), splitMap.getZoom(), { animate: false });
             splitSyncLock = false;
         }
 
-        function _initSplitMap() {
-            if (splitMap) return;
+        function _initSplitMaps() {
+            const center = map.getCenter();
+            const zoom   = map.getZoom();
 
-            splitMap = L.map('splitMapRight', { zoomControl: false, preferCanvas: false })
-                        .setView(map.getCenter(), map.getZoom());
+            // ── LEFT PANE — mirror of actual-state map ──
+            if (!splitActualMap) {
+                splitActualMap = L.map('splitMapLeft', { zoomControl: false, preferCanvas: false })
+                                  .setView(center, zoom);
+                setTimeout(() => splitActualMap.invalidateSize(), 50);
+                L.control.zoom({ position: 'topright' }).addTo(splitActualMap);
 
-            // Force tile render after Leaflet measures the container
-            setTimeout(() => splitMap.invalidateSize(), 50);
+                // Same basemap as current left map
+                if (isSatelliteMode) {
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom:19 }).addTo(splitActualMap);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { subdomains:'abcd', maxZoom:19 }).addTo(splitActualMap);
+                } else {
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { subdomains:'abcd', maxZoom:19 }).addTo(splitActualMap);
+                }
 
-            L.control.zoom({ position: 'topright' }).addTo(splitMap);
+                // Plot same sites with actual congestion colours
+                if (siteDataCache && siteDataCache.length) {
+                    const actualNormal = L.markerClusterGroup({ chunkedLoading:true, maxClusterRadius:60,
+                        iconCreateFunction: c => new L.DivIcon({ html:'<div class="cluster-base cluster-normal"><span>'+c.getChildCount()+'</span></div>', className:'marker-cluster', iconSize:new L.Point(40,40) }) });
+                    const actualCong   = L.markerClusterGroup({ chunkedLoading:true, maxClusterRadius:60,
+                        iconCreateFunction: c => new L.DivIcon({ html:'<div class="cluster-base cluster-congested"><span>'+c.getChildCount()+'</span></div>', className:'marker-cluster', iconSize:new L.Point(40,40) }) });
 
-            // Same basemap as left
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                { attribution: '&copy; Esri', maxZoom: 19 }).addTo(splitMap);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
-                { attribution: '&copy; CartoDB', subdomains: 'abcd', maxZoom: 19 }).addTo(splitMap);
+                    siteDataCache.forEach(site => {
+                        const isCong = site.congested;
+                        const color  = isCong ? '#dc2626' : '#2563eb';
+                        const icon   = L.divIcon({ className:'custom-pin',
+                            html:`<div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:900;color:#1e293b;text-shadow:2px 2px 0 #fff,-2px -2px 0 #fff,2px -2px 0 #fff,-2px 2px 0 #fff;white-space:nowrap;pointer-events:none;">${site.site_id}</div>
+                                  <div style="background-color:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>`,
+                            iconSize:[14,14], iconAnchor:[7,7] });
+                        const m = L.marker([site.lat, site.lng], { icon })
+                            .bindPopup(`<div style="font-family:'Inter',sans-serif;min-width:180px;">
+                                <div style="background:#0f2d52;color:white;padding:8px 12px;border-radius:6px 6px 0 0;font-weight:800;">${site.site_id} — Actual</div>
+                                <div style="padding:8px 12px;font-size:.78rem;">
+                                    <div><span style="color:#64748b;">Status:</span> <b style="color:${isCong?'#dc2626':'#16a34a'}">${isCong?'⚠ Congested':'✓ Normal'}</b></div>
+                                </div></div>`);
+                        if (isCong) actualCong.addLayer(m); else actualNormal.addLayer(m);
+                    });
+                    splitActualMap.addLayer(actualNormal);
+                    splitActualMap.addLayer(actualCong);
+                }
 
-            splitCluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 60,
-                iconCreateFunction: c => new L.DivIcon({ html: '<div class="cluster-base cluster-normal"><span>' + c.getChildCount() + '</span></div>', className: 'marker-cluster', iconSize: new L.Point(40,40) })
-            });
-            splitCongestedCluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 60,
-                iconCreateFunction: c => new L.DivIcon({ html: '<div class="cluster-base cluster-congested"><span>' + c.getChildCount() + '</span></div>', className: 'marker-cluster', iconSize: new L.Point(40,40) })
-            });
-            splitMap.addLayer(splitCluster);
-            splitMap.addLayer(splitCongestedCluster);
+                // Label overlay
+                const lblLeft = L.control({ position: 'topleft' });
+                lblLeft.onAdd = () => { const d = L.DomUtil.create('div'); d.innerHTML = '<div style="background:#0f2d52;color:white;padding:4px 10px;border-radius:0 0 6px 0;font-size:.72rem;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.2);">📍 Current Status</div>'; return d; };
+                lblLeft.addTo(splitActualMap);
 
-            map.on('moveend zoomend', _syncLeftToRight);
-            splitMap.on('moveend zoomend', _syncRightToLeft);
+                splitActualMap.on('moveend zoomend', _syncRightToLeft);
+            }
 
-            _loadForecastMarkers();
+            // ── RIGHT PANE — forecast map ──
+            if (!splitMap) {
+                splitMap = L.map('splitForecastMap', { zoomControl: false, preferCanvas: false })
+                            .setView(center, zoom);
+                setTimeout(() => { splitMap.invalidateSize(); _ensureSplitLayers(); }, 50);
+                L.control.zoom({ position: 'topright' }).addTo(splitMap);
+
+                // Label overlay
+                const lblRight = L.control({ position: 'topleft' });
+                lblRight.onAdd = () => { const d = L.DomUtil.create('div'); d.innerHTML = '<div style="background:#1e3a8a;color:white;padding:4px 10px;border-radius:0 0 6px 0;font-size:.72rem;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.2);">🔮 Forecast</div>'; return d; };
+                lblRight.addTo(splitMap);
+
+                splitCluster = L.markerClusterGroup({ chunkedLoading:true, maxClusterRadius:60,
+                    iconCreateFunction: c => new L.DivIcon({ html:'<div class="cluster-base cluster-normal"><span>'+c.getChildCount()+'</span></div>', className:'marker-cluster', iconSize:new L.Point(40,40) }) });
+                splitCongestedCluster = L.markerClusterGroup({ chunkedLoading:true, maxClusterRadius:60,
+                    iconCreateFunction: c => new L.DivIcon({ html:'<div class="cluster-base cluster-congested"><span>'+c.getChildCount()+'</span></div>', className:'marker-cluster', iconSize:new L.Point(40,40) }) });
+                splitMap.addLayer(splitCluster);
+                splitMap.addLayer(splitCongestedCluster);
+
+                map.on('moveend zoomend', _syncLeftToRight);
+                splitMap.on('moveend zoomend', _syncRightToLeft);
+
+                _loadForecastMarkers();
+                // Sync current layer visibility to both split maps immediately
+                setTimeout(_syncAllLayersToSplit, 200);
+            }
         }
 
         async function _loadForecastMarkers() {
@@ -3254,10 +3321,14 @@
                 trafficLayer.addTo(map);
                 trafficIncidentLayer.addTo(map);
                 sw.classList.add('active');
+                _mirrorLayerToSplit(trafficLayer, true);
+                _mirrorLayerToSplit(trafficIncidentLayer, true);
             } else {
                 map.removeLayer(trafficLayer);
                 map.removeLayer(trafficIncidentLayer);
                 sw.classList.remove('active');
+                _mirrorLayerToSplit(trafficLayer, false);
+                _mirrorLayerToSplit(trafficIncidentLayer, false);
             }
         }
 
@@ -3271,9 +3342,37 @@
             if (layerStates[key]) {
                 layer.addTo(map);
                 sw.classList.add('active');
+                _mirrorLayerToSplit(layer, true);
             } else {
                 map.removeLayer(layer);
                 sw.classList.remove('active');
+                _mirrorLayerToSplit(layer, false);
+            }
+        }
+
+        // Mirror any Leaflet layer to both split map panes
+        function _mirrorLayerToSplit(layer, add) {
+            if (!splitActive) return;
+            [window.splitActualMap, window.splitMap].forEach(m => {
+                if (!m) return;
+                try {
+                    if (add) { if (!m.hasLayer(layer)) layer.addTo(m); }
+                    else     { if (m.hasLayer(layer))  m.removeLayer(layer); }
+                } catch(e) {}
+            });
+        }
+
+        // Called once after split maps are initialised — sync current layer state onto both maps
+        function _syncAllLayersToSplit() {
+            if (!splitActive) return;
+            // Overlay layers from layerMap
+            Object.entries(layerMap || {}).forEach(([key, layer]) => {
+                _mirrorLayerToSplit(layer, !!layerStates[key]);
+            });
+            // Traffic
+            if (typeof trafficEnabled !== 'undefined') {
+                _mirrorLayerToSplit(trafficLayer,         trafficEnabled);
+                _mirrorLayerToSplit(trafficIncidentLayer, trafficEnabled);
             }
         }
 
@@ -6643,13 +6742,27 @@
     // ================================================================
     // BASE MAP TOGGLE — Satellite ↔ Street
     // ================================================================
+    // Split map tile layer refs (mirrored from left map)
+    var splitSatLayer, splitLabelsLayer, splitStreetLayer, splitDemLayer;
+
+    function _ensureSplitLayers() {
+        if (!splitMap || splitSatLayer) return;
+        splitSatLayer    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri', maxZoom: 19 });
+        splitLabelsLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { attribution: '&copy; CartoDB', subdomains: 'abcd', maxZoom: 19 });
+        splitStreetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; CartoDB', subdomains: 'abcd', maxZoom: 19 });
+        splitDemLayer    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri', maxZoom: 19, opacity: 0.55, zIndex: 3 });
+        // Start in same mode as current left map
+        if (isSatelliteMode) { splitSatLayer.addTo(splitMap); splitLabelsLayer.addTo(splitMap); }
+        else                 { splitStreetLayer.addTo(splitMap); }
+        if (isDemActive) { splitDemLayer.addTo(splitMap); splitDemLayer.bringToFront(); if (isSatelliteMode) splitLabelsLayer.bringToFront(); }
+    }
+
     function toggleBaseMap() {
         const sw     = document.getElementById('toggle-satellite');
         const icon   = document.getElementById('baseMapIcon');
         const label  = document.getElementById('baseMapLabel');
 
         if (isSatelliteMode) {
-            // Switch to Street
             map.removeLayer(satelliteLayer);
             map.removeLayer(labelsLayer);
             streetLayer.addTo(map);
@@ -6659,8 +6772,12 @@
             icon.style.background = 'linear-gradient(135deg,#2563eb,#7c3aed)';
             icon.innerHTML = '<i class="fas fa-map" style="color:white;font-size:0.7rem;"></i>';
             label.textContent = 'Street Map';
+            // Mirror to both split maps
+            if (splitActive) {
+                _applyBaseMap('street', splitMap,       splitSatLayer, splitLabelsLayer, splitStreetLayer);
+                _applyBaseMap('street', splitActualMap, null, null, null, true);
+            }
         } else {
-            // Switch to Satellite
             map.removeLayer(streetLayer);
             satelliteLayer.addTo(map);
             labelsLayer.addTo(map);
@@ -6669,9 +6786,46 @@
             icon.style.background = 'linear-gradient(135deg,#0f4c81,#1a7a4a)';
             icon.innerHTML = '<i class="fas fa-satellite" style="color:white;font-size:0.7rem;"></i>';
             label.textContent = 'Satellite View';
+            // Mirror to both split maps
+            if (splitActive) {
+                _applyBaseMap('satellite', splitMap,       splitSatLayer, splitLabelsLayer, splitStreetLayer);
+                _applyBaseMap('satellite', splitActualMap, null, null, null, true);
+            }
         }
-        // Keep DEM on top if active
-        if (isDemActive) demLayer.bringToFront();
+        if (isDemActive) {
+            demLayer.bringToFront();
+            if (splitActive) {
+                if (splitDemLayer && splitMap)       { splitDemLayer.bringToFront(); if (isSatelliteMode) splitLabelsLayer.bringToFront(); }
+                if (splitActualDemLayer && splitActualMap) { splitActualDemLayer.bringToFront(); }
+            }
+        }
+    }
+
+    // Helper — swap base tiles on a given map instance
+    // For the actual-left map, we manage separate tile layer instances
+    var splitActualSatLayer, splitActualLabelsLayer, splitActualStreetLayer, splitActualDemLayer;
+
+    function _applyBaseMap(mode, targetMap, satL, labL, strL, isActual) {
+        if (!targetMap) return;
+        if (isActual) {
+            // Lazy-create actual-side split layers
+            if (!splitActualSatLayer) {
+                splitActualSatLayer    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom:19 });
+                splitActualLabelsLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { subdomains:'abcd', maxZoom:19 });
+                splitActualStreetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { subdomains:'abcd', maxZoom:19 });
+                splitActualDemLayer    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}', { maxZoom:19, opacity:0.55, zIndex:3 });
+            }
+            satL = splitActualSatLayer; labL = splitActualLabelsLayer; strL = splitActualStreetLayer;
+        }
+        if (mode === 'street') {
+            if (targetMap.hasLayer(satL)) targetMap.removeLayer(satL);
+            if (targetMap.hasLayer(labL)) targetMap.removeLayer(labL);
+            if (!targetMap.hasLayer(strL)) strL.addTo(targetMap);
+        } else {
+            if (targetMap.hasLayer(strL)) targetMap.removeLayer(strL);
+            if (!targetMap.hasLayer(satL)) satL.addTo(targetMap);
+            if (!targetMap.hasLayer(labL)) labL.addTo(targetMap);
+        }
     }
 
     // ================================================================
@@ -6686,20 +6840,36 @@
             isDemActive = false;
             sw.classList.remove('active');
             opacityRow.style.display = 'none';
+            if (splitActive) {
+                if (splitDemLayer      && splitMap      && splitMap.hasLayer(splitDemLayer))       splitMap.removeLayer(splitDemLayer);
+                if (splitActualDemLayer && splitActualMap && splitActualMap.hasLayer(splitActualDemLayer)) splitActualMap.removeLayer(splitActualDemLayer);
+            }
         } else {
             demLayer.addTo(map);
             demLayer.bringToFront();
-            // Keep labels above hillshade if on satellite
             if (isSatelliteMode && map.hasLayer(labelsLayer)) labelsLayer.bringToFront();
             isDemActive = true;
             sw.classList.add('active');
             opacityRow.style.display = 'flex';
+            if (splitActive) {
+                // Right (forecast) map
+                _ensureSplitLayers();
+                splitDemLayer.addTo(splitMap); splitDemLayer.bringToFront();
+                if (isSatelliteMode && splitMap.hasLayer(splitLabelsLayer)) splitLabelsLayer.bringToFront();
+                // Left (actual) map
+                if (splitActualMap) {
+                    _applyBaseMap(isSatelliteMode ? 'satellite' : 'street', splitActualMap, null, null, null, true);
+                    splitActualDemLayer.addTo(splitActualMap); splitActualDemLayer.bringToFront();
+                }
+            }
         }
     }
 
     function setDemOpacity(val) {
         demLayer.setOpacity(val / 100);
         document.getElementById('demOpacityVal').textContent = val + '%';
+        if (splitDemLayer)       splitDemLayer.setOpacity(val / 100);
+        if (splitActualDemLayer) splitActualDemLayer.setOpacity(val / 100);
     }
 
     // ================================================================
