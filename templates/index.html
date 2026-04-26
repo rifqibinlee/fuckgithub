@@ -197,6 +197,47 @@
         #annotationBtn.active   { background: #dc2626; }
         #notesBtn.active        { background: #dc2626; }
         #showAnnotationsBtn.annotations-hidden { background: #64748b; }
+        #splitScreenBtn         { top: 10px; left: 630px; background: #0f2d52; }
+        #splitScreenBtn.active  { background: #1e3a8a; box-shadow: 0 0 0 2px #93c5fd, 0 2px 8px rgba(0,0,0,.18); }
+        #sidebar.collapsed ~ #splitScreenBtn { left: 290px !important; }
+
+        /* ── SPLIT SCREEN ── */
+        #splitContainer {
+            display: none; position: absolute; top: 0; left: 350px; right: 0; bottom: 0;
+            flex-direction: row;
+        }
+        #splitContainer.active { display: flex; }
+        #map.split { left: 350px; right: 50%; }
+        #splitRightPane {
+            position: absolute; top: 0; right: 0; bottom: 0; width: 50%;
+            display: flex; flex-direction: column;
+            border-left: 2px solid #0f2d52;
+        }
+        #splitMapRight { flex: 1; }
+        #splitToolbar {
+            position: absolute; top: 0; right: 0; width: 50%; z-index: 1100;
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,.95);
+            border-bottom: 1px solid #e2e8f0;
+            border-left: 2px solid #0f2d52;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        }
+        .split-q-btn {
+            padding: 4px 10px; border: 1.5px solid #e2e8f0; border-radius: 5px;
+            background: white; color: #475569; font-size: .72rem; font-weight: 700;
+            cursor: pointer; transition: all .15s;
+        }
+        .split-q-btn:hover    { background: #dbeafe; border-color: #93c5fd; color: #1e3a8a; }
+        .split-q-btn.active   { background: #0f2d52; border-color: #0f2d52; color: white; }
+        #splitYearSelect {
+            padding: 4px 8px; border: 1.5px solid #e2e8f0; border-radius: 5px;
+            font-size: .72rem; font-weight: 600; color: #374151; outline: none;
+        }
+        #splitStatusBar {
+            font-size: .68rem; color: #64748b; font-weight: 600; margin-left: auto;
+            display: flex; align-items: center; gap: 6px;
+        }
 
         /* ── IFRAME ── */
         #metabaseEmbedContainer iframe { width: 100%; height: 100%; border: none; }
@@ -997,7 +1038,33 @@
         </div>
     </div>
 
+    <button id="splitScreenBtn" class="tool-icon-btn" onclick="toggleSplitScreen()" title="Split Screen — Actual vs Forecast">
+        <i class="fas fa-columns"></i>
+    </button>
+
+    <!-- Split-screen forecast toolbar (shown above right pane) -->
+    <div id="splitToolbar" style="display:none;">
+        <i class="fas fa-chart-line" style="color:#0f2d52; font-size:.85rem;"></i>
+        <span style="font-size:.72rem; font-weight:800; color:#0f2d52; white-space:nowrap;">Forecast — Q</span>
+        <button class="split-q-btn" id="sq1" onclick="setSplitQuarter(13)">Q1 W13</button>
+        <button class="split-q-btn" id="sq2" onclick="setSplitQuarter(26)">Q2 W26</button>
+        <button class="split-q-btn active" id="sq3" onclick="setSplitQuarter(39)">Q3 W39</button>
+        <button class="split-q-btn" id="sq4" onclick="setSplitQuarter(52)">Q4 W52</button>
+        <select id="splitYearSelect" onchange="refreshSplitMarkers()">
+            <option>2026</option><option>2025</option><option>2027</option>
+        </select>
+        <div id="splitStatusBar">
+            <i class="fas fa-circle-notch fa-spin" id="splitSpinner" style="display:none;"></i>
+            <span id="splitStatusText">Click a site to compare</span>
+        </div>
+    </div>
+
     <div id="map"></div>
+
+    <!-- Right pane — forecast map (only shown in split mode) -->
+    <div id="splitRightPane" style="display:none;">
+        <div id="splitMapRight"></div>
+    </div>
 
     <!-- ══ TRUE NORTH COMPASS ══ -->
     <div id="northCompass" title="True North Indicator">
@@ -2892,6 +2959,209 @@
             } catch(e) {}
         }
         function escapeHtml(text) { const div = document.createElement('div'); div.appendChild(document.createTextNode(text)); return div.innerHTML; }
+
+        // ================================================================
+        // SPLIT SCREEN — Actual vs Forecast
+        // ================================================================
+        let splitMap        = null;
+        let splitActive     = false;
+        let splitQuarter    = 39;   // default Q3 W39
+        let splitSiteCache  = {};   // site_id → forecast data
+        let splitMarkers    = {};   // site_id → right-pane marker
+        let splitNormalMarkers = []; // all right-pane site markers
+        let splitCluster    = null;
+        let splitCongestedCluster = null;
+        let splitSyncLock   = false;  // prevents recursive sync loops
+        let splitPopupOpen  = null;   // track open popup site
+
+        function toggleSplitScreen() {
+            const btn = document.getElementById('splitScreenBtn');
+            if (splitActive) {
+                // Close split
+                splitActive = false;
+                btn.classList.remove('active');
+                document.getElementById('map').style.right = '0';
+                document.getElementById('splitRightPane').style.display = 'none';
+                document.getElementById('splitToolbar').style.display = 'none';
+                if (splitMap) { splitMap.remove(); splitMap = null; splitMarkers = {}; splitCluster = null; splitCongestedCluster = null; }
+            } else {
+                // Open split
+                splitActive = true;
+                btn.classList.add('active');
+                document.getElementById('map').style.right = '50%';
+                document.getElementById('splitRightPane').style.display = 'block';
+                document.getElementById('splitToolbar').style.display = 'flex';
+                initSplitMap();
+            }
+            // Re-trigger map resize so tiles fill correctly
+            setTimeout(() => { if (map) map.invalidateSize(); }, 320);
+        }
+
+        function initSplitMap() {
+            if (splitMap) return;
+
+            splitMap = L.map('splitMapRight', { zoomControl: false, preferCanvas: false })
+                        .setView(map.getCenter(), map.getZoom());
+
+            L.control.zoom({ position: 'topright' }).addTo(splitMap);
+
+            // Mirror the same tile layers as the left map
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                { attribution: '&copy; Esri', maxZoom: 19 }).addTo(splitMap);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+                { attribution: '&copy; CartoDB', subdomains: 'abcd', maxZoom: 19 }).addTo(splitMap);
+
+            splitCluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 60,
+                iconCreateFunction: function(c) {
+                    return new L.DivIcon({ html: '<div class="cluster-base cluster-normal"><span>' + c.getChildCount() + '</span></div>',
+                        className: 'marker-cluster', iconSize: new L.Point(40, 40) });
+                }
+            });
+            splitCongestedCluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 60,
+                iconCreateFunction: function(c) {
+                    return new L.DivIcon({ html: '<div class="cluster-base cluster-congested"><span>' + c.getChildCount() + '</span></div>',
+                        className: 'marker-cluster', iconSize: new L.Point(40, 40) });
+                }
+            });
+            splitMap.addLayer(splitCluster);
+            splitMap.addLayer(splitCongestedCluster);
+
+            // Sync: left → right
+            map.on('moveend zoomend', function() {
+                if (splitSyncLock || !splitActive || !splitMap) return;
+                splitSyncLock = true;
+                splitMap.setView(map.getCenter(), map.getZoom(), { animate: false });
+                splitSyncLock = false;
+            });
+            // Sync: right → left
+            splitMap.on('moveend zoomend', function() {
+                if (splitSyncLock || !splitActive) return;
+                splitSyncLock = true;
+                map.setView(splitMap.getCenter(), splitMap.getZoom(), { animate: false });
+                splitSyncLock = false;
+            });
+
+            loadSplitMarkers();
+        }
+
+        async function loadSplitMarkers() {
+            if (!siteDataCache || !siteDataCache.length) return;
+            splitSetStatus('<i class="fas fa-circle-notch fa-spin"></i> Loading forecast markers…');
+
+            const year = document.getElementById('splitYearSelect').value;
+
+            // Fetch forecast data for all sites in a single call — batch by prefetching
+            // We use a lightweight call: just the congested flag per site for the chosen quarter
+            try {
+                // Use the forecast_data endpoint to get congestion flags for all sites at chosen week
+                const res = await fetch(`/api/forecast_data?year=${year}&week=${splitQuarter}&length=99999&start=0`);
+                const json = await res.json();
+                const rows = json.data || [];
+
+                // Build a lookup: site_id → congested flag + KPIs (aggregate by site)
+                const siteForecastMap = {};
+                rows.forEach(r => {
+                    const sid = String(r.zoom_sector_id || '').split('_')[0].toUpperCase();
+                    if (!siteForecastMap[sid]) siteForecastMap[sid] = { congested: false, prbs: [], vols: [], thpts: [] };
+                    if (r.congested) siteForecastMap[sid].congested = true;
+                    if (r.predicted_eric_prb_util_rate)  siteForecastMap[sid].prbs.push(parseFloat(r.predicted_eric_prb_util_rate));
+                    if (r.predicted_eric_data_volume_ul_dl) siteForecastMap[sid].vols.push(parseFloat(r.predicted_eric_data_volume_ul_dl));
+                    if (r.predicted_eric_dl_user_ip_thpt) siteForecastMap[sid].thpts.push(parseFloat(r.predicted_eric_dl_user_ip_thpt));
+                });
+
+                splitSiteCache = siteForecastMap;
+                splitCluster.clearLayers();
+                splitCongestedCluster.clearLayers();
+                splitMarkers = {};
+
+                siteDataCache.forEach(site => {
+                    const sid = site.site_id.toUpperCase();
+                    const fc = siteForecastMap[sid];
+                    const isCongested = fc ? fc.congested : false;
+                    const color = isCongested ? '#dc2626' : '#2563eb';
+
+                    const icon = L.divIcon({
+                        className: 'custom-pin',
+                        html: `<div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:900;color:#1e293b;text-shadow:2px 2px 0 #fff,-2px -2px 0 #fff,2px -2px 0 #fff,-2px 2px 0 #fff;white-space:nowrap;pointer-events:none;">${site.site_id}</div>
+                               <div style="background-color:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>`,
+                        iconSize: [14, 14], iconAnchor: [7, 7]
+                    });
+
+                    const avgPrb  = fc && fc.prbs.length  ? (fc.prbs.reduce((a,b)=>a+b,0)/fc.prbs.length).toFixed(1)  : '—';
+                    const avgVol  = fc && fc.vols.length  ? (fc.vols.reduce((a,b)=>a+b,0)/fc.vols.length).toFixed(1)  : '—';
+                    const avgThpt = fc && fc.thpts.length ? (fc.thpts.reduce((a,b)=>a+b,0)/fc.thpts.length).toFixed(1) : '—';
+
+                    const popup = L.popup({ maxWidth: 320, className: '' }).setContent(
+                        `<div style="font-family:'Inter',sans-serif;">
+                            <div style="background:#0f2d52;color:white;padding:10px 14px;border-radius:6px 6px 0 0;margin:-1px -1px 0;">
+                                <div style="font-weight:800;font-size:.95rem;">${site.site_id}</div>
+                                <div style="font-size:.65rem;color:#93c5fd;margin-top:2px;">
+                                    Forecast — Q${[13,26,39,52].indexOf(splitQuarter)+1} Week ${splitQuarter} · ${year}
+                                </div>
+                            </div>
+                            <div style="padding:10px 14px;background:white;">
+                                <table style="width:100%;font-size:.75rem;border-collapse:collapse;">
+                                    <tr style="background:#f8fafc;"><th style="padding:4px 8px;text-align:left;color:#475569;font-weight:700;">Metric</th><th style="padding:4px 8px;text-align:right;color:#475569;font-weight:700;">Forecast Avg</th></tr>
+                                    <tr><td style="padding:4px 8px;color:#64748b;">PRB Util (%)</td><td style="padding:4px 8px;text-align:right;font-weight:800;color:${parseFloat(avgPrb)>80?'#dc2626':'#16a34a'}">${avgPrb}</td></tr>
+                                    <tr style="background:#f8fafc;"><td style="padding:4px 8px;color:#64748b;">Data Vol (GB)</td><td style="padding:4px 8px;text-align:right;font-weight:800;color:#0f2d52">${avgVol}</td></tr>
+                                    <tr><td style="padding:4px 8px;color:#64748b;">Throughput (Mbps)</td><td style="padding:4px 8px;text-align:right;font-weight:800;color:#0f2d52">${avgThpt}</td></tr>
+                                    <tr style="background:#f8fafc;"><td style="padding:4px 8px;color:#64748b;">Congested</td><td style="padding:4px 8px;text-align:right;font-weight:800;color:${isCongested?'#dc2626':'#16a34a'}">${isCongested?'⚠ Yes':'✓ No'}</td></tr>
+                                </table>
+                                ${!fc ? '<div style="font-size:.68rem;color:#9ca3af;padding:4px 0;text-align:center;">No forecast data for this quarter</div>' : ''}
+                            </div>
+                        </div>`
+                    );
+
+                    const m = L.marker([site.lat, site.lng], { icon }).bindPopup(popup);
+                    splitMarkers[sid] = m;
+                    if (isCongested) {
+                        splitCongestedCluster.addLayer(m);
+                    } else {
+                        splitCluster.addLayer(m);
+                    }
+                });
+
+                const qLabel = ['Q1 W13','Q2 W26','Q3 W39','Q4 W52'];
+                const qi = [13,26,39,52].indexOf(splitQuarter);
+                splitSetStatus(`Showing ${qLabel[qi]} · ${year} forecast`);
+
+            } catch(e) {
+                console.error('Split screen forecast error:', e);
+                splitSetStatus('Failed to load forecast data');
+            }
+        }
+
+        function splitSetStatus(html) {
+            const el = document.getElementById('splitStatusText');
+            if (el) el.innerHTML = html;
+        }
+
+        function setSplitQuarter(week) {
+            splitQuarter = week;
+            // Update button active states
+            [13,26,39,52].forEach((w, i) => {
+                const btn = document.getElementById('sq' + (i+1));
+                if (btn) btn.classList.toggle('active', w === week);
+            });
+            if (splitActive) refreshSplitMarkers();
+        }
+
+        function refreshSplitMarkers() {
+            if (!splitActive || !splitMap) return;
+            loadSplitMarkers();
+        }
+
+        // When user clicks a marker on the LEFT map, also open the popup on the RIGHT map
+        map.on('popupopen', function(e) {
+            if (!splitActive || !splitMap) return;
+            // Find which site this popup belongs to
+            const siteId = Object.keys(siteMarkerMap).find(k => siteMarkerMap[k].getPopup() === e.popup);
+            if (siteId && splitMarkers[siteId]) {
+                splitMap.panTo(splitMarkers[siteId].getLatLng(), { animate: false });
+                splitMarkers[siteId].openPopup();
+            }
+        });
+
     </script>
 
     <script>
