@@ -144,7 +144,7 @@
         .header-btn:hover { background: #fff; }
 
         /* ── LAYER CONTROL ── */
-        #mapLayerControl { position: absolute; bottom: 24px; left: 366px; z-index: 1100; transition: left .3s cubic-bezier(.4,0,.2,1); }
+        #mapLayerControl { position: absolute; bottom: 24px; left: 366px; z-index: 1300; transition: left .3s cubic-bezier(.4,0,.2,1), bottom .3s; }
         #layerMenuBtn { display: flex; align-items: center; gap: 8px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 7px 11px 7px 9px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.12); transition: box-shadow .2s, background .15s; user-select: none; white-space: nowrap; }
         #layerMenuBtn:hover  { background: #f8fafc; box-shadow: 0 2px 8px rgba(0,0,0,.14); }
         #layerMenuBtn:active { background: #f1f5f9; }
@@ -223,6 +223,18 @@
         .split-dash-panel.active { display:flex; }
         #splitDashLeft  { border-top:2px solid #0f2d52; }
         #splitDashRight { border-top:2px solid #1e3a8a; }
+        /* Per-pane dashboard toggle pill — sits at bottom of each map canvas */
+        .split-dash-toggle {
+            position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+            z-index:1100; border:none; border-radius:6px 6px 0 0;
+            color:white; cursor:pointer; padding:4px 16px; font-size:.68rem; font-weight:700;
+            box-shadow:0 -2px 8px rgba(0,0,0,.15); transition:background .2s; white-space:nowrap;
+            display:none;
+        }
+        #splitDashToggleLeft  { background:#0f2d52; }
+        #splitDashToggleLeft:hover  { background:#1e3a8a; }
+        #splitDashToggleRight { background:#1e3a8a; }
+        #splitDashToggleRight:hover { background:#2563eb; }
         #splitToolbar {
             flex-shrink: 0;
             display: flex; align-items: center; gap: 6px;
@@ -1139,7 +1151,12 @@
     <div id="splitWrapper">
         <!-- Left half: actual-state map + its own dashboard -->
         <div id="splitMapLeft">
-            <div id="splitMapLeftCanvas"></div>
+            <div style="flex:1; min-height:0; position:relative;">
+                <div id="splitMapLeftCanvas" style="position:absolute; inset:0;"></div>
+                <button id="splitDashToggleLeft" class="split-dash-toggle" onclick="toggleSplitDash('left')">
+                    <i class="fas fa-chart-bar" style="margin-right:5px;"></i>Current Status
+                </button>
+            </div>
             <div id="splitDashLeft" class="split-dash-panel">
                 <div class="dash-resize-handle" id="splitDashLeftHandle"></div>
                 <div class="dash-tabs">
@@ -1190,7 +1207,12 @@
                 </select>
                 <div id="splitStatusBar"><span id="splitStatusText">Initialising…</span></div>
             </div>
-            <div id="splitForecastMap"></div>
+            <div id="splitForecastMap" style="flex:1; min-height:0; position:relative;">
+                <div id="splitForecastMapCanvas" style="position:absolute; inset:0;"></div>
+                <button id="splitDashToggleRight" class="split-dash-toggle" onclick="toggleSplitDash('right')">
+                    <i class="fas fa-chart-line" style="margin-right:5px;"></i>Forecast
+                </button>
+            </div>
             <div id="splitDashRight" class="split-dash-panel">
                 <div class="dash-resize-handle" id="splitDashRightHandle"></div>
                 <div class="dash-tabs">
@@ -1212,12 +1234,11 @@
                         </div>
                     </div>
                     <div id="splitDashRight-capex" class="dash-tab-pane">
-                        <div style="background:#f0fdf4;padding:8px;border-radius:6px;text-align:center;margin-bottom:8px;border:1px solid #bbf7d0;">
-                            <div style="font-size:.6rem;color:#64748b;font-weight:700;text-transform:uppercase;">Forecast CAPEX — Visible</div>
-                            <div id="sdr-capexTotal" style="font-size:1.2rem;font-weight:900;color:#16a34a;">RM 0</div>
+                        <div style="display:flex;align-items:center;justify-content:center;height:160px;flex-direction:column;gap:10px;">
+                            <span style="font-size:2rem;">🚧</span>
+                            <span style="font-size:.82rem;font-weight:700;color:#64748b;">In Construction</span>
+                            <span style="font-size:.7rem;color:#94a3b8;text-align:center;max-width:180px;">Forecast CAPEX estimates are being developed.</span>
                         </div>
-                        <div id="sdr-capexList" style="max-height:90px;overflow-y:auto;margin-bottom:6px;"></div>
-                        <canvas id="sdr-capexChart" height="100"></canvas>
                     </div>
                     <div id="splitDashRight-cnes" class="dash-tab-pane">
                         <div style="display:flex;align-items:center;justify-content:center;height:120px;color:#94a3b8;font-size:.75rem;text-align:center;">
@@ -1276,7 +1297,7 @@
         <i class="fas fa-chart-pie"></i>
     </button>
 
-    <div class="absolute bottom-6 right-8 bg-white rounded-lg shadow-xl z-[1100] border border-gray-200 w-56 pointer-events-auto overflow-hidden" style="transition: all 0.25s ease;">
+    <div id="mapLegend" class="bg-white rounded-lg shadow-xl border border-gray-200 w-56 pointer-events-auto overflow-hidden" style="position:absolute; bottom:24px; right:32px; z-index:1100; transition:bottom .3s cubic-bezier(.4,0,.2,1), all 0.25s ease;">
         <button onclick="toggleMapLegend()" class="w-full flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors" style="border:none; background:none;">
             <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Legend</h4>
             <i id="legendChevron" class="fas fa-chevron-down text-gray-400 transition-transform duration-200" style="font-size:0.6rem;"></i>
@@ -3144,14 +3165,19 @@
                 document.getElementById('map').classList.remove('split');
                 document.getElementById('splitWrapper').classList.remove('active');
                 map.off('moveend zoomend', _syncLeftToRight);
-                if (splitMap)      { splitMap.remove();      splitMap      = null; }
-                if (splitActualMap) { splitActualMap.remove(); splitActualMap = null; }
+                if (splitMap)       { splitMap.remove();       splitMap       = null; }
+                if (splitActualMap) { splitActualMap.remove();  splitActualMap = null; }
                 splitSatLayer = splitLabelsLayer = splitStreetLayer = splitDemLayer = null;
                 splitActualSatLayer = splitActualLabelsLayer = splitActualStreetLayer = splitActualDemLayer = null;
+                // Collapse and hide split dashboards
                 document.getElementById('splitDashLeft')?.classList.remove('active');
                 document.getElementById('splitDashRight')?.classList.remove('active');
-                setTimeout(() => { if (map) map.invalidateSize(); }, 50);
-                // Restore compass to original position
+                document.getElementById('splitDashToggleLeft').style.display  = 'none';
+                document.getElementById('splitDashToggleRight').style.display = 'none';
+                // Restore main dashboard
+                if (dashPanelOpen) document.getElementById('mapDashboardPanel')?.classList.remove('dash-hidden');
+                document.getElementById('dashReopenBtn').style.display = dashPanelOpen ? 'none' : 'block';
+                setTimeout(() => { if (map) map.invalidateSize(); _setMapBottomPad(dashPanelOpen ? document.getElementById('mapDashboardPanel').offsetHeight : 0); }, 50);
                 const c = document.getElementById('northCompass');
                 if (c) c.style.top = '80px';
             } else {
@@ -3159,14 +3185,40 @@
                 btn.classList.add('active');
                 document.getElementById('map').classList.add('split');
                 document.getElementById('splitWrapper').classList.add('active');
-                // Lower compass so it clears zoom buttons on right pane
+                // Hide the main dashboard while in split mode — each pane has its own
+                document.getElementById('mapDashboardPanel')?.classList.add('dash-hidden');
+                document.getElementById('dashReopenBtn').style.display = 'none';
+                _setMapBottomPad(0);
+                // Show toggle buttons, dashboards start collapsed
+                document.getElementById('splitDashToggleLeft').style.display  = 'block';
+                document.getElementById('splitDashToggleRight').style.display = 'block';
+                document.getElementById('splitDashLeft')?.classList.remove('active');
+                document.getElementById('splitDashRight')?.classList.remove('active');
                 const c = document.getElementById('northCompass');
                 if (c) c.style.top = '130px';
-                setTimeout(() => {
-                    _initSplitMaps();
-                    if (map) map.invalidateSize();
-                }, 100);
+                setTimeout(() => { _initSplitMaps(); if (map) map.invalidateSize(); }, 100);
             }
+        }
+
+        function toggleSplitDash(side) {
+            const panelId = side === 'left' ? 'splitDashLeft' : 'splitDashRight';
+            const btnId   = side === 'left' ? 'splitDashToggleLeft' : 'splitDashToggleRight';
+            const mapInst = side === 'left' ? splitActualMap : splitMap;
+            const panel   = document.getElementById(panelId);
+            const btn     = document.getElementById(btnId);
+            if (!panel) return;
+            const isOpen = panel.classList.contains('active');
+            if (isOpen) {
+                panel.classList.remove('active');
+                btn.innerHTML = `<i class="fas fa-chart-${side==='left'?'bar':'line'}" style="margin-right:5px;"></i>${side==='left'?'Current Status':'Forecast'}`;
+            } else {
+                panel.classList.add('active');
+                btn.innerHTML = `<i class="fas fa-chevron-down" style="margin-right:5px;"></i>${side==='left'?'Current Status':'Forecast'}`;
+                // Populate dashboard
+                setTimeout(() => { if (side === 'left') updateSplitLeftDashboard(); else updateSplitMainDashboard(); }, 50);
+            }
+            // Let Leaflet re-measure after panel resize
+            setTimeout(() => { if (mapInst) mapInst.invalidateSize(); }, 300);
         }
 
         let splitActualMap = null; // left pane Leaflet instance
@@ -3237,7 +3289,7 @@
 
             // ── RIGHT PANE — forecast map ──
             if (!splitMap) {
-                splitMap = L.map('splitForecastMap', { zoomControl: false, preferCanvas: false })
+                splitMap = L.map('splitForecastMapCanvas', { zoomControl: false, preferCanvas: false })
                             .setView(center, zoom);
                 setTimeout(() => { splitMap.invalidateSize(); _ensureSplitLayers(); }, 50);
                 L.control.zoom({ position: 'topright' }).addTo(splitMap);
@@ -3251,11 +3303,6 @@
 
                 map.on('moveend zoomend', _syncLeftToRight);
                 splitMap.on('moveend zoomend', _syncRightToLeft);
-
-                // Show split dashboard and hook refresh
-                // Show both split dashboards
-                document.getElementById('splitDashLeft')?.classList.add('active');
-                document.getElementById('splitDashRight')?.classList.add('active');
                 splitActualMap.on('moveend zoomend', () => updateSplitLeftDashboard());
                 splitMap.on('moveend zoomend', () => updateSplitMainDashboard());
 
@@ -7831,12 +7878,12 @@ out center;`;
     function _setMapBottomPad(px) {
         const mapEl    = document.getElementById('map');
         const layerCtrl = document.getElementById('mapLayerControl');
-        const pegman   = document.getElementById('pegmanControl');
         const wrapper  = document.getElementById('splitWrapper');
-        if (mapEl)     mapEl.style.bottom     = px + 'px';
+        const legend   = document.getElementById('mapLegend');
+        if (mapEl)     mapEl.style.bottom      = px + 'px';
         if (layerCtrl) layerCtrl.style.bottom  = (px + 18) + 'px';
-        if (pegman)    pegman.style.bottom     = (px + 20) + 'px';
         if (wrapper)   wrapper.style.bottom    = px + 'px';
+        if (legend)    legend.style.bottom     = (px + 24) + 'px';
         if (map) setTimeout(() => map.invalidateSize(), 50);
         if (splitActualMap) setTimeout(() => splitActualMap.invalidateSize(), 50);
     }
