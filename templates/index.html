@@ -2056,7 +2056,13 @@
                 </div>
                 <div id="reviewMsg" class="hidden text-sm text-center font-semibold rounded-lg py-2"></div>
             </div>
-            <div id="reviewPanelRead" class="hidden p-4 max-h-96 overflow-y-auto">
+            <div id="reviewPanelRead" class="hidden p-4" style="max-height:580px;overflow-y:auto;">
+                <!-- keyword cloud -->
+                <div id="reviewKeywords" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl hidden">
+                    <p class="text-[10px] font-bold text-yellow-700 uppercase tracking-widest mb-2"><i class="fas fa-tags mr-1"></i>Top Keywords</p>
+                    <div id="reviewKeywordTags" class="flex flex-wrap gap-1.5"></div>
+                </div>
+                <!-- filter row -->
                 <div class="flex gap-2 mb-3">
                     <select id="reviewFilterCat" onchange="loadReviews()" class="border border-gray-200 rounded-lg px-3 py-1.5 text-xs flex-1">
                         <option value="">All Categories</option><option>General</option><option>Dashboard</option><option>Coverage Map</option><option>Data Quality</option><option>Performance</option><option>Feature Request</option><option>Bug Report</option>
@@ -2795,23 +2801,141 @@
             } catch(e) { showReviewMsg('Network error.', 'error'); } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i> Submit'; }
         }
         function showReviewMsg(text, type) { const msg = document.getElementById('reviewMsg'); msg.textContent = text; msg.className = `text-sm text-center font-semibold rounded-lg py-2 ${type==='success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`; msg.classList.remove('hidden'); }
-        async function loadReviews() {
-            const list = document.getElementById('reviewsList'); const cat = document.getElementById('reviewFilterCat').value;
-            list.innerHTML = '<div class="text-center text-gray-400 text-sm py-8"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading...</div>';
+
+        // ─── KEYWORDS ────────────────────────────────────────────────────────
+        async function loadReviewKeywords() {
             try {
-                const res = await fetch(`/api/reviews?limit=50${cat ? '&category='+encodeURIComponent(cat) : ''}`); const rows = await res.json();
+                const res = await fetch('/api/reviews/keywords');
+                const kws = await res.json();
+                if (!kws.length) return;
+                const max = kws[0].count || 1;
+                const container = document.getElementById('reviewKeywordTags');
+                container.innerHTML = kws.map(k => {
+                    const size = Math.round(10 + (k.count / max) * 10);
+                    const op   = Math.round(50 + (k.count / max) * 50);
+                    return `<span style="font-size:${size}px;opacity:${op}%;cursor:default;" class="bg-yellow-100 text-yellow-800 font-semibold px-2 py-0.5 rounded-full border border-yellow-200" title="${k.count} mention${k.count!==1?'s':''}">${escapeHtml(k.word)}</span>`;
+                }).join('');
+                document.getElementById('reviewKeywords').classList.remove('hidden');
+            } catch(e) { /* silently skip */ }
+        }
+
+        // ─── LOAD REVIEWS ────────────────────────────────────────────────────
+        async function loadReviews() {
+            const list = document.getElementById('reviewsList');
+            const cat  = document.getElementById('reviewFilterCat').value;
+            list.innerHTML = '<div class="text-center text-gray-400 text-sm py-8"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading...</div>';
+            loadReviewKeywords();
+            try {
+                const res  = await fetch(`/api/reviews?limit=50${cat ? '&category='+encodeURIComponent(cat) : ''}`);
+                const rows = await res.json();
                 if (!rows.length) { list.innerHTML = '<div class="text-center text-gray-400 text-sm py-8"><i class="fas fa-inbox mr-2"></i>No reviews yet.</div>'; return; }
-                list.innerHTML = rows.map(r => `
-                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-3">
+
+                const ids = rows.map(r => r.id);
+                let reactMap = {};
+                try {
+                    const rr = await fetch('/api/reviews/reactions?ids=' + ids.join(','));
+                    if (rr.ok) reactMap = await rr.json();
+                } catch(e) {}
+
+                list.innerHTML = rows.map(r => {
+                    const stars  = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+                    const react  = reactMap[r.id] || { likes:0, dislikes:0, my_reaction:null };
+                    const likeActive    = react.my_reaction === 'like'    ? 'text-blue-600 font-bold'  : 'text-gray-400';
+                    const dislikeActive = react.my_reaction === 'dislike' ? 'text-red-500  font-bold'  : 'text-gray-400';
+                    return `
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-3" id="rv-${r.id}">
                         <div class="flex justify-between items-start">
                             <div><span class="text-xs font-bold text-gray-700">${escapeHtml(r.username)}</span><span class="ml-2 text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">${escapeHtml(r.category)}</span></div>
-                            <span class="text-yellow-400 text-sm">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
+                            <span class="text-yellow-400 text-sm">${stars}</span>
                         </div>
                         ${r.title ? `<p class="text-sm font-semibold text-gray-800 mt-1">${escapeHtml(r.title)}</p>` : ''}
                         <p class="text-xs text-gray-600 mt-1 leading-relaxed">${escapeHtml(r.body)}</p>
                         <p class="text-[10px] text-gray-400 mt-1">${new Date(r.created_at).toLocaleDateString('en-MY',{year:'numeric',month:'short',day:'numeric'})}</p>
-                    </div>`).join('');
+                        <div class="flex items-center gap-3 mt-2 pt-2 border-t border-gray-100">
+                            <button onclick="reactToReview(${r.id},'like')" id="rv-like-${r.id}" class="flex items-center gap-1 text-xs ${likeActive} hover:text-blue-600 transition-colors">
+                                <i class="fas fa-thumbs-up text-xs"></i><span id="rv-like-count-${r.id}">${react.likes}</span>
+                            </button>
+                            <button onclick="reactToReview(${r.id},'dislike')" id="rv-dislike-${r.id}" class="flex items-center gap-1 text-xs ${dislikeActive} hover:text-red-500 transition-colors">
+                                <i class="fas fa-thumbs-down text-xs"></i><span id="rv-dislike-count-${r.id}">${react.dislikes}</span>
+                            </button>
+                            <button onclick="toggleReviewComments(${r.id})" class="flex items-center gap-1 text-xs text-gray-400 hover:text-yellow-600 transition-colors ml-auto">
+                                <i class="fas fa-comment-dots text-xs"></i><span id="rv-cmt-count-${r.id}">Comments</span>
+                            </button>
+                        </div>
+                        <div id="rv-comments-${r.id}" class="hidden mt-2 space-y-2">
+                            <div id="rv-comments-list-${r.id}" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
+                            <div class="flex gap-2 mt-1">
+                                <input id="rv-comment-input-${r.id}" type="text" maxlength="300" placeholder="Add a comment…"
+                                    class="flex-1 border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-400"
+                                    onkeydown="if(event.key==='Enter') submitReviewComment(${r.id})">
+                                <button onclick="submitReviewComment(${r.id})" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold px-3 py-1 rounded-lg transition"><i class="fas fa-paper-plane"></i></button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
             } catch(e) { list.innerHTML = '<div class="text-center text-red-400 text-sm py-8">Failed to load reviews.</div>'; }
+        }
+
+        // ─── REACTIONS ───────────────────────────────────────────────────────
+        async function reactToReview(reviewId, reaction) {
+            try {
+                const res  = await fetch(`/api/reviews/${reviewId}/react`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({reaction}) });
+                const data = await res.json();
+                if (!data.success) return;
+                document.getElementById(`rv-like-count-${reviewId}`).textContent    = data.likes;
+                document.getElementById(`rv-dislike-count-${reviewId}`).textContent = data.dislikes;
+                const lb = document.getElementById(`rv-like-${reviewId}`);
+                const db = document.getElementById(`rv-dislike-${reviewId}`);
+                lb.className = `flex items-center gap-1 text-xs ${data.my_reaction==='like'    ? 'text-blue-600 font-bold' : 'text-gray-400'} hover:text-blue-600 transition-colors`;
+                db.className = `flex items-center gap-1 text-xs ${data.my_reaction==='dislike' ? 'text-red-500 font-bold'  : 'text-gray-400'} hover:text-red-500  transition-colors`;
+            } catch(e) {}
+        }
+
+        // ─── COMMENTS ────────────────────────────────────────────────────────
+        const _commentsOpen = {};
+        async function toggleReviewComments(reviewId) {
+            const section = document.getElementById(`rv-comments-${reviewId}`);
+            if (_commentsOpen[reviewId]) { section.classList.add('hidden'); _commentsOpen[reviewId] = false; }
+            else { section.classList.remove('hidden'); _commentsOpen[reviewId] = true; await fetchReviewComments(reviewId); }
+        }
+        async function fetchReviewComments(reviewId) {
+            const container = document.getElementById(`rv-comments-list-${reviewId}`);
+            const countEl   = document.getElementById(`rv-cmt-count-${reviewId}`);
+            container.innerHTML = '<div class="text-xs text-gray-400 py-1"><i class="fas fa-circle-notch fa-spin mr-1"></i>Loading…</div>';
+            try {
+                const res  = await fetch(`/api/reviews/${reviewId}/comments`);
+                const cmts = await res.json();
+                countEl.textContent = cmts.length + (cmts.length === 1 ? ' Comment' : ' Comments');
+                if (!cmts.length) { container.innerHTML = '<div class="text-xs text-gray-400 py-1 italic">No comments yet — be the first!</div>'; return; }
+                const myUserId = window._sessionUserId;
+                container.innerHTML = cmts.map(c => {
+                    const isOwn = (c.user_id === myUserId);
+                    return `<div class="flex items-start gap-2 group" id="rvcmt-${c.id}">
+                        <div class="flex-1 bg-white border border-gray-100 rounded-lg px-2 py-1">
+                            <span class="text-[10px] font-bold text-gray-700">${escapeHtml(c.username)}</span>
+                            <span class="text-[10px] text-gray-400 ml-1">${new Date(c.created_at).toLocaleDateString('en-MY',{month:'short',day:'numeric'})}</span>
+                            <p class="text-xs text-gray-600 mt-0.5">${escapeHtml(c.body)}</p>
+                        </div>
+                        ${isOwn ? `<button onclick="deleteReviewComment(${reviewId},${c.id})" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-xs transition-all mt-1"><i class="fas fa-trash-alt"></i></button>` : ''}
+                    </div>`;
+                }).join('');
+            } catch(e) { container.innerHTML = '<div class="text-xs text-red-400">Failed to load comments.</div>'; }
+        }
+        async function submitReviewComment(reviewId) {
+            const input = document.getElementById(`rv-comment-input-${reviewId}`);
+            const body  = input.value.trim();
+            if (!body) return;
+            input.disabled = true;
+            try {
+                const res = await fetch(`/api/reviews/${reviewId}/comments`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({body}) });
+                const data = await res.json();
+                if (data.success) { input.value = ''; await fetchReviewComments(reviewId); }
+            } catch(e) {}
+            input.disabled = false; input.focus();
+        }
+        async function deleteReviewComment(reviewId, commentId) {
+            if (!confirm('Delete this comment?')) return;
+            try { await fetch(`/api/reviews/${reviewId}/comments/${commentId}`, {method:'DELETE'}); await fetchReviewComments(reviewId); } catch(e) {}
         }
 
         // --- MESSAGING ---
@@ -6140,76 +6264,197 @@
         // ==========================================
         // LOAD / UNLOAD 3D CELL SITES (USER-TRIGGERED)
         // ==========================================
-        let cesiumSitesLoaded = false;
+        // ── Memory-safe site loading state ───────────────────────────────────
+        let cesiumSitesLoaded  = false;
+        let _cesiumEntityIds   = [];       // tracked IDs for clean removal
+        let _cesiumCamListener = null;
+        const CESIUM_CHUNK     = 50;       // sites per animation frame
+        const CESIUM_MAX_SITES = 2000;     // hard cap to prevent OOM
+        const LOD_BEAMS_M      = 5000;     // sector beams visible within this range (m)
+        const LOD_LABEL_M      = 15000;    // labels visible within this range (m)
 
         async function toggleCesiumSites() {
-            const btn = document.getElementById('cesiumLoadSitesBtn');
+            const btn       = document.getElementById('cesiumLoadSitesBtn');
             const searchBar = document.getElementById('cesiumSearchBar');
 
             if (cesiumSitesLoaded) {
-                // Unload sites
-                cesiumViewer.entities.removeAll();
-                cesiumSitesLoaded = false;
-                btn.innerHTML = '<i class="fas fa-broadcast-tower"></i> Load Cell Sites';
+                _cesiumUnloadSites();
+                cesiumSitesLoaded    = false;
+                btn.innerHTML        = '<i class="fas fa-broadcast-tower"></i> Load Cell Sites';
                 btn.style.background = '#1d4ed8';
                 searchBar.style.display = 'none';
                 setCesiumStatus('Cell sites removed', 'fas fa-check-circle', 2500);
                 return;
             }
 
-            // Load sites
-            btn.disabled = true;
+            btn.disabled  = true;
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Loading…';
             btn.style.opacity = '0.7';
 
-            // Fetch data if needed
             if (!siteDataCache || siteDataCache.length === 0) {
-                setCesiumStatus('Fetching site data from server…', 'fas fa-database fa-beat-fade');
+                setCesiumStatus('Fetching site data…', 'fas fa-database fa-beat-fade');
                 try {
-                    const params = new URLSearchParams();
-                    const weekSel = document.getElementById('weekSelect');
+                    const params    = new URLSearchParams();
+                    const weekSel   = document.getElementById('weekSelect');
                     const regionSel = document.getElementById('regionSelect');
-                    if (weekSel && weekSel.value && weekSel.value !== 'All') params.set('week', weekSel.value);
-                    if (regionSel && regionSel.value && regionSel.value !== 'All') params.set('region', regionSel.value);
+                    if (weekSel   && weekSel.value   !== 'All') params.set('week',   weekSel.value);
+                    if (regionSel && regionSel.value !== 'All') params.set('region', regionSel.value);
                     const resp = await fetch('/api/sites?' + params.toString());
                     const data = await resp.json();
                     if (Array.isArray(data)) {
                         siteDataCache = data.filter(s => {
                             if (!s || !s.site_id) return false;
-                            const lat = parseFloat(s.lat); const lng = parseFloat(s.lng);
+                            const lat = parseFloat(s.lat), lng = parseFloat(s.lng);
                             return !isNaN(lat) && !isNaN(lng) && (lat !== 0 || lng !== 0);
                         });
                     }
                 } catch (fetchErr) {
-                    console.warn('3D map: could not fetch site data:', fetchErr);
                     setCesiumStatus('Failed to fetch site data: ' + fetchErr.message, 'fas fa-times-circle', 5000);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-broadcast-tower"></i> Load Cell Sites';
-                    btn.style.opacity = '1';
+                    btn.disabled = false; btn.innerHTML = '<i class="fas fa-broadcast-tower"></i> Load Cell Sites'; btn.style.opacity = '1';
                     return;
                 }
             }
 
             if (!siteDataCache || siteDataCache.length === 0) {
-                setCesiumStatus('No site data available — try loading data from the Coverage Map tab first', 'fas fa-exclamation-triangle', 6000);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-broadcast-tower"></i> Load Cell Sites';
-                btn.style.opacity = '1';
+                setCesiumStatus('No site data — load Coverage Map first', 'fas fa-exclamation-triangle', 6000);
+                btn.disabled = false; btn.innerHTML = '<i class="fas fa-broadcast-tower"></i> Load Cell Sites'; btn.style.opacity = '1';
                 return;
             }
 
-            setCesiumStatus('Building ' + siteDataCache.length + ' cell towers…', 'fas fa-broadcast-tower fa-beat-fade');
-            await new Promise(r => setTimeout(r, 100));
+            const sites  = siteDataCache.slice(0, CESIUM_MAX_SITES);
+            const capped = sites.length < siteDataCache.length;
+            setCesiumStatus('Building ' + sites.length + (capped ? ' (capped)' : '') + ' cell towers…', 'fas fa-broadcast-tower fa-beat-fade');
 
-            add3dSiteMarkers();
-            cesiumSitesLoaded = true;
+            await _cesiumLoadSitesChunked(sites);
 
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-eye-slash"></i> Unload Cell Sites';
+            cesiumSitesLoaded    = true;
+            btn.disabled         = false;
+            btn.innerHTML        = '<i class="fas fa-eye-slash"></i> Unload Cell Sites';
             btn.style.background = '#dc2626';
-            btn.style.opacity = '1';
+            btn.style.opacity    = '1';
             searchBar.style.display = '';
-            setCesiumStatus(siteDataCache.length + ' sites loaded successfully', 'fas fa-check-circle', 4000);
+            setCesiumStatus(sites.length + ' sites loaded' + (capped ? ' (first ' + CESIUM_MAX_SITES + ')' : ''), 'fas fa-check-circle', 4000);
+        }
+
+        function _cesiumUnloadSites() {
+            if (_cesiumCamListener) { cesiumViewer.camera.changed.removeEventListener(_cesiumCamListener); _cesiumCamListener = null; }
+            _cesiumEntityIds.forEach(id => { const e = cesiumViewer.entities.getById(id); if (e) cesiumViewer.entities.remove(e); });
+            _cesiumEntityIds = [];
+        }
+
+        function _cesiumLoadSitesChunked(sites) {
+            return new Promise(resolve => {
+                let idx = 0;
+                function nextChunk() {
+                    const end = Math.min(idx + CESIUM_CHUNK, sites.length);
+                    for (; idx < end; idx++) { _addOneCesiumSite(sites[idx]); }
+                    setCesiumStatus('Loading sites… ' + Math.round((idx / sites.length) * 100) + '%', 'fas fa-broadcast-tower fa-beat-fade');
+                    if (idx < sites.length) requestAnimationFrame(nextChunk);
+                    else resolve();
+                }
+                requestAnimationFrame(nextChunk);
+            });
+        }
+
+        function _addOneCesiumSite(site) {
+            if (!site.lat || !site.lng) return;
+            const lng    = parseFloat(site.lng);
+            const lat    = parseFloat(site.lat);
+            const towerH = (site.antenna_height && site.antenna_height > 0) ? parseFloat(site.antenna_height) : 30;
+
+            let isCongested = false;
+            if (site.sectors) {
+                const isUrban = String(site.area_target || '').toLowerCase().match(/urban|kmc/);
+                const thresh  = isUrban ? 80.0 : 92.0;
+                for (const sec of site.sectors) { if (parseFloat(sec.prb ?? 0) >= thresh) { isCongested = true; break; } }
+            }
+            const dotColor = Cesium.Color.fromCssColorString(isCongested ? '#dc2626' : '#22c55e');
+
+            // ── Cheap point (replaces heavy ellipsoid) ────────────────────────
+            const ptId = cesiumViewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(lng, lat, towerH),
+                point: {
+                    pixelSize: isCongested ? 10 : 7,
+                    color: dotColor,
+                    outlineColor: Cesium.Color.WHITE.withAlpha(0.9),
+                    outlineWidth: 1.5,
+                    heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+                    distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 200000),
+                    scaleByDistance: new Cesium.NearFarScalar(500, 1.6, 50000, 0.6)
+                }
+            }).id;
+            _cesiumEntityIds.push(ptId);
+
+            // ── Label — only within LOD_LABEL_M ──────────────────────────────
+            const lblId = cesiumViewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(lng, lat, towerH + 5),
+                label: {
+                    text: site.site_id || '',
+                    font: 'bold 11px sans-serif',
+                    fillColor: Cesium.Color.WHITE,
+                    outlineColor: Cesium.Color.fromCssColorString(isCongested ? '#991b1b' : '#1e3a8a'),
+                    outlineWidth: 2,
+                    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                    pixelOffset: new Cesium.Cartesian2(0, -8),
+                    distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, LOD_LABEL_M),
+                    heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+                    scaleByDistance: new Cesium.NearFarScalar(200, 1.0, LOD_LABEL_M, 0.3),
+                    showBackground: true,
+                    backgroundColor: Cesium.Color.fromCssColorString(isCongested ? '#dc2626' : '#1d4ed8').withAlpha(0.8),
+                    backgroundPadding: new Cesium.Cartesian2(6, 4)
+                },
+                description:
+                    '<table style="width:100%;border-collapse:collapse;font-family:sans-serif;">' +
+                    '<tr><td style="padding:6px;font-weight:bold;color:#1d4ed8;">Site ID</td><td style="padding:6px;">'   + (site.site_id   || '-') + '</td></tr>' +
+                    '<tr><td style="padding:6px;font-weight:bold;color:#1d4ed8;">Name</td><td style="padding:6px;">'      + (site.site_name || '-') + '</td></tr>' +
+                    '<tr><td style="padding:6px;font-weight:bold;color:#1d4ed8;">Region</td><td style="padding:6px;">'    + (site.region    || '-') + '</td></tr>' +
+                    '<tr><td style="padding:6px;font-weight:bold;color:#1d4ed8;">Height</td><td style="padding:6px;">'    + towerH + ' m</td></tr>' +
+                    '<tr><td style="padding:6px;font-weight:bold;color:#1d4ed8;">Status</td><td style="padding:6px;color:' + (isCongested ? '#dc2626;font-weight:bold' : '#059669') + ';">' + (isCongested ? '🔴 CONGESTED' : '✅ Normal') + '</td></tr>' +
+                    (site.sectors ? '<tr><td style="padding:6px;font-weight:bold;color:#1d4ed8;">Sectors</td><td style="padding:6px;">' + site.sectors.length + '</td></tr>' : '') +
+                    '</table>'
+            }).id;
+            _cesiumEntityIds.push(lblId);
+
+            // ── Sector beams — only within LOD_BEAMS_M ───────────────────────
+            if (site.coverage && site.coverage.length > 0) {
+                const TECH_COLORS = {
+                    '5G': Cesium.Color.YELLOW.withAlpha(0.25),
+                    '4G': Cesium.Color.CORNFLOWERBLUE.withAlpha(0.20),
+                    '3G': Cesium.Color.ORANGE.withAlpha(0.18),
+                    '2G': Cesium.Color.GRAY.withAlpha(0.15)
+                };
+                const azGroups = {};
+                site.coverage.forEach(sec => { const a = parseFloat(sec.az); if (!azGroups[a]) azGroups[a] = []; azGroups[a].push(sec); });
+                Object.entries(azGroups).forEach(([azStr, sectors]) => {
+                    const az = parseFloat(azStr);
+                    sectors.forEach(sec => {
+                        const beamColor = TECH_COLORS[sec.tech || '4G'] || TECH_COLORS['4G'];
+                        const bw        = (sec.bw || 65) / 2;
+                        const beamLen   = Math.min(sec.rad || 300, 400);
+                        const beamTop   = towerH + 2, beamBot = Math.max(towerH - 6, 0);
+                        const steps = 5;
+                        const pts   = [Cesium.Cartesian3.fromDegrees(lng, lat, beamTop)];
+                        for (let i = 0; i <= steps; i++) {
+                            const angle  = az - bw + (2 * bw * i / steps);
+                            const rad    = Cesium.Math.toRadians(angle);
+                            const endLng = lng + (beamLen / 111320) * Math.sin(rad) / Math.cos(Cesium.Math.toRadians(lat));
+                            const endLat = lat + (beamLen / 111320) * Math.cos(rad);
+                            pts.push(Cesium.Cartesian3.fromDegrees(endLng, endLat, beamBot));
+                        }
+                        const beamId = cesiumViewer.entities.add({
+                            polygon: {
+                                hierarchy: new Cesium.PolygonHierarchy(pts),
+                                perPositionHeight: true,
+                                material: beamColor,
+                                outline: false,
+                                distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, LOD_BEAMS_M)
+                            }
+                        }).id;
+                        _cesiumEntityIds.push(beamId);
+                    });
+                });
+            }
         }
 
         // ==========================================
@@ -6497,138 +6742,6 @@
             document.addEventListener('keydown', function(e) { if (e.key === 'Escape') onCancel(); });
         })();
 
-        function add3dSiteMarkers() {
-            if (!cesiumViewer || !siteDataCache) return;
-
-            const DEFAULT_HEIGHT = 30;  // fallback if antenna_height is missing (meters)
-            const BEAM_LENGTH     = 300; // meters (visual sector beam length)
-
-            // Tech colours for sector beams
-            const TECH_COLORS = {
-                '5G': Cesium.Color.YELLOW.withAlpha(0.25),
-                '4G': Cesium.Color.CORNFLOWERBLUE.withAlpha(0.20),
-                '3G': Cesium.Color.ORANGE.withAlpha(0.18),
-                '2G': Cesium.Color.GRAY.withAlpha(0.15)
-            };
-
-            siteDataCache.forEach(site => {
-                if (!site.lat || !site.lng) return;
-                const lng = parseFloat(site.lng);
-                const lat = parseFloat(site.lat);
-
-                // Use per-site antenna_height from Athena, fallback to default
-                const towerH = (site.antenna_height && site.antenna_height > 0)
-                    ? parseFloat(site.antenna_height)
-                    : DEFAULT_HEIGHT;
-
-                // --- Congestion check ---
-                let isCongested = false;
-                if (site.sectors) {
-                    const areaStr = String(site.area_target || '').toLowerCase();
-                    const isUrban = areaStr.includes('urban') || areaStr.includes('kmc');
-                    const prbThreshold = isUrban ? 80.0 : 92.0;
-                    for (let sec of site.sectors) {
-                        const p = parseFloat(sec.prb ?? 0);
-                        if (p >= prbThreshold) { isCongested = true; break; }
-                    }
-                }
-
-                const ballColor = isCongested
-                    ? Cesium.Color.fromCssColorString('#dc2626')
-                    : Cesium.Color.fromCssColorString('#22c55e');
-
-                // ====== BALL AT ANTENNA HEIGHT ======
-                const BALL_RADIUS = 8; // meters
-                cesiumViewer.entities.add({
-                    position: Cesium.Cartesian3.fromDegrees(lng, lat, towerH),
-                    ellipsoid: {
-                        radii: new Cesium.Cartesian3(BALL_RADIUS, BALL_RADIUS, BALL_RADIUS),
-                        material: ballColor,
-                        heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND
-                    }
-                });
-
-                // ====== SECTOR BEAMS FROM COVERAGE DATA ======
-                if (site.coverage && site.coverage.length > 0) {
-                    const azGroups = {};
-                    site.coverage.forEach(sec => {
-                        const a = parseFloat(sec.az);
-                        if (!azGroups[a]) azGroups[a] = [];
-                        azGroups[a].push(sec);
-                    });
-
-                    Object.entries(azGroups).forEach(([azStr, sectors]) => {
-                        const az = parseFloat(azStr);
-                        sectors.forEach(sec => {
-                            const tech    = sec.tech || '4G';
-                            const beamColor = TECH_COLORS[tech] || TECH_COLORS['4G'];
-                            const bw      = (sec.bw || 65) / 2;
-                            const beamLen = Math.min(sec.rad || BEAM_LENGTH, 500);
-                            // Beam fans out from the ball position
-                            const beamTop    = towerH + 2;
-                            const beamBottom = Math.max(towerH - 6, 0);
-
-                            const beamPoints = [];
-                            beamPoints.push(Cesium.Cartesian3.fromDegrees(lng, lat, beamTop));
-
-                            const steps = 8;
-                            for (let i = 0; i <= steps; i++) {
-                                const angle    = az - bw + (2 * bw * i / steps);
-                                const angleRad = Cesium.Math.toRadians(angle);
-                                const endLng   = lng + (beamLen / 111320) * Math.sin(angleRad) / Math.cos(Cesium.Math.toRadians(lat));
-                                const endLat   = lat + (beamLen / 111320) * Math.cos(angleRad);
-                                beamPoints.push(Cesium.Cartesian3.fromDegrees(endLng, endLat, beamBottom));
-                            }
-
-                            cesiumViewer.entities.add({
-                                polygon: {
-                                    hierarchy: new Cesium.PolygonHierarchy(beamPoints),
-                                    perPositionHeight: true,
-                                    material: beamColor,
-                                    outline: true,
-                                    outlineColor: beamColor.withAlpha(0.4),
-                                    outlineWidth: 1
-                                }
-                            });
-                        });
-                    });
-                }
-
-                // ====== SITE LABEL ======
-                cesiumViewer.entities.add({
-                    position: Cesium.Cartesian3.fromDegrees(lng, lat, towerH + 5),
-                    label: {
-                        text: site.site_id || '',
-                        font: 'bold 12px sans-serif',
-                        fillColor: Cesium.Color.WHITE,
-                        outlineColor: isCongested
-                            ? Cesium.Color.fromCssColorString('#991b1b')
-                            : Cesium.Color.fromCssColorString('#1e3a8a'),
-                        outlineWidth: 3,
-                        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                        pixelOffset: new Cesium.Cartesian2(0, -8),
-                        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 20000),
-                        heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
-                        scaleByDistance: new Cesium.NearFarScalar(200, 1.0, 30000, 0.3),
-                        showBackground: true,
-                        backgroundColor: isCongested
-                            ? Cesium.Color.fromCssColorString('#dc2626').withAlpha(0.8)
-                            : Cesium.Color.fromCssColorString('#1d4ed8').withAlpha(0.8),
-                        backgroundPadding: new Cesium.Cartesian2(6, 4)
-                    },
-                    description:
-                        '<table style="width:100%;border-collapse:collapse;font-family:sans-serif;">' +
-                        '<tr><td style="padding:6px;font-weight:bold;color:#1d4ed8;">Site ID</td><td style="padding:6px;">' + (site.site_id || '-') + '</td></tr>' +
-                        '<tr><td style="padding:6px;font-weight:bold;color:#1d4ed8;">Name</td><td style="padding:6px;">' + (site.site_name || '-') + '</td></tr>' +
-                        '<tr><td style="padding:6px;font-weight:bold;color:#1d4ed8;">Region</td><td style="padding:6px;">' + (site.region || '-') + '</td></tr>' +
-                        '<tr><td style="padding:6px;font-weight:bold;color:#1d4ed8;">Antenna Height</td><td style="padding:6px;">' + towerH + ' m</td></tr>' +
-                        '<tr><td style="padding:6px;font-weight:bold;color:#1d4ed8;">Status</td><td style="padding:6px;color:' + (isCongested ? '#dc2626;font-weight:bold' : '#059669') + ';">' + (isCongested ? 'CONGESTED' : 'Normal') + '</td></tr>' +
-                        (site.sectors ? '<tr><td style="padding:6px;font-weight:bold;color:#1d4ed8;">Sectors</td><td style="padding:6px;">' + site.sectors.length + '</td></tr>' : '') +
-                        '</table>'
-                });
-            });
-        }
 
 
     // ================================================================
