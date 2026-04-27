@@ -149,6 +149,31 @@ def run_setup():
         """)
         print("  [OK] Reviews Table created.")
 
+        # ── Paste this block immediately after the reviews table creation in app_database_setup.py ──
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS review_comments (
+                id          SERIAL PRIMARY KEY,
+                review_id   INTEGER NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+                user_id     INTEGER NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+                username    TEXT    NOT NULL,
+                body        TEXT    NOT NULL,
+                created_at  TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        print("  [OK] Review Comments Table created.")
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS review_reactions (
+                id          SERIAL PRIMARY KEY,
+                review_id   INTEGER NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+                user_id     INTEGER NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+                reaction    TEXT    NOT NULL CHECK (reaction IN ('like','dislike')),
+                UNIQUE (review_id, user_id)
+            );
+        """)
+        print("  [OK] Review Reactions Table created.")
+
         # --- 5. CAPEX PRICING (With Default Seed Data) ---
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS capex_pricing (
