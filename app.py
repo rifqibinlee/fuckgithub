@@ -575,6 +575,125 @@ def delete_review(review_id):
         cursor.execute("DELETE FROM reviews WHERE id = %s", (review_id,))
     return jsonify({'success': True})
 
+# ── Paste these routes into app.py, right after the delete_review route ──────
+
+@app.route('/api/reviews/<int:review_id>/comments', methods=['GET', 'POST'])
+@api_login_required
+def review_comments(review_id):
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        if request.method == 'GET':
+            cursor.execute(
+                "SELECT id, user_id, username, body, created_at "
+                "FROM review_comments WHERE review_id = %s ORDER BY created_at ASC",
+                (review_id,)
+            )
+            cols = ['id', 'user_id', 'username', 'body', 'created_at']
+            rows = [dict(zip(cols, r)) for r in cursor.fetchall()]
+            for r in rows:
+                r['created_at'] = r['created_at'].isoformat() if r['created_at'] else None
+            return jsonify(rows)
+
+        # POST – add comment
+        data = request.get_json()
+        body = (data.get('body') or '').strip()
+        if not body:
+            return jsonify({'error': 'Comment body required'}), 400
+        cursor.execute(
+            "INSERT INTO review_comments (review_id, user_id, username, body) "
+            "VALUES (%s, %s, %s, %s) RETURNING id, created_at",
+            (review_id, session['user_id'], session['username'], body)
+        )
+        row = cursor.fetchone()
+        return jsonify({'success': True, 'id': row[0], 'created_at': row[1].isoformat()}), 201
+
+
+@app.route('/api/reviews/<int:review_id>/comments/<int:comment_id>', methods=['DELETE'])
+@api_login_required
+def delete_review_comment(review_id, comment_id):
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT user_id FROM review_comments WHERE id = %s AND review_id = %s",
+                       (comment_id, review_id))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({'error': 'Not found'}), 404
+        if row[0] != session['user_id'] and session.get('role') != 'Admin':
+            return jsonify({'error': 'Denied'}), 403
+        cursor.execute("DELETE FROM review_comments WHERE id = %s", (comment_id,))
+    return jsonify({'success': True})
+
+
+@app.route('/api/reviews/<int:review_id>/react', methods=['POST'])
+@api_login_required
+def react_review(review_id):
+    """Toggle like / dislike. Sending the same reaction again removes it."""
+    data     = request.get_json()
+    reaction = data.get('reaction')  # 'like' or 'dislike'
+    if reaction not in ('like', 'dislike'):
+        return jsonify({'error': 'Invalid reaction'}), 400
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, reaction FROM review_reactions WHERE review_id=%s AND user_id=%s",
+            (review_id, session['user_id'])
+        )
+        existing = cursor.fetchone()
+
+        if existing:
+            if existing[1] == reaction:          # same → remove (toggle off)
+                cursor.execute("DELETE FROM review_reactions WHERE id=%s", (existing[0],))
+            else:                                # different → swap
+                cursor.execute("UPDATE review_reactions SET reaction=%s WHERE id=%s",
+                               (reaction, existing[0]))
+        else:
+            cursor.execute(
+                "INSERT INTO review_reactions (review_id, user_id, reaction) VALUES (%s,%s,%s)",
+                (review_id, session['user_id'], reaction)
+            )
+
+        # return fresh counts
+        cursor.execute(
+            "SELECT reaction, COUNT(*) FROM review_reactions WHERE review_id=%s GROUP BY reaction",
+            (review_id,)
+        )
+        counts = {r: 0 for r in ('like', 'dislike')}
+        for rec_reaction, cnt in cursor.fetchall():
+            counts[rec_reaction] = cnt
+
+        # what is the current user's reaction now?
+        cursor.execute(
+            "SELECT reaction FROM review_reactions WHERE review_id=%s AND user_id=%s",
+            (review_id, session['user_id'])
+        )
+        mine = cursor.fetchone()
+    return jsonify({'success': True, 'likes': counts['like'], 'dislikes': counts['dislike'],
+                    'my_reaction': mine[0] if mine else None})
+
+
+@app.route('/api/reviews/keywords', methods=['GET'])
+@api_login_required
+def review_keywords():
+    """Return the top 20 keywords (excluding stop-words) from all review bodies."""
+    import re, collections
+    STOP = {
+        'the','a','an','and','or','but','in','on','at','to','for','of','with',
+        'is','it','its','was','are','be','been','have','has','i','my','we','our',
+        'this','that','they','their','you','your','not','no','so','as','by','if',
+        'all','can','get','more','very','just','from','about','also','up','do',
+        'there','been','will','would','could','should','some','any',
+    }
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT body FROM reviews")
+        words = []
+        for (body,) in cursor.fetchall():
+            words += re.findall(r"[a-zA-Z]{3,}", body.lower())
+    freq = collections.Counter(w for w in words if w not in STOP)
+    top = [{'word': w, 'count': c} for w, c in freq.most_common(20)]
+    return jsonify(top)
+
 # ==========================================================
 # MAP ANNOTATIONS, NOTES & TASKS API
 # ==========================================================
