@@ -2137,7 +2137,143 @@ def get_metabase_embed():
         print(f"Metabase Token Error: {e}")
         traceback.print_exc()
         return jsonify({"error": "Failed to generate dashboard secure link"}), 500
+# ═══════════════════════════════════════════════════════════════════════════════
+# GENSET — Substation Finder Routes
+# ═══════════════════════════════════════════════════════════════════════════════
 
+@app.route('/api/genset/find', methods=['POST'])
+@login_required
+def api_genset_find():
+    """
+    Single-site substation lookup.
+
+    JSON body:
+        { "lat": float, "lng": float, "mode": "shortest"|"all" }
+
+    Returns:
+        { "status": "found"|"not_found",
+          "substations": [ { name, operator, voltage, lat, lon,
+                              road_dist_m, road_dist_km, geometry }, ... ] }
+    """
+    from genset_pipeline import find_substations
+    try:
+        body = request.get_json(force=True) or {}
+        lat  = float(body.get("lat", 0))
+        lng  = float(body.get("lng", 0))
+        mode = str(body.get("mode", "shortest"))
+        if not lat or not lng:
+            return jsonify({"error": "lat and lng are required"}), 400
+        if mode not in ("shortest", "all"):
+            return jsonify({"error": "mode must be 'shortest' or 'all'"}), 400
+        results = find_substations(lat, lng, mode=mode)
+        return jsonify({
+            "status":      "found" if results else "not_found",
+            "substations": results
+        })
+    except Exception as exc:
+        print(traceback.format_exc())
+        return jsonify({"error": str(exc)}), 500
+
+
+@app.route('/api/genset/bulk', methods=['POST'])
+@login_required
+def api_genset_bulk():
+    """
+    Bulk substation lookup via Server-Sent Events (SSE).
+
+    JSON body:
+        { "site_ids": ["SIT001", ...], "mode": "shortest"|"all" }
+
+    Streams newline-delimited JSON events:
+        { "type": "progress",  "idx": 1, "total": 10, "site_id": "SIT001" }
+        { "type": "result",    "site_id": "SIT001", "status": "found"|"none"|"not_found",
+                               "substations": [...], "lat": float, "lng": float }
+        { "type": "done",      "found": int, "none": int, "total": int }
+    """
+    from genset_pipeline import find_substations
+    from flask import stream_with_context
+
+    try:
+        body     = request.get_json(force=True) or {}
+        site_ids = [str(s).strip().upper() for s in body.get("site_ids", []) if str(s).strip()]
+        mode     = str(body.get("mode", "shortest"))
+        if not site_ids:
+            return jsonify({"error": "site_ids list is empty"}), 400
+        if mode not in ("shortest", "all"):
+            return jsonify({"error": "mode must be 'shortest' or 'all'"}), 400
+
+        # Load all site coordinates from DB once
+        try:
+            sql = "SELECT site_id, latitude, longitude FROM site_coordinates WHERE latitude IS NOT NULL"
+            df_coords = get_cached_dataframe(sql)
+            coords_map = {
+                str(r["site_id"]).upper(): (float(r["latitude"]), float(r["longitude"]))
+                for _, r in df_coords.iterrows()
+                if pd.notna(r["latitude"]) and pd.notna(r["longitude"])
+            }
+        except Exception as exc:
+            return jsonify({"error": f"Failed to load site coordinates: {exc}"}), 500
+
+        total = len(site_ids)
+
+        def generate():
+            import json as _json
+            found_count = 0
+            none_count  = 0
+
+            for idx, site_id in enumerate(site_ids):
+                yield "data: " + _json.dumps({
+                    "type": "progress", "idx": idx + 1,
+                    "total": total, "site_id": site_id
+                }) + "\n\n"
+
+                coords = coords_map.get(site_id)
+                if coords is None:
+                    none_count += 1
+                    yield "data: " + _json.dumps({
+                        "type": "result", "site_id": site_id,
+                        "status": "not_found", "substations": [],
+                        "lat": None, "lng": None
+                    }) + "\n\n"
+                    continue
+
+                lat, lng = coords
+                try:
+                    substations = find_substations(lat, lng, mode=mode)
+                    if substations:
+                        found_count += 1
+                        status = "found"
+                    else:
+                        none_count += 1
+                        status = "none"
+                    yield "data: " + _json.dumps({
+                        "type": "result", "site_id": site_id,
+                        "status": status, "substations": substations,
+                        "lat": lat, "lng": lng
+                    }) + "\n\n"
+                except Exception as exc:
+                    none_count += 1
+                    yield "data: " + _json.dumps({
+                        "type": "result", "site_id": site_id,
+                        "status": "error", "substations": [],
+                        "lat": lat, "lng": lng, "error": str(exc)
+                    }) + "\n\n"
+
+            yield "data: " + _json.dumps({
+                "type": "done", "found": found_count,
+                "none": none_count, "total": total
+            }) + "\n\n"
+
+        return Response(
+            stream_with_context(generate()),
+            mimetype="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+        )
+
+    except Exception as exc:
+        print(traceback.format_exc())
+        return jsonify({"error": str(exc)}), 500
+        
 if __name__ == '__main__':
     app.config.update(
         SESSION_COOKIE_SECURE=True,  # Use HTTPS in production
