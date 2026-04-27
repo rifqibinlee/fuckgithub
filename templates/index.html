@@ -1898,6 +1898,23 @@
 
         <!-- Map -->
         <div id="gensetMap" style="position:absolute; top:0; left:340px; right:0; bottom:0;"></div>
+
+        <!-- Center Coords Widget -->
+        <div id="gensetCoordsWidget"
+             title="Map center coordinates — click to copy"
+             onclick="gensetCopyCoords()"
+             style="position:absolute; bottom:90px; right:10px; z-index:1200;
+                    background:rgba(255,255,255,0.96); border:1px solid #e2e8f0;
+                    border-radius:6px; padding:5px 10px; cursor:pointer;
+                    box-shadow:0 1px 5px rgba(0,0,0,0.13);
+                    display:flex; align-items:center; gap:7px;
+                    font-family:&apos;Inter&apos;,sans-serif; font-size:0.7rem;
+                    transition:box-shadow .15s, background .15s;
+                    user-select:none; white-space:nowrap;">
+            <i class="fas fa-crosshairs" style="color:#0f2d52; font-size:0.65rem; flex-shrink:0;"></i>
+            <span id="gensetCoordsText" style="font-weight:700; color:#1e293b; letter-spacing:0.01em;">—</span>
+            <i id="gensetCoordsIcon" class="fas fa-copy" style="color:#94a3b8; font-size:0.6rem; flex-shrink:0;"></i>
+        </div>
     </div>
 
 <div id="plotModalOverlay" class="plot-modal-overlay">
@@ -2007,157 +2024,175 @@
     </div>
 
     <!-- Review Modal -->
-    <div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style="z-index:11000;">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-            <div class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 py-4 flex justify-between items-center">
+    <div id="reviewModal" class="hidden fixed inset-0 flex items-center justify-center" style="z-index:11000; background:rgba(15,45,82,0.55); backdrop-filter:blur(2px);">
+        <div class="bg-white w-full max-w-lg mx-4 overflow-hidden" style="border-radius:10px; box-shadow:0 25px 60px rgba(15,45,82,0.28); border-top:4px solid #0f2d52;">
+            <!-- Header -->
+            <div style="background:#0f2d52; padding:18px 24px;" class="flex justify-between items-center">
                 <div>
-                    <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-star"></i> Submit a Review</h2>
-                    <p class="text-xs text-yellow-100 mt-0.5">Share your feedback about the platform</p>
+                    <h2 style="color:white; font-family:'Montserrat',sans-serif; font-weight:800; font-size:1rem; letter-spacing:0.02em; display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-star" style="color:#93c5fd; font-size:0.85rem;"></i> PLATFORM REVIEW
+                    </h2>
+                    <p style="color:#93c5fd; font-size:0.68rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; margin-top:3px;">Share your feedback with the team</p>
                 </div>
-                <button onclick="closeReviewModal()" class="text-white hover:text-yellow-200 text-xl"><i class="fas fa-times"></i></button>
+                <button onclick="closeReviewModal()" style="color:#93c5fd; background:rgba(255,255,255,0.08); border:none; border-radius:5px; width:30px; height:30px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'"><i class="fas fa-times"></i></button>
             </div>
-            <div class="flex border-b border-gray-200">
-                <button id="reviewTabWrite" onclick="switchReviewTab('write')" class="flex-1 py-3 text-sm font-semibold text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50"><i class="fas fa-pen mr-1"></i> Write Review</button>
-                <button id="reviewTabRead" onclick="switchReviewTab('read')" class="flex-1 py-3 text-sm font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-50"><i class="fas fa-list mr-1"></i> All Reviews</button>
+            <!-- Tabs -->
+            <div style="display:flex; border-bottom:2px solid #e2e8f0; background:#f8fafc;">
+                <button id="reviewTabWrite" onclick="switchReviewTab('write')" style="flex:1; padding:11px; font-size:0.75rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:#0f2d52; border-bottom:2px solid #0f2d52; margin-bottom:-2px; background:white; border-left:none; border-right:none; border-top:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all .15s;"><i class="fas fa-pen" style="font-size:0.65rem;"></i> Write Review</button>
+                <button id="reviewTabRead" onclick="switchReviewTab('read')" style="flex:1; padding:11px; font-size:0.75rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:#64748b; border:none; background:#f8fafc; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all .15s;" onmouseover="this.style.color='#0f2d52'" onmouseout="this.style.color='#64748b'"><i class="fas fa-list" style="font-size:0.65rem;"></i> All Reviews</button>
             </div>
-            <div id="reviewPanelWrite" class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
+            <!-- Write Panel -->
+            <div id="reviewPanelWrite" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Category</label>
-                        <select id="reviewCategory" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                        <label class="ann-form-label">Category</label>
+                        <select id="reviewCategory" class="ann-form-input" style="background:#f8fafc;">
                             <option>General</option><option>Dashboard</option><option>Coverage Map</option><option>Data Quality</option><option>Performance</option><option>Feature Request</option><option>Bug Report</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Rating</label>
-                        <div id="reviewStars" class="flex gap-1 mt-1">
-                            <i class="review-star fas fa-star text-2xl cursor-pointer text-gray-300" data-val="1"></i>
-                            <i class="review-star fas fa-star text-2xl cursor-pointer text-gray-300" data-val="2"></i>
-                            <i class="review-star fas fa-star text-2xl cursor-pointer text-gray-300" data-val="3"></i>
-                            <i class="review-star fas fa-star text-2xl cursor-pointer text-gray-300" data-val="4"></i>
-                            <i class="review-star fas fa-star text-2xl cursor-pointer text-gray-300" data-val="5"></i>
+                        <label class="ann-form-label">Rating</label>
+                        <div id="reviewStars" style="display:flex; gap:5px; margin-top:4px;">
+                            <i class="review-star fas fa-star text-2xl cursor-pointer" data-val="1" style="color:#d1d5db; font-size:1.4rem; transition:color .1s;"></i>
+                            <i class="review-star fas fa-star text-2xl cursor-pointer" data-val="2" style="color:#d1d5db; font-size:1.4rem; transition:color .1s;"></i>
+                            <i class="review-star fas fa-star text-2xl cursor-pointer" data-val="3" style="color:#d1d5db; font-size:1.4rem; transition:color .1s;"></i>
+                            <i class="review-star fas fa-star text-2xl cursor-pointer" data-val="4" style="color:#d1d5db; font-size:1.4rem; transition:color .1s;"></i>
+                            <i class="review-star fas fa-star text-2xl cursor-pointer" data-val="5" style="color:#d1d5db; font-size:1.4rem; transition:color .1s;"></i>
                         </div>
                         <input type="hidden" id="reviewRating" value="0">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Title <span class="text-gray-400 font-normal">(optional)</span></label>
-                    <input id="reviewTitle" type="text" placeholder="Brief summary..." maxlength="120" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    <label class="ann-form-label">Title <span style="color:#94a3b8; font-weight:500; text-transform:none; letter-spacing:0;">(optional)</span></label>
+                    <input id="reviewTitle" type="text" placeholder="Brief summary..." maxlength="120" class="ann-form-input">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Your Feedback <span class="text-red-500">*</span></label>
-                    <textarea id="reviewBody" rows="4" placeholder="Tell us about your experience..." class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none"></textarea>
+                    <label class="ann-form-label">Your Feedback <span style="color:#dc2626;">*</span></label>
+                    <textarea id="reviewBody" rows="4" placeholder="Tell us about your experience..." class="ann-form-input" style="resize:none;"></textarea>
                 </div>
-                <div class="flex items-center justify-between">
-                    <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                        <input type="checkbox" id="reviewAnon" class="w-4 h-4 rounded"> Post anonymously
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <label style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#475569; cursor:pointer; font-weight:500;">
+                        <input type="checkbox" id="reviewAnon" style="width:14px; height:14px; accent-color:#0f2d52;"> Post anonymously
                     </label>
-                    <button onclick="submitReview()" id="reviewSubmitBtn" class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-6 py-2 rounded-lg text-sm font-bold transition-all"><i class="fas fa-paper-plane mr-1"></i> Submit</button>
+                    <button onclick="submitReview()" id="reviewSubmitBtn" class="btn-primary" style="display:flex; align-items:center; gap:6px; padding:9px 20px;"><i class="fas fa-paper-plane" style="font-size:0.75rem;"></i> Submit Review</button>
                 </div>
-                <div id="reviewMsg" class="hidden text-sm text-center font-semibold rounded-lg py-2"></div>
+                <div id="reviewMsg" class="hidden" style="font-size:0.82rem; text-align:center; font-weight:700; border-radius:5px; padding:9px;"></div>
             </div>
-            <div id="reviewPanelRead" class="hidden p-4" style="max-height:580px;overflow-y:auto;">
+            <!-- Read Panel -->
+            <div id="reviewPanelRead" class="hidden" style="padding:16px; max-height:580px; overflow-y:auto;">
                 <!-- keyword cloud -->
-                <div id="reviewKeywords" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl hidden">
-                    <p class="text-[10px] font-bold text-yellow-700 uppercase tracking-widest mb-2"><i class="fas fa-tags mr-1"></i>Top Keywords</p>
-                    <div id="reviewKeywordTags" class="flex flex-wrap gap-1.5"></div>
+                <div id="reviewKeywords" class="hidden mb-3" style="padding:12px; background:#dbeafe; border:1px solid #bfdbfe; border-radius:6px;">
+                    <p style="font-size:0.65rem; font-weight:800; color:#1e3a8a; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;"><i class="fas fa-tags mr-1"></i>Top Keywords</p>
+                    <div id="reviewKeywordTags" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
                 </div>
                 <!-- filter row -->
-                <div class="flex gap-2 mb-3">
-                    <select id="reviewFilterCat" onchange="loadReviews()" class="border border-gray-200 rounded-lg px-3 py-1.5 text-xs flex-1">
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
+                    <select id="reviewFilterCat" onchange="loadReviews()" class="ann-form-input" style="flex:1; background:#f8fafc;">
                         <option value="">All Categories</option><option>General</option><option>Dashboard</option><option>Coverage Map</option><option>Data Quality</option><option>Performance</option><option>Feature Request</option><option>Bug Report</option>
                     </select>
-                    <button onclick="loadReviews()" class="bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-lg px-3 py-1.5 text-xs font-bold hover:bg-yellow-100"><i class="fas fa-sync-alt"></i></button>
+                    <button onclick="loadReviews()" style="background:#0f2d52; color:white; border:none; border-radius:5px; padding:7px 12px; font-size:0.8rem; cursor:pointer; transition:background .2s;" onmouseover="this.style.background='#1e3a8a'" onmouseout="this.style.background='#0f2d52'"><i class="fas fa-sync-alt"></i></button>
                 </div>
-                <div id="reviewsList" class="space-y-3">
-                    <div class="text-center text-gray-400 text-sm py-8"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading...</div>
+                <div id="reviewsList" style="display:flex; flex-direction:column; gap:10px;">
+                    <div style="text-align:center; color:#94a3b8; font-size:0.85rem; padding:32px 0;"><i class="fas fa-circle-notch fa-spin" style="margin-right:6px;"></i>Loading...</div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Messaging Modal -->
-    <div id="messagingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style="z-index:11000;">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden" style="height: 640px; display: flex; flex-direction: column;">
-            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white flex items-center justify-between flex-shrink-0">
-                <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments"></i> Messages</h2>
-                <button onclick="closeMessagingModal()" class="hover:bg-white/20 p-1 rounded-lg transition"><i class="fas fa-times"></i></button>
+    <div id="messagingModal" class="hidden fixed inset-0 flex items-center justify-center" style="z-index:11000; background:rgba(15,45,82,0.55); backdrop-filter:blur(2px);">
+        <div class="bg-white w-full max-w-2xl mx-4 overflow-hidden" style="height:640px; display:flex; flex-direction:column; border-radius:10px; box-shadow:0 25px 60px rgba(15,45,82,0.28); border-top:4px solid #0f2d52;">
+            <!-- Header -->
+            <div style="background:#0f2d52; padding:16px 22px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+                <h2 style="color:white; font-family:'Montserrat',sans-serif; font-weight:800; font-size:1rem; letter-spacing:0.04em; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-comments" style="color:#93c5fd; font-size:0.85rem;"></i> INTERNAL MESSAGES
+                </h2>
+                <button onclick="closeMessagingModal()" style="color:#93c5fd; background:rgba(255,255,255,0.08); border:none; border-radius:5px; width:30px; height:30px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'"><i class="fas fa-times"></i></button>
             </div>
             <div class="flex flex-1 overflow-hidden">
-                <div class="w-64 border-r border-gray-200 flex flex-col flex-shrink-0">
-                    <div class="p-2 border-b border-gray-100">
-                        <div class="relative">
-                            <i class="fas fa-search absolute left-2.5 top-2.5 text-gray-400 text-xs"></i>
-                            <input id="msgSearchInput" type="text" placeholder="Search messages..." oninput="filterConversations()" class="w-full pl-7 pr-3 py-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-400 outline-none">
+                <!-- Sidebar -->
+                <div style="width:240px; border-right:1px solid #e2e8f0; display:flex; flex-direction:column; flex-shrink:0; background:#f8fafc;">
+                    <div style="padding:8px; border-bottom:1px solid #e2e8f0;">
+                        <div style="position:relative;">
+                            <i class="fas fa-search" style="position:absolute; left:9px; top:9px; color:#94a3b8; font-size:0.65rem;"></i>
+                            <input id="msgSearchInput" type="text" placeholder="Search messages..." oninput="filterConversations()" class="ann-form-input" style="padding-left:28px; font-size:0.75rem;">
                         </div>
                     </div>
-                    <div class="p-2 border-b border-gray-100 flex gap-2">
-                        <button onclick="showNewConversation()" class="flex-1 bg-blue-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-1"><i class="fas fa-plus"></i> DM</button>
-                        <button onclick="showNewGroup()" class="flex-1 bg-purple-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-purple-700 transition flexitems-center justify-center gap-1"><i class="fas fa-users"></i> Group</button>
+                    <div style="padding:8px; border-bottom:1px solid #e2e8f0; display:flex; gap:6px;">
+                        <button onclick="showNewConversation()" class="btn-primary" style="flex:1; font-size:0.7rem; padding:6px 8px; display:flex; align-items:center; justify-content:center; gap:4px;"><i class="fas fa-plus" style="font-size:0.6rem;"></i> DM</button>
+                        <button onclick="showNewGroup()" style="flex:1; background:#1e293b; color:white; border:none; border-radius:5px; font-size:0.7rem; padding:6px 8px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px; transition:background .2s;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background='#1e293b'"><i class="fas fa-users" style="font-size:0.6rem;"></i> Group</button>
                     </div>
                     <div id="conversationList" class="flex-1 overflow-y-auto"></div>
                 </div>
                 <div class="flex-1 flex flex-col overflow-hidden">
-                    <div id="chatEmpty" class="flex-1 flex items-center justify-center text-gray-400 flex-col gap-3">
-                        <i class="fas fa-comments text-5xl opacity-30"></i><p class="text-sm font-medium">Select a conversation or start a new one</p>
+                    <div id="chatEmpty" style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; color:#94a3b8;">
+                        <i class="fas fa-comments" style="font-size:2.5rem; opacity:0.25; color:#0f2d52;"></i>
+                        <p style="font-size:0.82rem; font-weight:600; color:#94a3b8;">Select a conversation or start a new one</p>
                     </div>
-                    <div id="newConvForm" class="hidden flex-1 flex flex-col p-4">
-                        <h3 class="font-bold text-gray-700 mb-3 text-sm">New Message</h3>
-                        <div class="mb-3"><select id="newMsgRecipient" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"><option value="">Select recipient...</option></select></div>
-                        <div class="flex-1 mb-3"><textarea id="newMsgContent" class="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:ring-2 focus:ring-blue-500" placeholder="Write your message..."></textarea></div>
-                        <div class="flex gap-2">
-                            <button onclick="sendNewMessage()" class="flex-1 bg-blue-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-paper-plane mr-1"></i> Send</button>
-                            <button onclick="cancelNewConv()" class="flex-1 bg-gray-100 text-gray-700 text-sm font-semibold py-2 rounded-lg hover:bg-gray-200 transition">Cancel</button>
+                    <div id="newConvForm" class="hidden flex-1 flex flex-col" style="padding:18px; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                            <div style="width:28px; height:28px; background:#0f2d52; border-radius:5px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-paper-plane" style="color:#93c5fd; font-size:0.7rem;"></i></div>
+                            <h3 style="font-weight:800; color:#0f2d52; font-size:0.82rem; font-family:'Montserrat',sans-serif; letter-spacing:0.04em; text-transform:uppercase;">New Direct Message</h3>
                         </div>
-                        <div id="newMsgStatus" class="mt-2 text-xs text-center font-semibold hidden"></div>
+                        <div><label class="ann-form-label">Recipient</label><select id="newMsgRecipient" class="ann-form-input" style="background:#f8fafc;"><option value="">Select recipient...</option></select></div>
+                        <div style="flex:1;"><label class="ann-form-label">Message</label><textarea id="newMsgContent" class="ann-form-input" style="width:100%; height:calc(100% - 24px); resize:none;" placeholder="Write your message..."></textarea></div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="sendNewMessage()" class="btn-primary" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px;"><i class="fas fa-paper-plane" style="font-size:0.7rem;"></i> Send</button>
+                            <button onclick="cancelNewConv()" class="btn-ghost" style="flex:1;">Cancel</button>
+                        </div>
+                        <div id="newMsgStatus" class="hidden" style="font-size:0.75rem; text-align:center; font-weight:700;"></div>
                     </div>
-                    <div id="newGroupForm" class="hidden flex-1 flex flex-col p-4 overflow-y-auto">
-                        <h3 class="font-bold text-gray-700 mb-3 text-sm flex items-center gap-2"><i class="fas fa-users text-purple-600"></i> New Group Chat</h3>
-                        <div class="mb-3"><input type="text" id="newGroupName" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500" placeholder="e.g. Planning Team"></div>
-                        <div class="mb-3"><div id="groupMemberCheckboxes" class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1 text-sm text-gray-700"></div></div>
-                        <div class="mb-3"><textarea id="newGroupMessage" class="w-full h-20 px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:ring-2 focus:ring-purple-500" placeholder="Write your first message..."></textarea></div>
-                        <div class="flex gap-2">
-                            <button onclick="sendNewGroup()" class="flex-1 bg-purple-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-purple-700 transition"><i class="fas fa-users mr-1"></i> Create Group</button>
-                            <button onclick="cancelNewConv()" class="flex-1 bg-gray-100 text-gray-700 text-sm font-semibold py-2 rounded-lg hover:bg-gray-200 transition">Cancel</button>
+                    <div id="newGroupForm" class="hidden flex-1 flex flex-col overflow-y-auto" style="padding:18px; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                            <div style="width:28px; height:28px; background:#1e293b; border-radius:5px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-users" style="color:#93c5fd; font-size:0.7rem;"></i></div>
+                            <h3 style="font-weight:800; color:#1e293b; font-size:0.82rem; font-family:'Montserrat',sans-serif; letter-spacing:0.04em; text-transform:uppercase;">New Group Chat</h3>
                         </div>
-                        <div id="newGroupStatus" class="mt-2 text-xs text-center font-semibold hidden"></div>
+                        <div><label class="ann-form-label">Group Name</label><input type="text" id="newGroupName" class="ann-form-input" placeholder="e.g. Planning Team"></div>
+                        <div><label class="ann-form-label">Members</label><div id="groupMemberCheckboxes" style="max-height:160px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:5px; padding:8px; background:#f8fafc; font-size:0.82rem; color:#374151; display:flex; flex-direction:column; gap:4px;"></div></div>
+                        <div><label class="ann-form-label">First Message</label><textarea id="newGroupMessage" class="ann-form-input" style="height:70px; resize:none;" placeholder="Write your first message..."></textarea></div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="sendNewGroup()" style="flex:1; background:#1e293b; color:white; border:none; border-radius:5px; font-size:0.82rem; font-weight:700; padding:9px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:background .2s;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background='#1e293b'"><i class="fas fa-users" style="font-size:0.7rem;"></i> Create Group</button>
+                            <button onclick="cancelNewConv()" class="btn-ghost" style="flex:1;">Cancel</button>
+                        </div>
+                        <div id="newGroupStatus" class="hidden" style="font-size:0.75rem; text-align:center; font-weight:700;"></div>
                     </div>
                     <div id="activeChat" class="hidden flex-1 flex flex-col overflow-hidden">
-                        <div class="p-3 border-b border-gray-100 flex-shrink-0 flex items-center justify-between">
-                            <p class="font-bold text-gray-800 text-sm" id="chatPartnerName"></p>
-                            <div id="groupChatActions" class="hidden flex items-center gap-1">
-                                <button onclick="showGroupMembers()" title="View members" class="text-xs text-gray-500 hover:text-purple-600 px-2 py-1 rounded hover:bg-purple-50 transition flex items-center gap-1"><i class="fas fa-users"></i><span class="hidden sm:inline">Members</span></button>
-                                <button id="renameGroupBtn" onclick="showRenameGroup()" title="Rename group" class="hidden text-xs text-blue-500 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition flex items-center gap-1"><i class="fas fa-pen"></i><span class="hidden sm:inline ml-1">Rename</span></button>
-                                <button id="leaveGroupBtn" onclick="leaveGroup()" title="Leave group" class="text-xs text-orange-500 hover:text-orange-700 px-2 py-1 rounded hover:bg-orange-50 transition flex items-center gap-1"><i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline ml-1">Leave</span></button>
-                                <button id="deleteGroupBtn" onclick="deleteGroup()" title="Delete group" class="hidden text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition flex items-center gap-1"><i class="fas fa-trash-alt"></i><span class="hidden sm:inline ml-1">Delete</span></button>
+                        <div style="padding:10px 14px; border-bottom:1px solid #e2e8f0; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; background:#f8fafc;">
+                            <p style="font-weight:800; color:#0f2d52; font-size:0.82rem; font-family:'Montserrat',sans-serif; letter-spacing:0.02em;" id="chatPartnerName"></p>
+                            <div id="groupChatActions" class="hidden" style="display:flex; align-items:center; gap:4px;">
+                                <button onclick="showGroupMembers()" title="View members" style="font-size:0.68rem; color:#475569; background:transparent; border:1px solid #e2e8f0; border-radius:4px; padding:3px 8px; cursor:pointer; display:flex; align-items:center; gap:4px; transition:all .15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'"><i class="fas fa-users"></i><span>Members</span></button>
+                                <button id="renameGroupBtn" onclick="showRenameGroup()" title="Rename group" class="hidden" style="font-size:0.68rem; color:#0f2d52; background:transparent; border:1px solid #e2e8f0; border-radius:4px; padding:3px 8px; cursor:pointer; display:flex; align-items:center; gap:4px; transition:all .15s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='transparent'"><i class="fas fa-pen"></i><span>Rename</span></button>
+                                <button id="leaveGroupBtn" onclick="leaveGroup()" title="Leave group" style="font-size:0.68rem; color:#b45309; background:transparent; border:1px solid #e2e8f0; border-radius:4px; padding:3px 8px; cursor:pointer; display:flex; align-items:center; gap:4px; transition:all .15s;" onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='transparent'"><i class="fas fa-sign-out-alt"></i><span>Leave</span></button>
+                                <button id="deleteGroupBtn" onclick="deleteGroup()" title="Delete group" class="hidden" style="font-size:0.68rem; color:#dc2626; background:transparent; border:1px solid #e2e8f0; border-radius:4px; padding:3px 8px; cursor:pointer; display:flex; align-items:center; gap:4px; transition:all .15s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'"><i class="fas fa-trash-alt"></i><span>Delete</span></button>
                             </div>
                         </div>
-                        <div id="groupMembersPanel" class="hidden border-b border-gray-100 bg-purple-50 px-3 py-2 flex-shrink-0">
-                            <p class="text-xs font-semibold text-purple-700 mb-1">Members</p><div id="groupMembersList" class="flex flex-wrap gap-1.5"></div>
+                        <div id="groupMembersPanel" class="hidden" style="border-bottom:1px solid #e2e8f0; background:#dbeafe; padding:8px 14px; flex-shrink:0;">
+                            <p style="font-size:0.65rem; font-weight:800; color:#1e3a8a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:5px;">Members</p>
+                            <div id="groupMembersList" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
                         </div>
-                        <div id="renameGroupPanel" class="hidden border-b border-gray-100 bg-blue-50 px-3 py-2 flex-shrink-0">
-                            <p class="text-xs font-semibold text-blue-700 mb-1.5">Rename Group</p>
-                            <div class="flex gap-2">
-                                <input type="text" id="renameGroupInput" maxlength="80" class="flex-1 px-2 py-1.5 text-sm border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none" placeholder="New group name...">
-                                <button onclick="submitRenameGroup()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-1.5 rounded-lg transition">Save</button>
-                                <button onclick="hideRenameGroup()" class="text-xs text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition">Cancel</button>
-                            </div><p id="renameGroupStatus" class="text-xs mt-1 hidden"></p>
+                        <div id="renameGroupPanel" class="hidden" style="border-bottom:1px solid #e2e8f0; background:#f0f9ff; padding:8px 14px; flex-shrink:0;">
+                            <p style="font-size:0.65rem; font-weight:800; color:#0f2d52; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Rename Group</p>
+                            <div style="display:flex; gap:6px;">
+                                <input type="text" id="renameGroupInput" maxlength="80" class="ann-form-input" style="flex:1; font-size:0.8rem;" placeholder="New group name...">
+                                <button onclick="submitRenameGroup()" class="btn-primary" style="font-size:0.75rem; padding:6px 12px;">Save</button>
+                                <button onclick="hideRenameGroup()" class="btn-ghost" style="font-size:0.75rem; padding:6px 10px;">Cancel</button>
+                            </div><p id="renameGroupStatus" class="hidden" style="font-size:0.72rem; margin-top:4px;"></p>
                         </div>
-                        <div id="msgInChatSearchBar" class="hidden border-b border-gray-100 px-3 py-2 flex-shrink-0">
-                            <div class="relative">
-                                <i class="fas fa-search absolute left-2.5 top-2 text-gray-400 text-xs"></i>
-                                <input id="msgInChatInput" type="text" placeholder="Search in conversation..." oninput="filterMessagesInChat()" class="w-full pl-7 pr-8 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-400 outline-none">
-                                <button onclick="closeMsgInChatSearch()" class="absolute right-2 top-1.5 text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xs"></i></button>
+                        <div id="msgInChatSearchBar" class="hidden" style="border-bottom:1px solid #e2e8f0; padding:8px 14px; flex-shrink:0;">
+                            <div style="position:relative;">
+                                <i class="fas fa-search" style="position:absolute; left:9px; top:9px; color:#94a3b8; font-size:0.65rem;"></i>
+                                <input id="msgInChatInput" type="text" placeholder="Search in conversation..." oninput="filterMessagesInChat()" class="ann-form-input" style="padding-left:28px; padding-right:28px; font-size:0.75rem;">
+                                <button onclick="closeMsgInChatSearch()" style="position:absolute; right:8px; top:7px; background:none; border:none; color:#94a3b8; cursor:pointer;"><i class="fas fa-times" style="font-size:0.7rem;"></i></button>
                             </div>
                         </div>
-                        <div id="chatMessagesPanel" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
-                        <div class="p-3 border-t border-gray-100 flex-shrink-0">
-                            <div id="emojiPicker" class="hidden mb-2 p-2 border border-gray-200 rounded-xl bg-white shadow-md"><div class="flex flex-wrap gap-1 max-h-28 overflow-y-auto text-lg leading-none"></div></div>
-                            <div class="flex gap-2 items-center">
-                                <button onclick="toggleEmojiPicker()" title="Emoji" class="text-gray-400 hover:text-yellow-500 transition text-lg flex-shrink-0">😊</button>
-                                <input type="text" id="internalChatInput" placeholder="Type a message..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-smfocus:ring-2 focus:ring-blue-500 outline-none" onkeydown="if(event.key==='Enter')sendChatMessage()">
-                                <button onclick="toggleMsgInChatSearch()" title="Search messages" class="text-gray-400 hover:text-blue-500 transition flex-shrink-0"><i class="fas fa-search text-sm"></i></button>
-                                <button onclick="sendChatMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition flex-shrink-0"><i class="fas fa-paper-plane"></i></button>
+                        <div id="chatMessagesPanel" class="flex-1 overflow-y-auto" style="padding:12px; display:flex; flex-direction:column; gap:8px;"></div>
+                        <div style="padding:10px 12px; border-top:1px solid #e2e8f0; flex-shrink:0; background:#f8fafc;">
+                            <div id="emojiPicker" class="hidden" style="margin-bottom:8px; padding:8px; border:1px solid #e2e8f0; border-radius:6px; background:white; box-shadow:0 4px 12px rgba(0,0,0,.08);"><div style="display:flex; flex-wrap:wrap; gap:4px; max-height:112px; overflow-y:auto; font-size:1.1rem; line-height:1;"></div></div>
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <button onclick="toggleEmojiPicker()" title="Emoji" style="font-size:1.1rem; background:none; border:none; cursor:pointer; flex-shrink:0; opacity:0.7; transition:opacity .2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">😊</button>
+                                <input type="text" id="internalChatInput" placeholder="Type a message..." class="ann-form-input" style="flex:1; font-size:0.82rem;" onkeydown="if(event.key==='Enter')sendChatMessage()">
+                                <button onclick="toggleMsgInChatSearch()" title="Search messages" style="color:#64748b; background:none; border:none; cursor:pointer; flex-shrink:0; transition:color .2s;" onmouseover="this.style.color='#0f2d52'" onmouseout="this.style.color='#64748b'"><i class="fas fa-search" style="font-size:0.8rem;"></i></button>
+                                <button onclick="sendChatMessage()" class="btn-primary" style="flex-shrink:0; padding:8px 14px;"><i class="fas fa-paper-plane" style="font-size:0.75rem;"></i></button>
                             </div>
                         </div>
                     </div>
@@ -2769,14 +2804,14 @@
         function switchReviewTab(tab) {
             const write = document.getElementById('reviewPanelWrite'); const read = document.getElementById('reviewPanelRead');
             const tabW = document.getElementById('reviewTabWrite'); const tabR = document.getElementById('reviewTabRead');
+            const activeStyle = 'flex:1;padding:11px;font-size:0.75rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#0f2d52;border-bottom:2px solid #0f2d52;margin-bottom:-2px;background:white;border-left:none;border-right:none;border-top:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;';
+            const inactiveStyle = 'flex:1;padding:11px;font-size:0.75rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#64748b;border:none;background:#f8fafc;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;';
             if (tab === 'write') {
                 write.classList.remove('hidden'); read.classList.add('hidden');
-                tabW.className = 'flex-1 py-3 text-sm font-semibold text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50';
-                tabR.className = 'flex-1 py-3 text-sm font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-50';
+                tabW.style.cssText = activeStyle; tabR.style.cssText = inactiveStyle;
             } else {
                 write.classList.add('hidden'); read.classList.remove('hidden');
-                tabR.className = 'flex-1 py-3 text-sm font-semibold text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50';
-                tabW.className = 'flex-1 py-3 text-sm font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-50';
+                tabR.style.cssText = activeStyle; tabW.style.cssText = inactiveStyle;
                 loadReviews();
             }
         }
@@ -2813,7 +2848,7 @@
                 container.innerHTML = kws.map(k => {
                     const size = Math.round(10 + (k.count / max) * 10);
                     const op   = Math.round(50 + (k.count / max) * 50);
-                    return `<span style="font-size:${size}px;opacity:${op}%;cursor:default;" class="bg-yellow-100 text-yellow-800 font-semibold px-2 py-0.5 rounded-full border border-yellow-200" title="${k.count} mention${k.count!==1?'s':''}">${escapeHtml(k.word)}</span>`;
+                    return `<span style="font-size:${size}px;opacity:${op}%;cursor:default;" style="background:#dbeafe;color:#1e3a8a;font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid #bfdbfe;" title="${k.count} mention${k.count!==1?'s':''}">${escapeHtml(k.word)}</span>`;
                 }).join('');
                 document.getElementById('reviewKeywords').classList.remove('hidden');
             } catch(e) { /* silently skip */ }
@@ -2843,32 +2878,32 @@
                     const likeActive    = react.my_reaction === 'like'    ? 'text-blue-600 font-bold'  : 'text-gray-400';
                     const dislikeActive = react.my_reaction === 'dislike' ? 'text-red-500  font-bold'  : 'text-gray-400';
                     return `
-                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-3" id="rv-${r.id}">
-                        <div class="flex justify-between items-start">
-                            <div><span class="text-xs font-bold text-gray-700">${escapeHtml(r.username)}</span><span class="ml-2 text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">${escapeHtml(r.category)}</span></div>
-                            <span class="text-yellow-400 text-sm">${stars}</span>
+                    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px;border-left:3px solid #0f2d52;" id="rv-${r.id}">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                            <div><span style="font-size:0.75rem;font-weight:800;color:#0f2d52;">${escapeHtml(r.username)}</span><span style="margin-left:8px;font-size:0.65rem;background:#dbeafe;color:#1e3a8a;padding:2px 8px;border-radius:3px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;">${escapeHtml(r.category)}</span></div>
+                            <span style="color:#f59e0b;font-size:0.85rem;">${stars}</span>
                         </div>
-                        ${r.title ? `<p class="text-sm font-semibold text-gray-800 mt-1">${escapeHtml(r.title)}</p>` : ''}
-                        <p class="text-xs text-gray-600 mt-1 leading-relaxed">${escapeHtml(r.body)}</p>
-                        <p class="text-[10px] text-gray-400 mt-1">${new Date(r.created_at).toLocaleDateString('en-MY',{year:'numeric',month:'short',day:'numeric'})}</p>
-                        <div class="flex items-center gap-3 mt-2 pt-2 border-t border-gray-100">
-                            <button onclick="reactToReview(${r.id},'like')" id="rv-like-${r.id}" class="flex items-center gap-1 text-xs ${likeActive} hover:text-blue-600 transition-colors">
-                                <i class="fas fa-thumbs-up text-xs"></i><span id="rv-like-count-${r.id}">${react.likes}</span>
+                        ${r.title ? `<p style="font-size:0.82rem;font-weight:700;color:#1e293b;margin-top:6px;">${escapeHtml(r.title)}</p>` : ''}
+                        <p style="font-size:0.75rem;color:#475569;margin-top:4px;line-height:1.5;">${escapeHtml(r.body)}</p>
+                        <p style="font-size:0.65rem;color:#94a3b8;margin-top:4px;">${new Date(r.created_at).toLocaleDateString('en-MY',{year:'numeric',month:'short',day:'numeric'})}</p>
+                        <div style="display:flex;align-items:center;gap:12px;margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0;">
+                            <button onclick="reactToReview(${r.id},'like')" id="rv-like-${r.id}" style="display:flex;align-items:center;gap:4px;font-size:0.72rem;background:none;border:none;cursor:pointer;color:${react.my_reaction==='like'?'#1e3a8a':'#94a3b8'};font-weight:${react.my_reaction==='like'?'800':'500'};transition:color .15s;">
+                                <i class="fas fa-thumbs-up" style="font-size:0.65rem;"></i><span id="rv-like-count-${r.id}">${react.likes}</span>
                             </button>
-                            <button onclick="reactToReview(${r.id},'dislike')" id="rv-dislike-${r.id}" class="flex items-center gap-1 text-xs ${dislikeActive} hover:text-red-500 transition-colors">
-                                <i class="fas fa-thumbs-down text-xs"></i><span id="rv-dislike-count-${r.id}">${react.dislikes}</span>
+                            <button onclick="reactToReview(${r.id},'dislike')" id="rv-dislike-${r.id}" style="display:flex;align-items:center;gap:4px;font-size:0.72rem;background:none;border:none;cursor:pointer;color:${react.my_reaction==='dislike'?'#dc2626':'#94a3b8'};font-weight:${react.my_reaction==='dislike'?'800':'500'};transition:color .15s;">
+                                <i class="fas fa-thumbs-down" style="font-size:0.65rem;"></i><span id="rv-dislike-count-${r.id}">${react.dislikes}</span>
                             </button>
-                            <button onclick="toggleReviewComments(${r.id})" class="flex items-center gap-1 text-xs text-gray-400 hover:text-yellow-600 transition-colors ml-auto">
-                                <i class="fas fa-comment-dots text-xs"></i><span id="rv-cmt-count-${r.id}">Comments</span>
+                            <button onclick="toggleReviewComments(${r.id})" style="display:flex;align-items:center;gap:4px;font-size:0.72rem;background:none;border:none;cursor:pointer;color:#64748b;margin-left:auto;transition:color .15s;" onmouseover="this.style.color='#0f2d52'" onmouseout="this.style.color='#64748b'">
+                                <i class="fas fa-comment-dots" style="font-size:0.65rem;"></i><span id="rv-cmt-count-${r.id}">Comments</span>
                             </button>
                         </div>
-                        <div id="rv-comments-${r.id}" class="hidden mt-2 space-y-2">
-                            <div id="rv-comments-list-${r.id}" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
-                            <div class="flex gap-2 mt-1">
+                        <div id="rv-comments-${r.id}" class="hidden" style="margin-top:8px;">
+                            <div id="rv-comments-list-${r.id}" style="display:flex;flex-direction:column;gap:5px;max-height:160px;overflow-y:auto;padding-right:4px;"></div>
+                            <div style="display:flex;gap:6px;margin-top:6px;">
                                 <input id="rv-comment-input-${r.id}" type="text" maxlength="300" placeholder="Add a comment…"
-                                    class="flex-1 border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-400"
+                                    class="ann-form-input" style="flex:1;font-size:0.75rem;"
                                     onkeydown="if(event.key==='Enter') submitReviewComment(${r.id})">
-                                <button onclick="submitReviewComment(${r.id})" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold px-3 py-1 rounded-lg transition"><i class="fas fa-paper-plane"></i></button>
+                                <button onclick="submitReviewComment(${r.id})" class="btn-primary" style="font-size:0.72rem;padding:6px 12px;"><i class="fas fa-paper-plane"></i></button>
                             </div>
                         </div>
                     </div>`;
@@ -7177,6 +7212,37 @@
         });
 
         await gensetLoadSites();
+
+        // ── Centre-coords widget ──
+        function gsUpdateCoordsWidget() {
+            const c = gensetMap.getCenter();
+            const lat = c.lat.toFixed(6);
+            const lng = c.lng.toFixed(6);
+            const el = document.getElementById('gensetCoordsText');
+            if (el) el.textContent = lat + ', ' + lng;
+        }
+        gsUpdateCoordsWidget();
+        gensetMap.on('moveend zoomend', gsUpdateCoordsWidget);
+    }
+
+    // ── Centre-coords copy ──
+    function gensetCopyCoords() {
+        const text = document.getElementById('gensetCoordsText').textContent;
+        if (!text || text === '—') return;
+        navigator.clipboard.writeText(text).then(function() {
+            const icon = document.getElementById('gensetCoordsIcon');
+            const widget = document.getElementById('gensetCoordsWidget');
+            icon.className = 'fas fa-check';
+            icon.style.color = '#16a34a';
+            widget.style.background = '#f0fdf4';
+            widget.style.borderColor = '#86efac';
+            setTimeout(function() {
+                icon.className = 'fas fa-copy';
+                icon.style.color = '#94a3b8';
+                widget.style.background = 'rgba(255,255,255,0.96)';
+                widget.style.borderColor = '#e2e8f0';
+            }, 1800);
+        });
     }
 
     // ── Layer controls ──
@@ -7350,14 +7416,23 @@ out center;`;
 
             gsSetStatus('Calculating cable route…');
 
-            // Use 'walking' profile — it is bidirectional and ignores one-way road
-            // restrictions. A cable laid alongside a road doesn't follow traffic direction.
+            // Use driving profile in both directions, pick the shorter result.
+            // This handles one-way roads — a cable follows the road corridor regardless
+            // of traffic direction, so whichever direction OSRM accepts is valid.
             const routeResults = await Promise.all(substations.map(async sub => {
                 try {
-                    const osrmUrl = `https://router.project-osrm.org/route/v1/walking/${lng},${lat};${sub.lng},${sub.lat}?overview=full&geometries=geojson`;
-                    const rData   = await (await fetch(osrmUrl)).json();
-                    if (rData.code !== 'Ok' || !rData.routes?.length) return null;
-                    return { sub, roadDist: rData.routes[0].distance, geometry: rData.routes[0].geometry };
+                    const fwdUrl = `https://router.project-osrm.org/route/v1/driving/${lng},${lat};${sub.lng},${sub.lat}?overview=full&geometries=geojson`;
+                    const revUrl = `https://router.project-osrm.org/route/v1/driving/${sub.lng},${sub.lat};${lng},${lat}?overview=full&geometries=geojson`;
+                    const [fwdData, revData] = await Promise.all([
+                        fetch(fwdUrl).then(r => r.json()).catch(() => null),
+                        fetch(revUrl).then(r => r.json()).catch(() => null)
+                    ]);
+                    const fwd = (fwdData?.code === 'Ok' && fwdData.routes?.length) ? fwdData.routes[0] : null;
+                    const rev = (revData?.code === 'Ok' && revData.routes?.length) ? revData.routes[0] : null;
+                    if (!fwd && !rev) return null;
+                    // Pick shorter; reverse geometry so it always runs tower→substation
+                    const best = (!fwd) ? rev : (!rev) ? fwd : (fwd.distance <= rev.distance ? fwd : rev);
+                    return { sub, roadDist: best.distance, geometry: best.geometry };
                 } catch { return null; }
             }));
 
@@ -7661,13 +7736,21 @@ out center;`;
         const ovData = await (await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:q })).json();
         const subs = (ovData.elements||[]).map(el=>({ name:el.tags&&(el.tags.name||el.tags.operator)||'TNB Substation', lat:el.type==='node'?el.lat:el.center&&el.center.lat, lng:el.type==='node'?el.lon:el.center&&el.center.lon })).filter(s=>s.lat&&s.lng);
         if (!subs.length) return null;
-        // Use 'walking' profile — bidirectional, ignores one-way restrictions.
-        // A cable laid along a road corridor doesn't follow traffic direction.
+        // Driving profile, both directions — pick the shorter result.
+        // Handles one-way roads: a cable follows the road corridor regardless of traffic direction.
         const routes = await Promise.all(subs.map(async sub => {
             try {
-                const d = await (await fetch('https://router.project-osrm.org/route/v1/walking/' + lng + ',' + lat + ';' + sub.lng + ',' + sub.lat + '?overview=full&geometries=geojson')).json();
-                if (d.code!=='Ok'||!d.routes||!d.routes.length) return null;
-                return { sub, roadDist:d.routes[0].distance, geometry:d.routes[0].geometry };
+                const fwdUrl = 'https://router.project-osrm.org/route/v1/driving/' + lng + ',' + lat + ';' + sub.lng + ',' + sub.lat + '?overview=full&geometries=geojson';
+                const revUrl = 'https://router.project-osrm.org/route/v1/driving/' + sub.lng + ',' + sub.lat + ';' + lng + ',' + lat + '?overview=full&geometries=geojson';
+                const [fwdData, revData] = await Promise.all([
+                    fetch(fwdUrl).then(r => r.json()).catch(() => null),
+                    fetch(revUrl).then(r => r.json()).catch(() => null)
+                ]);
+                const fwd = (fwdData?.code === 'Ok' && fwdData.routes?.length) ? fwdData.routes[0] : null;
+                const rev = (revData?.code === 'Ok' && revData.routes?.length) ? revData.routes[0] : null;
+                if (!fwd && !rev) return null;
+                const best = (!fwd) ? rev : (!rev) ? fwd : (fwd.distance <= rev.distance ? fwd : rev);
+                return { sub, roadDist:best.distance, geometry:best.geometry };
             } catch { return null; }
         }));
         const valid = routes.filter(r=>r&&r.roadDist<=2000).sort((a,b)=>a.roadDist-b.roadDist);
