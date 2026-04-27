@@ -7235,14 +7235,16 @@ out center;`;
 
             if (substations.length === 0) { gensetShowNotFound(); return; }
 
-            gsSetStatus('Routing via roads…');
+            gsSetStatus('Calculating cable route…');
 
+            // Use 'walking' profile — it is bidirectional and ignores one-way road
+            // restrictions. A cable laid alongside a road doesn't follow traffic direction.
             const routeResults = await Promise.all(substations.map(async sub => {
                 try {
-                    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lng},${lat};${sub.lng},${sub.lat}?overview=full&geometries=geojson`;
+                    const osrmUrl = `https://router.project-osrm.org/route/v1/walking/${lng},${lat};${sub.lng},${sub.lat}?overview=full&geometries=geojson`;
                     const rData   = await (await fetch(osrmUrl)).json();
                     if (rData.code !== 'Ok' || !rData.routes?.length) return null;
-                    return { sub, roadDist: rData.routes[0].distance, duration: rData.routes[0].duration, geometry: rData.routes[0].geometry };
+                    return { sub, roadDist: rData.routes[0].distance, geometry: rData.routes[0].geometry };
                 } catch { return null; }
             }));
 
@@ -7272,7 +7274,12 @@ out center;`;
             gensetMap.fitBounds(gensetRouteLine.getBounds(), { padding: [60, 60] });
 
             const km   = (best.roadDist / 1000).toFixed(3);
-            const mins = Math.ceil(best.duration / 60);
+            // Straight-line distance for reference
+            const toRad = d => d * Math.PI / 180;
+            const dLat  = toRad(best.sub.lat - lat);
+            const dLon  = toRad(best.sub.lng - lng);
+            const a     = Math.sin(dLat/2)**2 + Math.cos(toRad(lat)) * Math.cos(toRad(best.sub.lat)) * Math.sin(dLon/2)**2;
+            const straightKm = (6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) / 1000).toFixed(3);
             document.getElementById('gensetLoading').style.display = 'none';
             document.getElementById('gensetFound').style.display   = 'block';
             document.getElementById('gensetFoundContent').innerHTML = `
@@ -7283,11 +7290,11 @@ out center;`;
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;">
                     <div style="background:#fef3c7;border-radius:6px;padding:6px;text-align:center;">
                         <div style="font-size:1rem;font-weight:900;color:#d97706;">${km} km</div>
-                        <div style="font-size:0.6rem;color:#92400e;font-weight:600;text-transform:uppercase;">Road Distance</div>
+                        <div style="font-size:0.6rem;color:#92400e;font-weight:600;text-transform:uppercase;">Cable Route</div>
                     </div>
-                    <div style="background:#fef3c7;border-radius:6px;padding:6px;text-align:center;">
-                        <div style="font-size:1rem;font-weight:900;color:#d97706;">${mins} min</div>
-                        <div style="font-size:0.6rem;color:#92400e;font-weight:600;text-transform:uppercase;">Drive Time</div>
+                    <div style="background:#ecfdf5;border-radius:6px;padding:6px;text-align:center;">
+                        <div style="font-size:1rem;font-weight:900;color:#059669;">${straightKm} km</div>
+                        <div style="font-size:0.6rem;color:#065f46;font-weight:600;text-transform:uppercase;">Straight-Line</div>
                     </div>
                 </div>
                 ${best.sub.tags.voltage ? `<div style="margin-top:6px;font-size:0.68rem;color:#6b7280;"><i class="fas fa-plug" style="margin-right:4px;color:#d97706;"></i>Voltage: <b>${best.sub.tags.voltage}</b></div>` : ''}
@@ -7541,9 +7548,11 @@ out center;`;
         const ovData = await (await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:q })).json();
         const subs = (ovData.elements||[]).map(el=>({ name:el.tags&&(el.tags.name||el.tags.operator)||'TNB Substation', lat:el.type==='node'?el.lat:el.center&&el.center.lat, lng:el.type==='node'?el.lon:el.center&&el.center.lon })).filter(s=>s.lat&&s.lng);
         if (!subs.length) return null;
+        // Use 'walking' profile — bidirectional, ignores one-way restrictions.
+        // A cable laid along a road corridor doesn't follow traffic direction.
         const routes = await Promise.all(subs.map(async sub => {
             try {
-                const d = await (await fetch('https://router.project-osrm.org/route/v1/driving/' + lng + ',' + lat + ';' + sub.lng + ',' + sub.lat + '?overview=full&geometries=geojson')).json();
+                const d = await (await fetch('https://router.project-osrm.org/route/v1/walking/' + lng + ',' + lat + ';' + sub.lng + ',' + sub.lat + '?overview=full&geometries=geojson')).json();
                 if (d.code!=='Ok'||!d.routes||!d.routes.length) return null;
                 return { sub, roadDist:d.routes[0].distance, geometry:d.routes[0].geometry };
             } catch { return null; }
