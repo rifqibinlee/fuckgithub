@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>3W - Unified Platfor</title>
+  <title>3W</title>
 
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -356,8 +356,6 @@
 
         /* True North Compass */
         #northCompass { position: absolute; top: 130px; right: 10px; z-index: 1000; width: 44px; height: 44px; background: rgba(255,255,255,.96); border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06); display: flex; align-items: center; justify-content: center; pointer-events: none; }
-
-
 
         /* Geo Tools */
         .geo-pick-btn   { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 3px; border: none; cursor: pointer; transition: background .15s; }
@@ -1050,46 +1048,6 @@
 
     <div id="map"></div>
 
-        <div class="dash-tabs">
-            <div class="dash-tab active" onclick="switchDashTab(this,'main')">Main Dashboard</div>
-            <div class="dash-tab" onclick="switchDashTab(this,'capex')">CAPEX</div>
-            <div class="dash-tab" onclick="switchDashTab(this,'cnes')">CNES</div>
-        </div>
-        <div class="dash-body">
-            <!-- Main -->
-            <div id="dash-main" class="dash-pane active">
-                <div class="kpi-row">
-                    <div class="kpi-card" style="background:#eff6ff;"><div class="kpi-label">Sites in View</div><div class="kpi-val" id="dk-sites" style="color:#1e3a8a;">—</div></div>
-                    <div class="kpi-card" style="background:#fef2f2;"><div class="kpi-label">Congested</div><div class="kpi-val" id="dk-cong" style="color:#dc2626;">—</div></div>
-                    <div class="kpi-card" style="background:#fffbeb;"><div class="kpi-label">Upgrade Cases</div><div class="kpi-val" id="dk-upgrade" style="color:#d97706;">—</div></div>
-                    <div class="kpi-card" style="background:#f0fdf4;"><div class="kpi-label">% Healthy</div><div class="kpi-val" id="dk-pct" style="color:#16a34a;">—</div></div>
-                </div>
-                <div class="chart-row">
-                    <div><div class="chart-label">Top Congested Sectors</div><canvas id="dk-barChart" height="120"></canvas></div>
-                    <div><div class="chart-label">Site Health</div><canvas id="dk-donutChart" height="120"></canvas></div>
-                </div>
-            </div>
-            <!-- CAPEX -->
-            <div id="dash-capex" class="dash-pane">
-                <div style="background:#f0fdf4;padding:8px 12px;border-radius:6px;text-align:center;margin-bottom:10px;border:1px solid #bbf7d0;">
-                    <div style="font-size:.6rem;color:#64748b;font-weight:700;text-transform:uppercase;">Total CAPEX — Sites in View</div>
-                    <div id="dk-capexTotal" style="font-size:1.4rem;font-weight:900;color:#16a34a;">RM 0</div>
-                </div>
-                <div class="chart-label">Top Upgrade Candidates</div>
-                <div id="dk-capexList" style="max-height:100px;overflow-y:auto;margin-bottom:8px;"></div>
-                <canvas id="dk-capexChart" height="100"></canvas>
-            </div>
-            <!-- CNES -->
-            <div id="dash-cnes" class="dash-pane">
-                <div style="display:flex;align-items:center;justify-content:center;height:160px;flex-direction:column;gap:8px;color:#94a3b8;">
-                    <span style="font-size:2rem;">🚧</span>
-                    <span style="font-size:.82rem;font-weight:700;">In Construction</span>
-                    <span style="font-size:.7rem;text-align:center;max-width:200px;">CNES data is being developed.</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Split wrapper — shown instead of #map when split is active.
          Both halves are equal flex children so they're always 50/50. -->
     <div id="splitWrapper">
@@ -1158,7 +1116,7 @@
         <i class="fas fa-tasks"></i>
         <span id="tasksBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-0.5 font-bold">0</span>
     </button>
-    <button id="dashboardBtn" class="tool-icon-btn" onclick="openMetabaseDashboard()" title="NetAlytics Dashboard">
+    <button id="dashboardBtn" class="tool-icon-btn" onclick="openMetabaseDashboard()" title="3W Dashboard">
         <i class="fas fa-chart-pie"></i>
     </button>
 
@@ -1960,7 +1918,7 @@
     <div id="metabaseModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center" style="z-index:11000; padding-top:80px;">
             <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden">
                 <div class="bg-gray-800 text-white p-3 flex justify-between items-center flex-shrink-0">
-                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> NetAlytics Dashboard</h3>
+                    <h3 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i> 3W Dashboard</h3>
                     <button onclick="closeMetabaseDashboard()" class="text-gray-300 hover:text-white text-xl transition-colors">
                         <i class="fas fa-times"></i>
                     </button>
@@ -2256,12 +2214,12 @@
 
     <div id="chatPanel" class="hidden fixed bottom-20 right-8 w-[600px] bg-white shadow-2xl rounded-2xl border border-gray-200 flex-col z-[6000] overflow-hidden">
         <div class="bg-blue-600 p-3 text-white font-bold flex justify-between items-center">
-            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> NetAlytics AI Agent</span>
+            <span class="flex items-center gap-2"><i class="fas fa-robot"></i> 3W AI Agent</span>
             <button onclick="toggleChat()" class="hover:text-blue-200"><i class="fas fa-times"></i></button>
         </div>
         <div id="chatMessages" class="h-[550px] overflow-y-auto p-4 flex flex-col gap-3 bg-gray-50 text-sm">
             <div class="self-start bg-white border border-gray-200 text-gray-800 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl shadow-sm max-w-[95%] w-full">
-                Hello! I am your NetAlytics capacity planning assistant. Ask me to find a site or analyze congestion.
+                Hello! I am your 3W capacity planning assistant. Ask me to find a site or analyze congestion.
             </div>
         </div>
         <form onsubmit="handleChatSubmit(event)" class="p-3 border-t border-gray-200 bg-white flex gap-2">
@@ -3032,19 +2990,18 @@
                 map.off('moveend zoomend', _syncLeftToRight);
                 if (splitMap)      { splitMap.remove();      splitMap      = null; }
                 if (splitActualMap) { splitActualMap.remove(); splitActualMap = null; }
-                splitCluster          = null;
-                splitCongestedCluster = null;
                 splitSatLayer = splitLabelsLayer = splitStreetLayer = splitDemLayer = null;
                 splitActualSatLayer = splitActualLabelsLayer = splitActualStreetLayer = splitActualDemLayer = null;
                 setTimeout(() => { if (map) map.invalidateSize(); }, 50);
+                // Restore compass to original position
                 const c = document.getElementById('northCompass');
                 if (c) c.style.top = '80px';
-                // Restore dashboard
             } else {
                 splitActive = true;
                 btn.classList.add('active');
                 document.getElementById('map').classList.add('split');
                 document.getElementById('splitWrapper').classList.add('active');
+                // Lower compass so it clears zoom buttons on right pane
                 const c = document.getElementById('northCompass');
                 if (c) c.style.top = '130px';
                 setTimeout(() => {
@@ -3155,10 +3112,6 @@
             if (!siteDataCache || !siteDataCache.length) {
                 splitSetStatus('Waiting for site data…'); return;
             }
-            if (!splitCluster || !splitCongestedCluster) {
-                splitSetStatus('Map not ready, retrying…');
-                setTimeout(_loadForecastMarkers, 300); return;
-            }
             splitSetStatus('<i class="fas fa-circle-notch fa-spin"></i> Loading forecast…');
 
             const year = document.getElementById('splitYearSelect').value;
@@ -3184,9 +3137,9 @@
                 splitCongestedCluster.clearLayers();
 
                 siteDataCache.forEach(site => {
-                    const sid         = site.site_id.toUpperCase();
+                    const sid        = site.site_id.toUpperCase();
                     const isCongested = congestedSites.has(sid);
-                    const color       = isCongested ? '#dc2626' : '#2563eb';
+                    const color      = isCongested ? '#dc2626' : '#2563eb';
 
                     const icon = L.divIcon({
                         className: 'custom-pin',
@@ -3212,8 +3165,8 @@
                     }
                 });
 
-                const found  = rows.length > 0;
-                const noData = !found ? ' · <span style="color:#f59e0b">No forecast data for this quarter</span>' : '';
+                const found   = rows.length > 0;
+                const noData  = !found ? ' · <span style="color:#f59e0b">No forecast data for this quarter</span>' : '';
                 splitSetStatus(qLabels[splitQuarter] + ' · ' + year + noData);
 
             } catch(e) {
@@ -7674,6 +7627,7 @@ out center;`;
             XLSX.writeFile(wb, 'genset_bulk_results.xlsx');
         }
     }
+
 
     </script>
 </body>
