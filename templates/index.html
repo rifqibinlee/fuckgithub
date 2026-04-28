@@ -2008,28 +2008,45 @@
 
     <!-- Review Modal -->
     <div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style="z-index:11000;">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-            <div class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 py-4 flex justify-between items-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden border border-gray-200" style="max-height:90vh;display:flex;flex-direction:column;">
+
+            <!-- Header -->
+            <div class="text-white px-6 py-4 flex justify-between items-center flex-shrink-0" style="background:#0f2d52;">
                 <div>
-                    <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-star"></i> Submit a Review</h2>
-                    <p class="text-xs text-yellow-100 mt-0.5">Share your feedback about the platform</p>
+                    <h2 class="text-base font-bold flex items-center gap-2 tracking-wide uppercase"><i class="fas fa-clipboard-list text-blue-300"></i> Platform Feedback</h2>
+                    <p class="text-xs mt-0.5" style="color:#93c5fd;">Submit a review, browse feedback, or explore topics</p>
                 </div>
-                <button onclick="closeReviewModal()" class="text-white hover:text-yellow-200 text-xl"><i class="fas fa-times"></i></button>
+                <button onclick="closeReviewModal()" class="text-white opacity-70 hover:opacity-100 text-xl transition"><i class="fas fa-times"></i></button>
             </div>
-            <div class="flex border-b border-gray-200">
-                <button id="reviewTabWrite" onclick="switchReviewTab('write')" class="flex-1 py-3 text-sm font-semibold text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50"><i class="fas fa-pen mr-1"></i> Write Review</button>
-                <button id="reviewTabRead" onclick="switchReviewTab('read')" class="flex-1 py-3 text-sm font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-50"><i class="fas fa-list mr-1"></i> All Reviews</button>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 flex-shrink-0">
+                <button id="reviewTabWrite" onclick="switchReviewTab('write')"
+                    class="flex-1 py-2.5 text-sm font-semibold border-b-2 transition"
+                    style="color:#0f2d52;border-color:#0f2d52;background:#f0f4ff;">
+                    <i class="fas fa-pen mr-1"></i> Submit
+                </button>
+                <button id="reviewTabRead" onclick="switchReviewTab('read')"
+                    class="flex-1 py-2.5 text-sm font-semibold text-gray-400 hover:text-gray-600 hover:bg-gray-50 border-b-2 border-transparent transition">
+                    <i class="fas fa-list mr-1"></i> Reviews
+                </button>
+                <button id="reviewTabKeywords" onclick="switchReviewTab('keywords')"
+                    class="flex-1 py-2.5 text-sm font-semibold text-gray-400 hover:text-gray-600 hover:bg-gray-50 border-b-2 border-transparent transition">
+                    <i class="fas fa-tags mr-1"></i> Topics
+                </button>
             </div>
-            <div id="reviewPanelWrite" class="p-6 space-y-4">
+
+            <!-- ── Panel: Submit ── -->
+            <div id="reviewPanelWrite" class="p-6 space-y-4 overflow-y-auto">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Category</label>
-                        <select id="reviewCategory" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Category</label>
+                        <select id="reviewCategory" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-800">
                             <option>General</option><option>Dashboard</option><option>Coverage Map</option><option>Data Quality</option><option>Performance</option><option>Feature Request</option><option>Bug Report</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Rating</label>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Rating</label>
                         <div id="reviewStars" class="flex gap-1 mt-1">
                             <i class="review-star fas fa-star text-2xl cursor-pointer text-gray-300" data-val="1"></i>
                             <i class="review-star fas fa-star text-2xl cursor-pointer text-gray-300" data-val="2"></i>
@@ -2041,41 +2058,77 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Title <span class="text-gray-400 font-normal">(optional)</span></label>
-                    <input id="reviewTitle" type="text" placeholder="Brief summary..." maxlength="120" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Title <span class="text-gray-400 font-normal normal-case">(optional)</span></label>
+                    <input id="reviewTitle" type="text" placeholder="Brief summary..." maxlength="120"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-800">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Your Feedback <span class="text-red-500">*</span></label>
-                    <textarea id="reviewBody" rows="4" placeholder="Tell us about your experience..." class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none"></textarea>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Feedback <span class="text-red-500">*</span></label>
+                    <textarea id="reviewBody" rows="4" placeholder="Describe your experience in detail..."
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-800 resize-none"></textarea>
                 </div>
-                <div class="flex items-center justify-between">
-                    <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                        <input type="checkbox" id="reviewAnon" class="w-4 h-4 rounded"> Post anonymously
+                <div class="flex items-center justify-between pt-1">
+                    <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                        <input type="checkbox" id="reviewAnon" class="w-4 h-4 rounded border-gray-300"> Post anonymously
                     </label>
-                    <button onclick="submitReview()" id="reviewSubmitBtn" class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-6 py-2 rounded-lg text-sm font-bold transition-all"><i class="fas fa-paper-plane mr-1"></i> Submit</button>
+                    <button onclick="submitReview()" id="reviewSubmitBtn"
+                        class="text-white px-6 py-2 rounded text-sm font-bold transition hover:opacity-90 flex items-center gap-2"
+                        style="background:#0f2d52;">
+                        <i class="fas fa-paper-plane"></i> Submit Review
+                    </button>
                 </div>
-                <div id="reviewMsg" class="hidden text-sm text-center font-semibold rounded-lg py-2"></div>
+                <div id="reviewMsg" class="hidden text-sm text-center font-semibold rounded py-2"></div>
             </div>
-            <div id="reviewPanelRead" class="hidden p-4 max-h-96 overflow-y-auto">
-                <div class="flex gap-2 mb-3">
-                    <select id="reviewFilterCat" onchange="loadReviews()" class="border border-gray-200 rounded-lg px-3 py-1.5 text-xs flex-1">
+
+            <!-- ── Panel: Reviews ── -->
+            <div id="reviewPanelRead" class="hidden flex flex-col overflow-hidden" style="min-height:0;">
+                <!-- Keyword filter chips -->
+                <div class="px-4 pt-3 pb-2.5 border-b border-gray-100 flex-shrink-0" style="background:#fafbff;">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Filter by Topic</span>
+                        <button id="reviewKwClearBtn" onclick="setReviewKeyword(null)" class="hidden text-[10px] font-semibold hover:underline" style="color:#0f2d52;">Clear filter</button>
+                    </div>
+                    <div id="reviewKeywordsBar" class="flex flex-wrap gap-1.5 min-h-[24px]">
+                        <span class="text-xs text-gray-400 italic">Loading…</span>
+                    </div>
+                </div>
+                <!-- Filter bar -->
+                <div class="flex gap-2 px-4 py-2 border-b border-gray-100 flex-shrink-0">
+                    <select id="reviewFilterCat" onchange="loadReviews()"
+                        class="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 focus:outline-none focus:ring-1" style="--tw-ring-color:#0f2d52;">
                         <option value="">All Categories</option><option>General</option><option>Dashboard</option><option>Coverage Map</option><option>Data Quality</option><option>Performance</option><option>Feature Request</option><option>Bug Report</option>
                     </select>
-                    <button onclick="loadReviews()" class="bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-lg px-3 py-1.5 text-xs font-bold hover:bg-yellow-100"><i class="fas fa-sync-alt"></i></button>
+                    <button onclick="loadReviews()" class="border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-100 transition" title="Refresh"><i class="fas fa-sync-alt"></i></button>
                 </div>
-                <div id="reviewsList" class="space-y-3">
+                <!-- Review cards -->
+                <div id="reviewsList" class="flex-1 overflow-y-auto p-4 space-y-3">
                     <div class="text-center text-gray-400 text-sm py-8"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading...</div>
                 </div>
             </div>
+
+            <!-- ── Panel: Keywords / Topics ── -->
+            <div id="reviewPanelKeywords" class="hidden flex flex-col overflow-hidden" style="min-height:0;">
+                <div class="px-5 py-3 border-b border-gray-100 flex-shrink-0 flex items-center justify-between" style="background:#fafbff;">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Top Feedback Topics</p>
+                        <p class="text-[11px] text-gray-400 mt-0.5">Most frequent words across all reviews (stop-words excluded)</p>
+                    </div>
+                    <button onclick="loadKeywordsPanel()" class="border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-100 transition" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+                </div>
+                <div id="reviewKeywordsPanel" class="flex-1 overflow-y-auto p-5">
+                    <div class="text-center text-gray-400 text-sm py-10"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading...</div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <!-- Messaging Modal -->
     <div id="messagingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style="z-index:11000;">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden" style="height: 640px; display: flex; flex-direction: column;">
-            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white flex items-center justify-between flex-shrink-0">
-                <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments"></i> Messages</h2>
-                <button onclick="closeMessagingModal()" class="hover:bg-white/20 p-1 rounded-lg transition"><i class="fas fa-times"></i></button>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden border border-gray-200" style="height: 640px; display: flex; flex-direction: column;">
+            <div class="p-4 text-white flex items-center justify-between flex-shrink-0" style="background:#0f2d52;">
+                <h2 class="text-base font-bold flex items-center gap-2 tracking-wide uppercase"><i class="fas fa-envelope text-blue-300"></i> Internal Messages</h2>
+                <button onclick="closeMessagingModal()" class="opacity-70 hover:opacity-100 p-1 rounded transition text-white"><i class="fas fa-times"></i></button>
             </div>
             <div class="flex flex-1 overflow-hidden">
                 <div class="w-64 border-r border-gray-200 flex flex-col flex-shrink-0">
@@ -2086,32 +2139,32 @@
                         </div>
                     </div>
                     <div class="p-2 border-b border-gray-100 flex gap-2">
-                        <button onclick="showNewConversation()" class="flex-1 bg-blue-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-1"><i class="fas fa-plus"></i> DM</button>
-                        <button onclick="showNewGroup()" class="flex-1 bg-purple-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-purple-700 transition flexitems-center justify-center gap-1"><i class="fas fa-users"></i> Group</button>
+                        <button onclick="showNewConversation()" class="flex-1 text-white text-xs font-semibold py-1.5 rounded hover:opacity-90 transition flex items-center justify-center gap-1" style="background:#0f2d52;"><i class="fas fa-plus"></i> DM</button>
+                        <button onclick="showNewGroup()" class="flex-1 text-white text-xs font-semibold py-1.5 rounded hover:opacity-90 transition flex items-center justify-center gap-1" style="background:#1e3a8a;"><i class="fas fa-users"></i> Group</button>
                     </div>
                     <div id="conversationList" class="flex-1 overflow-y-auto"></div>
                 </div>
                 <div class="flex-1 flex flex-col overflow-hidden">
                     <div id="chatEmpty" class="flex-1 flex items-center justify-center text-gray-400 flex-col gap-3">
-                        <i class="fas fa-comments text-5xl opacity-30"></i><p class="text-sm font-medium">Select a conversation or start a new one</p>
+                        <i class="fas fa-envelope-open text-5xl opacity-20" style="color:#0f2d52;"></i><p class="text-sm font-medium text-gray-400">Select a conversation or start a new one</p>
                     </div>
                     <div id="newConvForm" class="hidden flex-1 flex flex-col p-4">
                         <h3 class="font-bold text-gray-700 mb-3 text-sm">New Message</h3>
                         <div class="mb-3"><select id="newMsgRecipient" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"><option value="">Select recipient...</option></select></div>
                         <div class="flex-1 mb-3"><textarea id="newMsgContent" class="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:ring-2 focus:ring-blue-500" placeholder="Write your message..."></textarea></div>
                         <div class="flex gap-2">
-                            <button onclick="sendNewMessage()" class="flex-1 bg-blue-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-paper-plane mr-1"></i> Send</button>
+                            <button onclick="sendNewMessage()" class="flex-1 text-white text-sm font-semibold py-2 rounded-lg hover:opacity-90 transition" style="background:#0f2d52;"><i class="fas fa-paper-plane mr-1"></i> Send</button>
                             <button onclick="cancelNewConv()" class="flex-1 bg-gray-100 text-gray-700 text-sm font-semibold py-2 rounded-lg hover:bg-gray-200 transition">Cancel</button>
                         </div>
                         <div id="newMsgStatus" class="mt-2 text-xs text-center font-semibold hidden"></div>
                     </div>
                     <div id="newGroupForm" class="hidden flex-1 flex flex-col p-4 overflow-y-auto">
-                        <h3 class="font-bold text-gray-700 mb-3 text-sm flex items-center gap-2"><i class="fas fa-users text-purple-600"></i> New Group Chat</h3>
-                        <div class="mb-3"><input type="text" id="newGroupName" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500" placeholder="e.g. Planning Team"></div>
+                        <h3 class="font-bold text-gray-700 mb-3 text-sm flex items-center gap-2"><i class="fas fa-users" style="color:#1e3a8a;"></i> New Group Chat</h3>
+                        <div class="mb-3"><input type="text" id="newGroupName" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 outline-none" style="--tw-ring-color:#0f2d52;" placeholder="e.g. Planning Team"></div>
                         <div class="mb-3"><div id="groupMemberCheckboxes" class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1 text-sm text-gray-700"></div></div>
-                        <div class="mb-3"><textarea id="newGroupMessage" class="w-full h-20 px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:ring-2 focus:ring-purple-500" placeholder="Write your first message..."></textarea></div>
+                        <div class="mb-3"><textarea id="newGroupMessage" class="w-full h-20 px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:ring-2 outline-none" placeholder="Write your first message..."></textarea></div>
                         <div class="flex gap-2">
-                            <button onclick="sendNewGroup()" class="flex-1 bg-purple-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-purple-700 transition"><i class="fas fa-users mr-1"></i> Create Group</button>
+                            <button onclick="sendNewGroup()" class="flex-1 text-white text-sm font-semibold py-2 rounded-lg hover:opacity-90 transition" style="background:#1e3a8a;"><i class="fas fa-users mr-1"></i> Create Group</button>
                             <button onclick="cancelNewConv()" class="flex-1 bg-gray-100 text-gray-700 text-sm font-semibold py-2 rounded-lg hover:bg-gray-200 transition">Cancel</button>
                         </div>
                         <div id="newGroupStatus" class="mt-2 text-xs text-center font-semibold hidden"></div>
@@ -2120,20 +2173,20 @@
                         <div class="p-3 border-b border-gray-100 flex-shrink-0 flex items-center justify-between">
                             <p class="font-bold text-gray-800 text-sm" id="chatPartnerName"></p>
                             <div id="groupChatActions" class="hidden flex items-center gap-1">
-                                <button onclick="showGroupMembers()" title="View members" class="text-xs text-gray-500 hover:text-purple-600 px-2 py-1 rounded hover:bg-purple-50 transition flex items-center gap-1"><i class="fas fa-users"></i><span class="hidden sm:inline">Members</span></button>
-                                <button id="renameGroupBtn" onclick="showRenameGroup()" title="Rename group" class="hidden text-xs text-blue-500 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition flex items-center gap-1"><i class="fas fa-pen"></i><span class="hidden sm:inline ml-1">Rename</span></button>
-                                <button id="leaveGroupBtn" onclick="leaveGroup()" title="Leave group" class="text-xs text-orange-500 hover:text-orange-700 px-2 py-1 rounded hover:bg-orange-50 transition flex items-center gap-1"><i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline ml-1">Leave</span></button>
-                                <button id="deleteGroupBtn" onclick="deleteGroup()" title="Delete group" class="hidden text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition flex items-center gap-1"><i class="fas fa-trash-alt"></i><span class="hidden sm:inline ml-1">Delete</span></button>
+                                <button onclick="showGroupMembers()" title="View members" class="text-xs text-gray-500 hover:text-blue-900 px-2 py-1 rounded hover:bg-slate-100 transition flex items-center gap-1"><i class="fas fa-users"></i><span class="hidden sm:inline">Members</span></button>
+                                <button id="renameGroupBtn" onclick="showRenameGroup()" title="Rename group" class="hidden text-xs text-blue-700 hover:text-blue-900 px-2 py-1 rounded hover:bg-slate-100 transition flex items-center gap-1"><i class="fas fa-pen"></i><span class="hidden sm:inline ml-1">Rename</span></button>
+                                <button id="leaveGroupBtn" onclick="leaveGroup()" title="Leave group" class="text-xs text-red-600 hover:text-red-800 px-2 py-1 rounded hover:bg-red-50 transition flex items-center gap-1"><i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline ml-1">Leave</span></button>
+                                <button id="deleteGroupBtn" onclick="deleteGroup()" title="Delete group" class="hidden text-xs text-red-600 hover:text-red-800 px-2 py-1 rounded hover:bg-red-50 transition flex items-center gap-1"><i class="fas fa-trash-alt"></i><span class="hidden sm:inline ml-1">Delete</span></button>
                             </div>
                         </div>
-                        <div id="groupMembersPanel" class="hidden border-b border-gray-100 bg-purple-50 px-3 py-2 flex-shrink-0">
-                            <p class="text-xs font-semibold text-purple-700 mb-1">Members</p><div id="groupMembersList" class="flex flex-wrap gap-1.5"></div>
+                        <div id="groupMembersPanel" class="hidden border-b border-gray-100 px-3 py-2 flex-shrink-0" style="background:#f0f4ff;">
+                            <p class="text-xs font-semibold mb-1" style="color:#0f2d52;">Members</p><div id="groupMembersList" class="flex flex-wrap gap-1.5"></div>
                         </div>
-                        <div id="renameGroupPanel" class="hidden border-b border-gray-100 bg-blue-50 px-3 py-2 flex-shrink-0">
-                            <p class="text-xs font-semibold text-blue-700 mb-1.5">Rename Group</p>
+                        <div id="renameGroupPanel" class="hidden border-b border-gray-100 px-3 py-2 flex-shrink-0" style="background:#f8fafc;">
+                            <p class="text-xs font-semibold mb-1.5" style="color:#0f2d52;">Rename Group</p>
                             <div class="flex gap-2">
-                                <input type="text" id="renameGroupInput" maxlength="80" class="flex-1 px-2 py-1.5 text-sm border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none" placeholder="New group name...">
-                                <button onclick="submitRenameGroup()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-1.5 rounded-lg transition">Save</button>
+                                <input type="text" id="renameGroupInput" maxlength="80" class="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 outline-none" style="--tw-ring-color:#0f2d52;" placeholder="New group name...">
+                                <button onclick="submitRenameGroup()" class="text-xs text-white font-semibold px-3 py-1.5 rounded-lg hover:opacity-90 transition" style="background:#0f2d52;">Save</button>
                                 <button onclick="hideRenameGroup()" class="text-xs text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition">Cancel</button>
                             </div><p id="renameGroupStatus" class="text-xs mt-1 hidden"></p>
                         </div>
@@ -2148,10 +2201,10 @@
                         <div class="p-3 border-t border-gray-100 flex-shrink-0">
                             <div id="emojiPicker" class="hidden mb-2 p-2 border border-gray-200 rounded-xl bg-white shadow-md"><div class="flex flex-wrap gap-1 max-h-28 overflow-y-auto text-lg leading-none"></div></div>
                             <div class="flex gap-2 items-center">
-                                <button onclick="toggleEmojiPicker()" title="Emoji" class="text-gray-400 hover:text-yellow-500 transition text-lg flex-shrink-0">😊</button>
-                                <input type="text" id="internalChatInput" placeholder="Type a message..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-smfocus:ring-2 focus:ring-blue-500 outline-none" onkeydown="if(event.key==='Enter')sendChatMessage()">
-                                <button onclick="toggleMsgInChatSearch()" title="Search messages" class="text-gray-400 hover:text-blue-500 transition flex-shrink-0"><i class="fas fa-search text-sm"></i></button>
-                                <button onclick="sendChatMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition flex-shrink-0"><i class="fas fa-paper-plane"></i></button>
+                                <button onclick="toggleEmojiPicker()" title="Emoji" class="text-gray-400 hover:text-gray-600 transition text-lg flex-shrink-0">😊</button>
+                                <input type="text" id="internalChatInput" placeholder="Type a message..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 outline-none" style="--tw-ring-color:#0f2d52;" onkeydown="if(event.key==='Enter')sendChatMessage()">
+                                <button onclick="toggleMsgInChatSearch()" title="Search messages" class="text-gray-400 hover:text-gray-700 transition flex-shrink-0"><i class="fas fa-search text-sm"></i></button>
+                                <button onclick="sendChatMessage()" class="text-white px-4 py-2 rounded-lg text-sm hover:opacity-90 transition flex-shrink-0" style="background:#0f2d52;"><i class="fas fa-paper-plane"></i></button>
                             </div>
                         </div>
                     </div>
@@ -2757,30 +2810,43 @@
         }
 
         // --- REVIEWS ---
-        let _reviewRating = 0;
-        window._openReviewModal = function() { document.getElementById('reviewModal').classList.remove('hidden'); switchReviewTab('write'); }
-        window._closeReviewModal = function() { document.getElementById('reviewModal').classList.add('hidden'); resetReviewForm(); }
+        let _reviewRating = 0, _activeKeyword = null, _allReviewRows = [];
+        window._openReviewModal  = function() { document.getElementById('reviewModal').classList.remove('hidden'); switchReviewTab('write'); }
+        window._closeReviewModal = function() { document.getElementById('reviewModal').classList.add('hidden'); resetReviewForm(); _activeKeyword = null; }
+
+        const _TAB_ACTIVE   = 'flex-1 py-2.5 text-sm font-semibold border-b-2 transition';
+        const _TAB_INACTIVE = 'flex-1 py-2.5 text-sm font-semibold text-gray-400 hover:text-gray-600 hover:bg-gray-50 border-b-2 border-transparent transition';
+
+        function _setTabActive(el)   { el.className = _TAB_ACTIVE;   el.style.cssText = 'color:#0f2d52;border-color:#0f2d52;background:#f0f4ff;'; }
+        function _setTabInactive(el) { el.className = _TAB_INACTIVE; el.style.cssText = ''; }
+
         function switchReviewTab(tab) {
-            const write = document.getElementById('reviewPanelWrite'); const read = document.getElementById('reviewPanelRead');
-            const tabW = document.getElementById('reviewTabWrite'); const tabR = document.getElementById('reviewTabRead');
-            if (tab === 'write') {
-                write.classList.remove('hidden'); read.classList.add('hidden');
-                tabW.className = 'flex-1 py-3 text-sm font-semibold text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50';
-                tabR.className = 'flex-1 py-3 text-sm font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-50';
-            } else {
-                write.classList.add('hidden'); read.classList.remove('hidden');
-                tabR.className = 'flex-1 py-3 text-sm font-semibold text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50';
-                tabW.className = 'flex-1 py-3 text-sm font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-50';
-                loadReviews();
-            }
+            const panels = { write: 'reviewPanelWrite', read: 'reviewPanelRead', keywords: 'reviewPanelKeywords' };
+            const tabs   = { write: 'reviewTabWrite',   read: 'reviewTabRead',   keywords: 'reviewTabKeywords'   };
+            Object.keys(panels).forEach(k => {
+                document.getElementById(panels[k]).classList.toggle('hidden', k !== tab);
+                if (k === tab) _setTabActive(document.getElementById(tabs[k]));
+                else           _setTabInactive(document.getElementById(tabs[k]));
+            });
+            if (tab === 'read')     { loadReviews(); loadReviewKeywords(); }
+            if (tab === 'keywords') { loadKeywordsPanel(); }
         }
+
         function resetReviewForm() {
-            _reviewRating = 0; document.getElementById('reviewRating').value = 0; document.getElementById('reviewTitle').value = ''; document.getElementById('reviewBody').value = ''; document.getElementById('reviewAnon').checked = false; document.getElementById('reviewCategory').value = 'General'; document.querySelectorAll('.review-star').forEach(s => s.style.color = '#d1d5db'); document.getElementById('reviewMsg').classList.add('hidden');
+            _reviewRating = 0;
+            document.getElementById('reviewRating').value   = 0;
+            document.getElementById('reviewTitle').value    = '';
+            document.getElementById('reviewBody').value     = '';
+            document.getElementById('reviewAnon').checked   = false;
+            document.getElementById('reviewCategory').value = 'General';
+            document.querySelectorAll('.review-star').forEach(s => s.style.color = '#d1d5db');
+            document.getElementById('reviewMsg').classList.add('hidden');
         }
+
         document.querySelectorAll('.review-star').forEach(star => {
-            star.addEventListener('click', function() { _reviewRating = parseInt(this.dataset.val); document.getElementById('reviewRating').value = _reviewRating; document.querySelectorAll('.review-star').forEach(s => s.style.color = parseInt(s.dataset.val) <= _reviewRating ? '#f59e0b' : '#d1d5db'); });
-            star.addEventListener('mouseover', function() { const val = parseInt(this.dataset.val); document.querySelectorAll('.review-star').forEach(s => s.style.color = parseInt(s.dataset.val) <= val ? '#f59e0b' : '#d1d5db'); });
-            star.addEventListener('mouseout', function() { document.querySelectorAll('.review-star').forEach(s => s.style.color = parseInt(s.dataset.val) <= _reviewRating ? '#f59e0b' : '#d1d5db'); });
+            star.addEventListener('click', function() { _reviewRating = parseInt(this.dataset.val); document.getElementById('reviewRating').value = _reviewRating; document.querySelectorAll('.review-star').forEach(s => s.style.color = parseInt(s.dataset.val) <= _reviewRating ? '#1e3a8a' : '#d1d5db'); });
+            star.addEventListener('mouseover', function() { const val = parseInt(this.dataset.val); document.querySelectorAll('.review-star').forEach(s => s.style.color = parseInt(s.dataset.val) <= val ? '#1e3a8a' : '#d1d5db'); });
+            star.addEventListener('mouseout', function() { document.querySelectorAll('.review-star').forEach(s => s.style.color = parseInt(s.dataset.val) <= _reviewRating ? '#1e3a8a' : '#d1d5db'); });
         });
         async function submitReview() {
             const rating = parseInt(document.getElementById('reviewRating').value); const body = document.getElementById('reviewBody').value.trim();
@@ -2790,29 +2856,274 @@
             try {
                 const res = await fetch('/api/reviews', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ category: document.getElementById('reviewCategory').value, rating, title: document.getElementById('reviewTitle').value.trim(), body, is_anonymous: document.getElementById('reviewAnon').checked }) });
                 const data = await res.json();
-                if (res.ok && data.success) { showReviewMsg('Thank you for your review! 🎉', 'success'); setTimeout(() => { resetReviewForm(); switchReviewTab('read'); }, 1200); }
+                if (res.ok && data.success) { showReviewMsg('Review submitted. Thank you for your feedback.', 'success'); setTimeout(() => { resetReviewForm(); switchReviewTab('read'); }, 1500); }
                 else { showReviewMsg(data.error || 'Failed to submit.', 'error'); }
             } catch(e) { showReviewMsg('Network error.', 'error'); } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i> Submit'; }
         }
         function showReviewMsg(text, type) { const msg = document.getElementById('reviewMsg'); msg.textContent = text; msg.className = `text-sm text-center font-semibold rounded-lg py-2 ${type==='success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`; msg.classList.remove('hidden'); }
+        // ── REVIEW SYSTEM ────────────────────────────────────────────────
+
+        async function loadKeywordsPanel() {
+            const el = document.getElementById('reviewKeywordsPanel');
+            if (!el) return;
+            el.innerHTML = '<div class="text-center text-gray-400 text-sm py-10"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading...</div>';
+            try {
+                const res  = await fetch('/api/reviews/keywords');
+                const data = await res.json();
+                if (!data.length) { el.innerHTML = '<p class="text-center text-gray-400 italic text-sm py-10">No feedback submitted yet.</p>'; return; }
+                const max = data[0].count;
+                el.innerHTML = `
+                    <div class="space-y-2">
+                        ${data.map((k, i) => {
+                            const pct    = Math.round((k.count / max) * 100);
+                            const rankCl = i < 3 ? 'font-black' : 'font-semibold';
+                            const barCol = i === 0 ? '#0f2d52' : i === 1 ? '#1e3a8a' : i === 2 ? '#2563eb' : '#60a5fa';
+                            return `
+                            <div class="flex items-center gap-3 group cursor-pointer" onclick="setReviewKeyword('${k.word}'); switchReviewTab('read');" title="Filter reviews by '${k.word}'">
+                                <span class="w-5 text-right text-[10px] text-gray-400 flex-shrink-0">${i+1}</span>
+                                <span class="w-24 text-xs ${rankCl} text-gray-700 flex-shrink-0 truncate">${escapeHtml(k.word)}</span>
+                                <div class="flex-1 bg-gray-100 rounded-sm overflow-hidden h-5 relative">
+                                    <div class="h-full rounded-sm transition-all" style="width:${pct}%;background:${barCol};opacity:0.85;"></div>
+                                </div>
+                                <span class="w-8 text-right text-xs font-bold flex-shrink-0" style="color:${barCol};">${k.count}</span>
+                                <i class="fas fa-arrow-right text-[10px] text-gray-300 group-hover:text-blue-500 transition flex-shrink-0"></i>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                    <p class="text-[10px] text-gray-400 text-center mt-4">Click any topic to filter the Reviews tab</p>`;
+            } catch(e) { el.innerHTML = '<p class="text-center text-red-400 text-xs py-6"><i class="fas fa-exclamation-triangle mr-1"></i>Failed to load topics.</p>'; }
+        }
+
+
+            const bar = document.getElementById('reviewKeywordsBar');
+            if (!bar) return;
+            try {
+                const res  = await fetch('/api/reviews/keywords');
+                const data = await res.json();
+                if (!data.length) { bar.innerHTML = '<span class="text-xs text-gray-400 italic">No keywords yet.</span>'; return; }
+                // Scale font/opacity by relative frequency
+                const max = data[0].count;
+                bar.innerHTML = data.map(k => {
+                    const weight = Math.round(60 + (k.count / max) * 40); // 60–100% opacity
+                    const isActive = _activeKeyword === k.word;
+                    return `<button onclick="setReviewKeyword('${k.word}')"
+                        data-kw="${k.word}"
+                        class="review-kw-chip inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all"
+                        style="${isActive
+                            ? 'background:#0f2d52;color:#fff;border-color:#0f2d52;'
+                            : `background:#f0f4ff;color:#0f2d52;border-color:#c7d6f0;opacity:${weight}%;`}"
+                        title="${k.count} mention${k.count>1?'s':''}">
+                        ${escapeHtml(k.word)}<span class="text-[9px] ${isActive ? 'text-blue-200' : 'text-gray-400'} font-normal">${k.count}</span>
+                    </button>`;
+                }).join('');
+            } catch(e) { bar.innerHTML = '<span class="text-xs text-red-400">Failed to load keywords.</span>'; }
+        }
+
+        window.setReviewKeyword = function(word) {
+            _activeKeyword = (word && _activeKeyword === word) ? null : word;
+            const clearBtn = document.getElementById('reviewKwClearBtn');
+            if (clearBtn) clearBtn.classList.toggle('hidden', !_activeKeyword);
+            loadReviewKeywords();
+            renderReviewCards(_allReviewRows);
+        };
+
         async function loadReviews() {
-            const list = document.getElementById('reviewsList'); const cat = document.getElementById('reviewFilterCat').value;
+            const list = document.getElementById('reviewsList');
+            const cat  = document.getElementById('reviewFilterCat').value;
             list.innerHTML = '<div class="text-center text-gray-400 text-sm py-8"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading...</div>';
             try {
-                const res = await fetch(`/api/reviews?limit=50${cat ? '&category='+encodeURIComponent(cat) : ''}`); const rows = await res.json();
-                if (!rows.length) { list.innerHTML = '<div class="text-center text-gray-400 text-sm py-8"><i class="fas fa-inbox mr-2"></i>No reviews yet.</div>'; return; }
-                list.innerHTML = rows.map(r => `
-                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-3">
-                        <div class="flex justify-between items-start">
-                            <div><span class="text-xs font-bold text-gray-700">${escapeHtml(r.username)}</span><span class="ml-2 text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">${escapeHtml(r.category)}</span></div>
-                            <span class="text-yellow-400 text-sm">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
-                        </div>
-                        ${r.title ? `<p class="text-sm font-semibold text-gray-800 mt-1">${escapeHtml(r.title)}</p>` : ''}
-                        <p class="text-xs text-gray-600 mt-1 leading-relaxed">${escapeHtml(r.body)}</p>
-                        <p class="text-[10px] text-gray-400 mt-1">${new Date(r.created_at).toLocaleDateString('en-MY',{year:'numeric',month:'short',day:'numeric'})}</p>
-                    </div>`).join('');
-            } catch(e) { list.innerHTML = '<div class="text-center text-red-400 text-sm py-8">Failed to load reviews.</div>'; }
+                const res  = await fetch(`/api/reviews?limit=50${cat ? '&category='+encodeURIComponent(cat) : ''}`);
+                _allReviewRows = await res.json();
+                renderReviewCards(_allReviewRows);
+            } catch(e) {
+                list.innerHTML = '<div class="text-center text-red-400 text-sm py-6">Failed to load reviews.</div>';
+            }
         }
+
+        function renderReviewCards(rows) {
+            const list = document.getElementById('reviewsList');
+            let filtered = rows;
+            if (_activeKeyword) {
+                filtered = rows.filter(r => (r.body + ' ' + (r.title || '')).toLowerCase().includes(_activeKeyword));
+            }
+            if (!filtered.length) {
+                list.innerHTML = `<div class="text-center text-gray-400 text-sm py-8"><i class="fas fa-inbox mr-2"></i>${_activeKeyword ? `No reviews mention "<b>${escapeHtml(_activeKeyword)}</b>"` : 'No reviews yet.'}</div>`;
+                return;
+            }
+            const me = window.USER_DATA;
+            list.innerHTML = filtered.map(r => {
+                const canDelete = me && (me.userId === r.user_id || me.role === 'Admin');
+                const stars     = `<span style="color:#1e3a8a;letter-spacing:1px;font-size:13px;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>`;
+                const initials  = (r.username||'?').substring(0,2).toUpperCase();
+                const dateStr   = new Date(r.created_at).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'});
+                // Highlight keyword in body
+                let bodyHtml = escapeHtml(r.body);
+                if (_activeKeyword) {
+                    const re = new RegExp('(' + _activeKeyword.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+                    bodyHtml = bodyHtml.replace(re, '<mark style="background:#dbeafe;color:#1e3a8a;border-radius:2px;padding:0 2px;">$1</mark>');
+                }
+                return `
+                <div class="review-card border border-gray-200 rounded-lg overflow-hidden" id="rcard_${r.id}">
+                    <div class="p-3">
+                        <div class="flex items-start gap-2">
+                            <div class="w-8 h-8 rounded flex items-center justify-center flex-shrink-0 text-white text-xs font-black" style="background:#0f2d52;">${initials}</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="text-xs font-bold text-gray-800">${escapeHtml(r.username)}</span>
+                                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded" style="background:#e8edf7;color:#0f2d52;">${escapeHtml(r.category)}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                        ${stars}
+                                        ${canDelete ? `<button onclick="deleteReview(${r.id})" class="text-gray-300 hover:text-red-500 transition text-xs ml-1" title="Delete"><i class="fas fa-trash"></i></button>` : ''}
+                                    </div>
+                                </div>
+                                ${r.title ? `<p class="text-sm font-semibold text-gray-800 mt-1">${escapeHtml(r.title)}</p>` : ''}
+                                <p class="text-xs text-gray-600 mt-1 leading-relaxed">${bodyHtml}</p>
+                                <p class="text-[10px] text-gray-400 mt-1.5">${dateStr}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Reaction + comment bar -->
+                    <div class="flex items-center gap-1 px-3 py-2 border-t border-gray-100 bg-gray-50">
+                        <button onclick="reactReview(${r.id},'like',this)" data-reaction="${r.my_reaction||''}"
+                            class="react-btn flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold border transition"
+                            style="${(r.my_reaction==='like') ? 'background:#0f2d52;color:#fff;border-color:#0f2d52;' : 'background:#fff;color:#475569;border-color:#e2e8f0;'}">
+                            <i class="fas fa-thumbs-up"></i><span class="like-count">${r.likes||0}</span>
+                        </button>
+                        <button onclick="reactReview(${r.id},'dislike',this)" data-reaction="${r.my_reaction||''}"
+                            class="react-btn flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold border transition"
+                            style="${(r.my_reaction==='dislike') ? 'background:#991b1b;color:#fff;border-color:#991b1b;' : 'background:#fff;color:#475569;border-color:#e2e8f0;'}">
+                            <i class="fas fa-thumbs-down"></i><span class="dislike-count">${r.dislikes||0}</span>
+                        </button>
+                        <button onclick="toggleComments(${r.id})"
+                            class="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 transition ml-auto">
+                            <i class="fas fa-comment-alt"></i> Comments
+                            <span id="ccount_${r.id}" class="text-[10px] bg-gray-200 text-gray-600 rounded-full px-1.5 font-bold ml-0.5">…</span>
+                        </button>
+                    </div>
+                    <!-- Comments panel -->
+                    <div id="comments_${r.id}" class="hidden border-t border-gray-100">
+                        <div id="clist_${r.id}" class="px-3 pt-2 space-y-2 text-xs text-gray-500 italic">Loading…</div>
+                        <div class="flex gap-2 p-3 pt-2">
+                            <input type="text" id="cinput_${r.id}" placeholder="Add a comment…"
+                                class="flex-1 border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1"
+                                style="--tw-ring-color:#0f2d52;"
+                                onkeydown="if(event.key==='Enter')submitComment(${r.id})">
+                            <button onclick="submitComment(${r.id})"
+                                class="text-xs text-white px-3 py-1.5 rounded font-semibold hover:opacity-90 transition"
+                                style="background:#0f2d52;">Reply</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+            // lazy-load comment counts
+            filtered.forEach(r => fetchCommentCount(r.id));
+        }
+
+        async function fetchCommentCount(rid) {
+            try {
+                const res  = await fetch(`/api/reviews/${rid}/comments`);
+                const data = await res.json();
+                const el   = document.getElementById(`ccount_${rid}`);
+                if (el) el.textContent = data.length;
+            } catch(e) {}
+        }
+
+        window.toggleComments = function(rid) {
+            const panel = document.getElementById(`comments_${rid}`);
+            if (!panel) return;
+            const wasHidden = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden');
+            if (wasHidden) loadComments(rid);
+        };
+
+        async function loadComments(rid) {
+            const el = document.getElementById(`clist_${rid}`);
+            if (!el) return;
+            try {
+                const res  = await fetch(`/api/reviews/${rid}/comments`);
+                const data = await res.json();
+                const me   = window.USER_DATA;
+                if (!data.length) { el.innerHTML = '<div class="text-gray-400 italic py-1">No comments yet.</div>'; return; }
+                el.innerHTML = data.map(c => {
+                    const canDel = me && (me.userId === c.user_id || me.role === 'Admin');
+                    return `<div class="flex items-start gap-2 py-1.5 border-b border-gray-50 last:border-0">
+                        <div class="w-5 h-5 rounded flex items-center justify-center text-white text-[9px] font-black flex-shrink-0" style="background:#1e3a8a;">${(c.username||'?').substring(0,2).toUpperCase()}</div>
+                        <div class="flex-1 min-w-0">
+                            <span class="font-semibold text-gray-700 text-xs">${escapeHtml(c.username)}</span>
+                            <span class="text-[10px] text-gray-400 ml-1">${new Date(c.created_at).toLocaleDateString('en-MY',{day:'numeric',month:'short'})}</span>
+                            <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">${escapeHtml(c.body)}</p>
+                        </div>
+                        ${canDel ? `<button onclick="deleteComment(${rid},${c.id},this)" class="text-gray-300 hover:text-red-400 transition flex-shrink-0 mt-0.5"><i class="fas fa-times text-[10px]"></i></button>` : ''}
+                    </div>`;
+                }).join('');
+                const countEl = document.getElementById(`ccount_${rid}`);
+                if (countEl) countEl.textContent = data.length;
+            } catch(e) { el.innerHTML = '<div class="text-red-400 text-xs">Failed to load.</div>'; }
+        }
+
+        window.submitComment = async function(rid) {
+            const input = document.getElementById(`cinput_${rid}`);
+            const body  = input.value.trim();
+            if (!body) return;
+            input.disabled = true;
+            try {
+                const res = await fetch(`/api/reviews/${rid}/comments`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({body})
+                });
+                if (!res.ok) throw new Error();
+                input.value = '';
+                await loadComments(rid);
+            } catch(e) { } finally { input.disabled = false; input.focus(); }
+        };
+
+        window.reactReview = async function(rid, reaction, btn) {
+            const card    = document.getElementById(`rcard_${rid}`);
+            const likeBtn = card.querySelector('[onclick*="like"]');
+            const disBtn  = card.querySelector('[onclick*="dislike"]');
+            try {
+                const res  = await fetch(`/api/reviews/${rid}/react`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({reaction})
+                });
+                const data = await res.json();
+                if (!data.success) return;
+                // Update like button
+                likeBtn.querySelector('.like-count').textContent = data.likes;
+                likeBtn.style.cssText = data.my_reaction === 'like'
+                    ? 'background:#0f2d52;color:#fff;border-color:#0f2d52;'
+                    : 'background:#fff;color:#475569;border-color:#e2e8f0;';
+                // Update dislike button
+                disBtn.querySelector('.dislike-count').textContent = data.dislikes;
+                disBtn.style.cssText = data.my_reaction === 'dislike'
+                    ? 'background:#991b1b;color:#fff;border-color:#991b1b;'
+                    : 'background:#fff;color:#475569;border-color:#e2e8f0;';
+            } catch(e) {}
+        };
+
+        window.deleteReview = async function(rid) {
+            if (!confirm('Delete this review?')) return;
+            try {
+                const res = await fetch(`/api/reviews/${rid}`, {method:'DELETE'});
+                if (!res.ok) return;
+                const card = document.getElementById(`rcard_${rid}`);
+                if (card) card.remove();
+                _allReviewRows = _allReviewRows.filter(r => r.id !== rid);
+                loadReviewKeywords();
+            } catch(e) {}
+        };
+
+        window.deleteComment = async function(rid, cid, btn) {
+            try {
+                const res = await fetch(`/api/reviews/${rid}/comments/${cid}`, {method:'DELETE'});
+                if (!res.ok) return;
+                btn.closest('div.flex').remove();
+                fetchCommentCount(rid);
+            } catch(e) {}
+        };
+
 
         // --- MESSAGING ---
         let currentConversationId = null; let allMessages = []; let allConversations = []; let chatPollInterval = null;
