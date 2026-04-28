@@ -3035,7 +3035,7 @@
 
             // ── LEFT PANE — mirror of actual-state map ──
             if (!splitActualMap) {
-                splitActualMap = L.map('splitMapLeft', { zoomControl: false, preferCanvas: false })
+                splitActualMap = L.map('splitMapLeft', { zoomControl: false, preferCanvas: false, maxZoom: 19 })
                                   .setView(center, zoom);
                 setTimeout(() => splitActualMap.invalidateSize(), 50);
                 L.control.zoom({ position: 'topright' }).addTo(splitActualMap);
@@ -3084,9 +3084,9 @@
 
             // ── RIGHT PANE — forecast map ──
             if (!splitMap) {
-                splitMap = L.map('splitForecastMap', { zoomControl: false, preferCanvas: false })
+                splitMap = L.map('splitForecastMap', { zoomControl: false, preferCanvas: false, maxZoom: 19 })
                             .setView(center, zoom);
-                setTimeout(() => { splitMap.invalidateSize(); _ensureSplitLayers(); }, 50);
+                setTimeout(() => { splitMap.invalidateSize(); _ensureSplitLayers(); _loadForecastMarkers(); }, 50);
                 L.control.zoom({ position: 'topright' }).addTo(splitMap);
 
                 // Label overlay
@@ -3103,8 +3103,6 @@
 
                 map.on('moveend zoomend', _syncLeftToRight);
                 splitMap.on('moveend zoomend', _syncRightToLeft);
-
-                _loadForecastMarkers();
             }
         }
 
