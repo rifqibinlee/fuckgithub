@@ -3013,20 +3013,27 @@
 
         let splitActualMap = null; // left pane Leaflet instance
 
-        function _syncLeftToRight() {
-            if (splitSyncLock || !splitActive || !splitMap) return;
+        function _syncAllTo(center, zoom) {
             splitSyncLock = true;
-            splitMap.setView(map.getCenter(), map.getZoom(), { animate: false });
-            if (splitActualMap) splitActualMap.setView(map.getCenter(), map.getZoom(), { animate: false });
+            map.setView(center, zoom, { animate: false });
+            if (splitActualMap) splitActualMap.setView(center, zoom, { animate: false });
+            if (splitMap)       splitMap.setView(center, zoom,       { animate: false });
             splitSyncLock = false;
         }
 
+        function _syncLeftToRight() {
+            if (splitSyncLock || !splitActive || !splitMap) return;
+            _syncAllTo(map.getCenter(), map.getZoom());
+        }
+
         function _syncRightToLeft() {
-            if (splitSyncLock || !splitActive) return;
-            splitSyncLock = true;
-            map.setView(splitMap.getCenter(), splitMap.getZoom(), { animate: false });
-            if (splitActualMap) splitActualMap.setView(splitMap.getCenter(), splitMap.getZoom(), { animate: false });
-            splitSyncLock = false;
+            if (splitSyncLock || !splitActive || !splitMap) return;
+            _syncAllTo(splitMap.getCenter(), splitMap.getZoom());
+        }
+
+        function _syncActualToOthers() {
+            if (splitSyncLock || !splitActive || !splitActualMap) return;
+            _syncAllTo(splitActualMap.getCenter(), splitActualMap.getZoom());
         }
 
         function _initSplitMaps() {
@@ -3063,11 +3070,7 @@
                                   <div style="background-color:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>`,
                             iconSize:[14,14], iconAnchor:[7,7] });
                         const m = L.marker([site.lat, site.lng], { icon })
-                            .bindPopup(`<div style="font-family:'Inter',sans-serif;min-width:180px;">
-                                <div style="background:#0f2d52;color:white;padding:8px 12px;border-radius:6px 6px 0 0;font-weight:800;">${site.site_id} — Actual</div>
-                                <div style="padding:8px 12px;font-size:.78rem;">
-                                    <div><span style="color:#64748b;">Status:</span> <b style="color:${isCong?'#dc2626':'#16a34a'}">${isCong?'⚠ Congested':'✓ Normal'}</b></div>
-                                </div></div>`);
+                            .bindPopup(createPopupContent(site, isCong, 'sl_'));
                         if (isCong) actualCong.addLayer(m); else actualNormal.addLayer(m);
                     });
                     splitActualMap.addLayer(actualNormal);
@@ -3079,7 +3082,7 @@
                 lblLeft.onAdd = () => { const d = L.DomUtil.create('div'); d.innerHTML = '<div style="background:#0f2d52;color:white;padding:4px 10px;border-radius:0 0 6px 0;font-size:.72rem;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.2);">📍 Current Status</div>'; return d; };
                 lblLeft.addTo(splitActualMap);
 
-                splitActualMap.on('moveend zoomend', _syncRightToLeft);
+                splitActualMap.on('moveend zoomend', _syncActualToOthers);
             }
 
             // ── RIGHT PANE — forecast map ──
@@ -3105,6 +3108,146 @@
                 splitMap.on('moveend zoomend', _syncRightToLeft);
             }
         }
+
+        function createForecastPopupContent(site, isCongested, quarter, year) {
+            const siteIdDisplay = site.site_id || 'UNKNOWN';
+            const safeSid       = siteIdDisplay.replace(/[^a-zA-Z0-9]/g, '_');
+            const popupId       = `sr_fcast_${safeSid}`;
+            const bodyId        = `sr_fcast_body_${safeSid}`;
+
+            const opName  = (site.operator && site.operator !== 'Unknown') ? site.operator.toUpperCase() : 'UNKNOWN';
+            let opClass   = 'badge-normal';
+            if (opName === 'CELCOM') opClass = 'badge-celcom';
+            if (opName === 'DIGI')   opClass = 'badge-digi';
+
+            const areaStr   = String(site.area_target || '').toLowerCase();
+            const isUrban   = areaStr.includes('urban') || areaStr.includes('kmc');
+            let areaBadge   = `<span class="badge bg-gray-500 text-white">${site.area_target || '-'}</span>`;
+            if (isUrban)                       areaBadge = '<span class="badge badge-urban">URBAN</span>';
+            else if (areaStr.includes('outside')) areaBadge = '<span class="badge badge-outside">OUTSIDE</span>';
+
+            const headerClass   = isCongested ? 'header-congested' : '';
+            const statusBadge   = isCongested
+                ? '<span class="badge badge-congested">FORECAST CONGESTED</span>'
+                : '<span class="badge badge-normal">FORECAST HEALTHY</span>';
+
+            const qLabels = { 13:'Q1 Wk 13', 26:'Q2 Wk 26', 39:'Q3 Wk 39', 52:'Q4 Wk 52' };
+            const qLabel  = qLabels[quarter] || `Wk ${quarter}`;
+
+            return `
+                <div id="${popupId}">
+                    <div class="popup-header ${headerClass}">
+                        <div>
+                            <div class="popup-title">${siteIdDisplay}</div>
+                            <div class="popup-sub">${site.cluster||''} | ${site.region||''}</div>
+                        </div>
+                        <div class="flex gap-2 items-center mt-1 flex-wrap">
+                            <span class="badge ${opClass}">${opName}</span>
+                            ${statusBadge}
+                            ${areaBadge}
+                            <span class="badge" style="background:#1e3a8a;color:white;">🔮 ${qLabel} · ${year}</span>
+                        </div>
+                    </div>
+                    <div id="${bodyId}" class="p-4 text-center text-gray-400 text-xs">
+                        <i class="fas fa-circle-notch fa-spin"></i> Loading forecast data…
+                    </div>
+                </div>`;
+        }
+
+        window._loadForecastPopupData = async function(siteId, quarter, year, bodyId) {
+            const el = document.getElementById(bodyId);
+            if (!el) return;
+            try {
+                const res  = await fetch(`/api/forecast_by_site?site_id=${encodeURIComponent(siteId)}&week=${quarter}&year=${year}`);
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+
+                const forecast = data.forecast || [];
+                const actual   = data.actual   || [];
+
+                // Build a lookup of actual data by sector
+                const actMap = {};
+                actual.forEach(a => { actMap[a.zoom_sector_id] = a; });
+
+                const areaStr  = String((window.siteDataCache||[]).find(s=>s.site_id.toUpperCase()===siteId.toUpperCase())?.area_target||'').toLowerCase();
+                const isUrban  = areaStr.includes('urban') || areaStr.includes('kmc');
+                const prbLimit = isUrban ? 80.0 : 92.0;
+
+                if (!forecast.length) {
+                    el.innerHTML = '<div class="text-center text-gray-400 italic py-3 text-xs">No forecast data available for this quarter.</div>';
+                    return;
+                }
+
+                const rows = forecast.map(f => {
+                    const secLabel  = f.zoom_sector_id.replace(new RegExp('^' + siteId + '_?', 'i'), '') || f.zoom_sector_id;
+                    const prb       = f.pred_prb  != null ? parseFloat(f.pred_prb)  : null;
+                    const thpt      = f.pred_thpt != null ? parseFloat(f.pred_thpt) : null;
+                    const vol       = f.pred_vol  != null ? parseFloat(f.pred_vol)  : null;
+                    const isCong    = !!f.congested;
+
+                    const act       = actMap[f.zoom_sector_id] || {};
+                    const actPrb    = act.actual_prb  != null ? parseFloat(act.actual_prb)  : null;
+                    const actThpt   = act.actual_thpt != null ? parseFloat(act.actual_thpt) : null;
+
+                    const alertPrb  = prb  != null && prb  >= prbLimit   ? 'val-alert' : '';
+                    const alertThpt = thpt != null && thpt > 0 && thpt < 3.0 ? 'val-alert' : '';
+
+                    // Delta arrows for PRB and Thpt vs actual
+                    const prbDelta  = (prb  != null && actPrb  != null) ? (prb  - actPrb).toFixed(1)  : null;
+                    const thptDelta = (thpt != null && actThpt != null) ? (thpt - actThpt).toFixed(1) : null;
+
+                    const deltaSpan = (d, higherIsBad) => {
+                        if (d === null) return '';
+                        const n = parseFloat(d);
+                        const up = n > 0;
+                        const color = (up === higherIsBad) ? '#dc2626' : '#16a34a';
+                        const arrow = up ? '▲' : '▼';
+                        return `<span style="color:${color};font-size:9px;margin-left:3px;">${arrow}${Math.abs(n)}</span>`;
+                    };
+
+                    const statusCell = isCong
+                        ? `<td class="text-center"><span style="color:#dc2626;font-weight:900;font-size:10px;">⚠ CONG</span></td>`
+                        : `<td class="text-center"><span style="color:#16a34a;font-weight:700;font-size:10px;">✓ OK</span></td>`;
+
+                    return `<tr>
+                        <td class="text-left pl-3 font-bold text-blue-700 border-r border-gray-200">${secLabel}</td>
+                        <td class="text-center ${alertPrb} border-r border-gray-200">
+                            ${prb != null ? prb.toFixed(1) + '%' : '—'}${deltaSpan(prbDelta, true)}
+                        </td>
+                        <td class="text-center ${alertThpt} border-r border-gray-200">
+                            ${thpt != null ? thpt.toFixed(2) : '—'}${deltaSpan(thptDelta, false)}
+                        </td>
+                        <td class="text-center border-r border-gray-200">${vol != null ? vol.toFixed(2) : '—'}</td>
+                        ${statusCell}
+                    </tr>`;
+                }).join('');
+
+                const actWeek = actual.length ? `Actual ref: Wk ${actual[0].week}` : '';
+
+                el.innerHTML = `
+                    <div class="mb-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center">
+                        Predicted KPIs per Sector <span class="normal-case font-normal text-gray-400 ml-1">${actWeek}</span>
+                    </div>
+                    <div class="sector-table-container">
+                        <table class="sector-table w-full text-xs">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600">
+                                    <th class="text-left pl-3 py-2">Sector</th>
+                                    <th class="text-center" title="Predicted PRB Utilisation (limit: ${prbLimit}%)">PRB%</th>
+                                    <th class="text-center" title="Predicted DL User Throughput (Mbps)">Thpt</th>
+                                    <th class="text-center" title="Predicted Data Volume (GB)">Vol</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                    <div class="text-[9px] text-gray-400 text-right mt-1 pr-1">▲▼ vs latest actual · Limit: PRB ${prbLimit}%</div>`;
+
+            } catch(err) {
+                el.innerHTML = `<div class="text-center text-red-500 text-xs py-3"><i class="fas fa-exclamation-triangle"></i> Failed to load: ${err.message}</div>`;
+            }
+        };
 
         async function _loadForecastMarkers() {
             if (!siteDataCache || !siteDataCache.length) {
@@ -3147,14 +3290,12 @@
                     });
 
                     const marker = L.marker([site.lat, site.lng], { icon })
-                        .bindPopup(`<div style="font-family:'Inter',sans-serif;min-width:180px;">
-                            <div style="background:#0f2d52;color:white;padding:8px 12px;border-radius:6px 6px 0 0;margin:-1px -1px 0;font-weight:800;">${site.site_id}</div>
-                            <div style="padding:8px 12px;font-size:.78rem;">
-                                <div style="margin-bottom:4px;"><span style="color:#64748b;">Region:</span> <b>${site.region||'—'}</b></div>
-                                <div style="margin-bottom:4px;"><span style="color:#64748b;">Quarter:</span> <b>${qLabels[splitQuarter]} · ${year}</b></div>
-                                <div><span style="color:#64748b;">Forecast Status:</span> <b style="color:${isCongested?'#dc2626':'#16a34a'}">${isCongested?'⚠ Congested':'✓ Normal'}</b></div>
-                            </div>
-                        </div>`);
+                        .bindPopup(createForecastPopupContent(site, isCongested, splitQuarter, year), { maxWidth: 420 });
+
+                    marker.on('popupopen', () => {
+                        const safeSid = site.site_id.replace(/[^a-zA-Z0-9]/g, '_');
+                        window._loadForecastPopupData(site.site_id, splitQuarter, year, `sr_fcast_body_${safeSid}`);
+                    });
 
                     if (isCongested) {
                         splitCongestedCluster.addLayer(marker);
@@ -3774,7 +3915,7 @@
                 .catch(err => { console.error(err); contentDiv.innerHTML = 'Error loading matrix.'; });
         }
 
-        function createPopupContent(site, isCongestedRaw) {
+        function createPopupContent(site, isCongestedRaw, idPrefix = '') {
             const siteIdDisplay = site.site_id || "UNKNOWN";
             const opName = (site.operator && site.operator !== 'Unknown') ? site.operator.toUpperCase() : "UNKNOWN";
             const host = site.coverage?.[0]?.host || 'Self';
@@ -3940,7 +4081,7 @@
                 return row + '</tr>';
             }).join('') || `<tr><td colspan="13" class="text-center text-gray-400 italic py-4">No band data available</td></tr>`;
 
-            const popupId = `popup_${siteIdDisplay.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            const popupId = `${idPrefix}popup_${siteIdDisplay.replace(/[^a-zA-Z0-9]/g, '_')}`;
 
             return `
                 <div id="${popupId}">
