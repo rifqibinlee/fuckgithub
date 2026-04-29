@@ -31,6 +31,9 @@ SQLAlchemy
 geopandas
 shapely
 openpyxl
+osmnx
+scikit-learn
+networkx
 
 # AI & LangChain (Including LiteLLM and PDF RAG)
 langchain
