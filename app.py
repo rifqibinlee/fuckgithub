@@ -17,6 +17,7 @@ from agent import run_netalytics_agent
 
 # --- PLOTLY & BOKEH IMPORTS ---
 from sklearn.linear_model import LinearRegression
+from genset_pipeline import route_substations
 from scipy.stats import t as t_dist
 import matplotlib
 matplotlib.use('Agg')
@@ -2115,7 +2116,6 @@ def api_genset_route():
     runs OSMnx road-network routing, returns distances + polylines.
     Body: { lat, lng, substations: [{osm_id, name, lat, lng}, ...] }
     """
-    from genset_pipeline import route_substations
     data        = request.get_json(force=True)
     lat         = data.get('lat')
     lng         = data.get('lng')
