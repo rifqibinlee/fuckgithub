@@ -1614,7 +1614,7 @@
                         <span id="gensetStatusText">Loading…</span>
                     </div>
                 </div>
-                <p style="font-size:0.67rem; color:#bbf7d0; margin:0;">Select a cell site to find the nearest TNB substation within 2 km via road.</p>
+                <p style="font-size:0.67rem; color:#bbf7d0; margin:0;">Select a cell site to find all TNB substations reachable within 2 km via road network.</p>
             </div>
 
             <!-- Search -->
@@ -1706,7 +1706,7 @@
                     </div>
 
                     <!-- Summary stats -->
-                    <div id="gensetBulkStats" style="display:none; grid-template-columns:repeat(3,1fr); gap:4px; margin-bottom:8px; text-align:center;">
+                    <div id="gensetBulkStats" style="display:none; grid-template-columns:repeat(4,1fr); gap:4px; margin-bottom:8px; text-align:center;">
                         <div style="background:#f0fdf4; border-radius:6px; padding:5px;">
                             <div id="gsBulkStatTotal" style="font-size:0.95rem; font-weight:900; color:#14532d;">0</div>
                             <div style="font-size:0.55rem; font-weight:700; text-transform:uppercase; color:#6b7280;">Total</div>
@@ -1718,6 +1718,10 @@
                         <div style="background:#fef2f2; border-radius:6px; padding:5px;">
                             <div id="gsBulkStatNone" style="font-size:0.95rem; font-weight:900; color:#dc2626;">0</div>
                             <div style="font-size:0.55rem; font-weight:700; text-transform:uppercase; color:#6b7280;">None</div>
+                        </div>
+                        <div style="background:#eff6ff; border-radius:6px; padding:5px;">
+                            <div id="gsBulkStatPaths" style="font-size:0.95rem; font-weight:900; color:#2563eb;">0</div>
+                            <div style="font-size:0.55rem; font-weight:700; text-transform:uppercase; color:#6b7280;">Paths</div>
                         </div>
                     </div>
 
@@ -1731,16 +1735,32 @@
 
                     <!-- Cable cost calculator -->
                     <div id="gsBulkCostCalc" style="display:none; background:#fffbeb; border:1px solid #fde68a; border-radius:7px; padding:8px 10px; margin-bottom:8px;">
-                        <div style="font-size:0.62rem; font-weight:800; color:#92400e; text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px;"><i class="fas fa-calculator" style="margin-right:4px;"></i>Cost Estimator</div>
+                        <div style="font-size:0.62rem; font-weight:800; color:#92400e; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;"><i class="fas fa-calculator" style="margin-right:4px;"></i>Cost Estimator (Best Path per Site)</div>
                         <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
-                            <span style="font-size:0.68rem; color:#6b7280; white-space:nowrap;">RM per 100m:</span>
-                            <input id="gsBulkCostPer100m" type="number" min="0" step="0.01" placeholder="e.g. 100"
+                            <span style="font-size:0.65rem; color:#78350f; font-weight:600; white-space:nowrap; min-width:110px;">Material (RM/100m):</span>
+                            <input id="gsBulkCostPer100m" type="number" min="0" step="0.01" placeholder="e.g. 850"
                                 style="flex:1; padding:5px 7px; border:1px solid #fde68a; border-radius:5px; font-size:0.78rem; outline:none; min-width:0;"
                                 oninput="gsBulkRecalcCost()">
                         </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:5px; border-top:1px solid #fde68a;">
-                            <span style="font-size:0.68rem; color:#92400e; font-weight:700;">Estimated Total Cost</span>
-                            <span id="gsBulkTotalCost" style="font-weight:900; color:#d97706; font-size:0.9rem;">RM 0.00</span>
+                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                            <span style="font-size:0.65rem; color:#78350f; font-weight:600; white-space:nowrap; min-width:110px;">Engineering (RM/100m):</span>
+                            <input id="gsBulkEngPer100m" type="number" min="0" step="0.01" placeholder="e.g. 200"
+                                style="flex:1; padding:5px 7px; border:1px solid #fde68a; border-radius:5px; font-size:0.78rem; outline:none; min-width:0;"
+                                oninput="gsBulkRecalcCost()">
+                        </div>
+                        <div style="border-top:1px solid #fde68a; padding-top:6px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0; font-size:0.67rem;">
+                                <span style="color:#92400e; font-weight:600;">Material Cost</span>
+                                <span id="gsBulkMatCost" style="font-weight:800; color:#d97706;">RM 0.00</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0; font-size:0.67rem;">
+                                <span style="color:#92400e; font-weight:600;">Engineering Cost</span>
+                                <span id="gsBulkEngCost" style="font-weight:800; color:#d97706;">RM 0.00</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding-top:5px; border-top:1px dashed #fde68a; margin-top:3px;">
+                                <span style="font-size:0.68rem; color:#92400e; font-weight:800;">Estimated Total</span>
+                                <span id="gsBulkTotalCost" style="font-weight:900; color:#d97706; font-size:0.9rem;">RM 0.00</span>
+                            </div>
                         </div>
                     </div>
 
@@ -1748,12 +1768,19 @@
                     <div id="gensetBulkResults" style="display:none; max-height:220px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:7px; font-size:0.65rem; margin-bottom:8px;"></div>
 
                     <!-- Export buttons -->
-                    <div id="gsBulkExportRow" style="display:none; display:none; gap:5px;">
-                        <button onclick="gensetBulkExport('xlsx')" style="flex:1; padding:6px; background:#0f2d52; color:white; border:none; border-radius:6px; font-size:0.7rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;">
-                            <i class="fas fa-file-excel"></i> XLSX
-                        </button>
-                        <button onclick="gensetBulkExport('csv')" style="flex:1; padding:6px; background:#334155; color:white; border:none; border-radius:6px; font-size:0.7rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;">
-                            <i class="fas fa-file-csv"></i> CSV
+                    <div id="gsBulkExportRow" style="display:none; flex-direction:column; gap:4px;">
+                        <div style="font-size:0.6rem; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.05em; margin-bottom:1px;">Export Best Path (with totals)</div>
+                        <div style="display:flex; gap:5px; margin-bottom:4px;">
+                            <button onclick="gensetBulkExport('xlsx','best')" style="flex:1; padding:6px; background:#0f2d52; color:white; border:none; border-radius:6px; font-size:0.7rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;">
+                                <i class="fas fa-file-excel"></i> XLSX
+                            </button>
+                            <button onclick="gensetBulkExport('csv','best')" style="flex:1; padding:6px; background:#334155; color:white; border:none; border-radius:6px; font-size:0.7rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;">
+                                <i class="fas fa-file-csv"></i> CSV
+                            </button>
+                        </div>
+                        <div style="font-size:0.6rem; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.05em; margin-bottom:1px;">Export All Paths (per path costs, no total)</div>
+                        <button onclick="gensetBulkExport('xlsx','all')" style="width:100%; padding:6px; background:#064e3b; color:white; border:none; border-radius:6px; font-size:0.7rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;">
+                            <i class="fas fa-file-excel"></i> All Paths XLSX
                         </button>
                     </div>
                 </div>
@@ -1831,7 +1858,7 @@
             <!-- Legend -->
             <div style="margin-top:auto; padding:10px 12px; border-top:1px solid #f3f4f6; background:#f9fafb; flex-shrink:0;">
                 <p style="font-size:0.62rem; color:#6b7280; font-weight:600; margin:0 0 5px;">
-                    <i class="fas fa-info-circle" style="color:#16a34a; margin-right:4px;"></i>Substation data: OpenStreetMap · Routing: OSRM
+                    <i class="fas fa-info-circle" style="color:#16a34a; margin-right:4px;"></i>Substation data: OpenStreetMap · Routing: OSMnx + NetworkX (all paths)
                 </p>
                 <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:0.62rem; color:#6b7280;">
                     <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#16a34a;margin-right:3px;vertical-align:middle;"></span>Cell Site</span>
@@ -7211,7 +7238,7 @@
         }).addTo(gensetMap);
 
         try {
-            const overpassUrl = 'https://overpass-api.de/api/interpreter';
+            // ── Step 1: Overpass (browser-direct, same as original) ────────
             const query = `[out:json][timeout:25];
 (
   node["power"="substation"](around:2000,${lat},${lng});
@@ -7219,33 +7246,18 @@
   relation["power"="substation"](around:2000,${lat},${lng});
 );
 out center;`;
-
-            const ovRes  = await fetch(overpassUrl, { method: 'POST', body: query });
-            const ovData = await ovRes.json();
-
+            const ovData = await (await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: query })).json();
             const substations = (ovData.elements || []).map(el => ({
-                id:   el.id,
-                name: el.tags?.name || el.tags?.['name:en'] || el.tags?.operator || 'TNB Substation',
-                lat:  el.type === 'node' ? el.lat  : el.center?.lat,
-                lng:  el.type === 'node' ? el.lon  : el.center?.lon,
-                tags: el.tags || {}
+                osm_id: String(el.id),
+                name:   el.tags?.name || el.tags?.['name:en'] || el.tags?.operator || 'TNB Substation',
+                lat:    el.type === 'node' ? el.lat  : el.center?.lat,
+                lng:    el.type === 'node' ? el.lon  : el.center?.lon,
+                tags:   el.tags || {}
             })).filter(s => s.lat && s.lng);
 
             if (substations.length === 0) { gensetShowNotFound(); return; }
 
-            gsSetStatus('Routing via roads…');
-
-            const routeResults = await Promise.all(substations.map(async sub => {
-                try {
-                    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lng},${lat};${sub.lng},${sub.lat}?overview=full&geometries=geojson`;
-                    const rData   = await (await fetch(osrmUrl)).json();
-                    if (rData.code !== 'Ok' || !rData.routes?.length) return null;
-                    return { sub, roadDist: rData.routes[0].distance, duration: rData.routes[0].duration, geometry: rData.routes[0].geometry };
-                } catch { return null; }
-            }));
-
-            const valid = routeResults.filter(r => r && r.roadDist <= 2000).sort((a, b) => a.roadDist - b.roadDist);
-
+            // Place all substation markers
             substations.forEach(sub => {
                 const m = L.marker([sub.lat, sub.lng], { icon: GENSET_TNB_ICON })
                     .bindPopup(`<b style="color:#d97706;">${sub.name}</b><br>
@@ -7258,41 +7270,65 @@ out center;`;
                 gensetTnbMarkers.push(m);
             });
 
-            if (valid.length === 0) { gensetShowNotFound(); return; }
+            // ── Step 2: OSMnx road routing via backend ─────────────────────
+            gsSetStatus('Routing via road network…');
+            const routeResp = await fetch('/api/genset/route', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lat, lng, substations })
+            });
+            const routeData = await routeResp.json();
+            if (!routeResp.ok || routeData.error) { gsSetStatus('Routing error', false); gensetShowNotFound(); return; }
 
-            const best   = valid[0];
-            const coords = best.geometry.coordinates.map(c => [c[1], c[0]]);
-            gensetRouteLine = L.polyline(coords, {
-                color: '#f59e0b', weight: 6, opacity: 0.95,
-                lineCap: 'round', lineJoin: 'round',
-                pane: 'routePane'
-            }).addTo(gensetMap);
-            gensetMap.fitBounds(gensetRouteLine.getBounds(), { padding: [60, 60] });
+            const valid = routeData.results; // already sorted by road_dist_m
+            if (!valid || valid.length === 0) { gensetShowNotFound(); return; }
 
-            const km   = (best.roadDist / 1000).toFixed(3);
-            const mins = Math.ceil(best.duration / 60);
+            // Draw all routes (nearest = solid amber, others = dashed green)
+            valid.forEach((r, i) => {
+                if (!r.route_coords || r.route_coords.length < 2) return;
+                const line = L.polyline(r.route_coords, {
+                    color:     i === 0 ? '#f59e0b' : '#4ade80',
+                    weight:    i === 0 ? 6 : 3,
+                    opacity:   i === 0 ? 0.95 : 0.55,
+                    dashArray: i === 0 ? null : '8 5',
+                    lineCap: 'round', lineJoin: 'round', pane: 'routePane'
+                }).addTo(gensetMap);
+                gensetTnbMarkers.push(line); // store for cleanup
+            });
+            const allCoords = valid.flatMap(r => r.route_coords || []);
+            if (allCoords.length) gensetMap.fitBounds(L.latLngBounds(allCoords).pad(0.12));
+
+            // ── Build result HTML ──────────────────────────────────────────
             document.getElementById('gensetLoading').style.display = 'none';
             document.getElementById('gensetFound').style.display   = 'block';
+
+            const best = valid[0];
+            let pathsHtml = valid.map((r, i) => `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #d1fae5;font-size:0.7rem;">
+                    <div style="display:flex;align-items:center;gap:5px;">
+                        <span style="background:${i===0?'#d97706':'#16a34a'};color:white;border-radius:8px;font-size:0.55rem;font-weight:800;padding:1px 5px;">#${i+1}</span>
+                        <span style="color:#374151;font-weight:${i===0?'700':'400'};">${r.name}</span>
+                    </div>
+                    <span style="font-weight:800;color:${i===0?'#d97706':'#16a34a'};white-space:nowrap;">${r.road_dist_km} km</span>
+                </div>`).join('');
+
             document.getElementById('gensetFoundContent').innerHTML = `
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
                     <i class="fas fa-bolt" style="color:#d97706;"></i>
-                    <b style="color:#92400e;font-size:0.78rem;">${best.sub.name}</b>
+                    <b style="color:#92400e;font-size:0.78rem;">${valid.length} path${valid.length>1?'s':''} within 2 km</b>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;">
-                    <div style="background:#fef3c7;border-radius:6px;padding:6px;text-align:center;">
-                        <div style="font-size:1rem;font-weight:900;color:#d97706;">${km} km</div>
-                        <div style="font-size:0.6rem;color:#92400e;font-weight:600;text-transform:uppercase;">Road Distance</div>
-                    </div>
-                    <div style="background:#fef3c7;border-radius:6px;padding:6px;text-align:center;">
-                        <div style="font-size:1rem;font-weight:900;color:#d97706;">${mins} min</div>
-                        <div style="font-size:0.6rem;color:#92400e;font-weight:600;text-transform:uppercase;">Drive Time</div>
-                    </div>
+                <div style="background:#fef3c7;border-radius:6px;padding:6px;text-align:center;margin-bottom:8px;">
+                    <div style="font-size:1.05rem;font-weight:900;color:#d97706;">${best.road_dist_km} km</div>
+                    <div style="font-size:0.6rem;color:#92400e;font-weight:600;text-transform:uppercase;">Nearest — ${best.name}</div>
                 </div>
-                ${best.sub.tags.voltage ? `<div style="margin-top:6px;font-size:0.68rem;color:#6b7280;"><i class="fas fa-plug" style="margin-right:4px;color:#d97706;"></i>Voltage: <b>${best.sub.tags.voltage}</b></div>` : ''}
-                ${valid.length > 1 ? `<div style="margin-top:4px;font-size:0.68rem;color:#6b7280;"><i class="fas fa-info-circle" style="margin-right:4px;"></i>${valid.length - 1} other substation${valid.length > 2 ? 's' : ''} also within 2 km.</div>` : ''}
-            `;
-            gsSetStatus('Done', false);
-            setTimeout(() => gsSetStatus(null), 2000);
+                <div style="max-height:160px;overflow-y:auto;padding-right:2px;">${pathsHtml}</div>
+                <div style="margin-top:6px;font-size:0.62rem;color:#6b7280;">
+                    <i class="fas fa-info-circle" style="color:#16a34a;margin-right:3px;"></i>
+                    Routed in ${routeData.elapsed_s}s via OSMnx road network
+                </div>`;
+
+            gsSetStatus('Done — ' + valid.length + ' path' + (valid.length>1?'s':'') + ' found', false);
+            setTimeout(() => gsSetStatus(null), 2500);
 
         } catch(err) {
             console.error('Genset TNB search error:', err);
@@ -7410,11 +7446,12 @@ out center;`;
     }
 
     // ── Bulk Excel processing ──
-    let gsBulkSiteIds  = [];
-    let gsBulkResults  = [];   // { siteId, status, subName, distM, routeGeom, lat, lng }
-    let gsBulkRunning  = false;
-    let gsBulkAbort    = false;
+    let gsBulkSiteIds    = [];
+    let gsBulkResults    = [];   // { siteId, status, paths:[], bestPath, lat, lng }
+    let gsBulkRunning    = false;
+    let gsBulkAbort      = false;
     let gsBulkRouteLines = []; // polylines drawn on map
+    let gsBulkExpanded   = new Set(); // expanded site IDs in accordion
 
     function gensetXlsxLoaded(input) {
         const file = input.files[0];
@@ -7467,7 +7504,7 @@ out center;`;
         resultsEl.insertAdjacentHTML('afterbegin',
             '<div style="display:grid;grid-template-columns:1fr 1.4fr 0.7fr;gap:4px;padding:4px 8px;background:#f1f5f9;font-weight:800;font-size:0.6rem;color:#475569;text-transform:uppercase;border-bottom:1px solid #e2e8f0;"><span>Site ID</span><span>Substation</span><span>Distance</span></div>');
 
-        let found = 0, none = 0, totalDistM = 0;
+        let found = 0, none = 0, totalDistM = 0, totalPathCount = 0;
 
         try {
         for (let i = 0; i < total; i++) {
@@ -7485,18 +7522,28 @@ out center;`;
                 gensetBulkAppendRow(resultsEl, row, i);
             } else {
                 try {
-                    const result = await gensetFindTNBSilentFull(site.lat, site.lng);
-                    if (result) {
-                        found++; totalDistM += result.roadDist;
-                        const row = { siteId, status:'found', subName: result.sub.name, distM: result.roadDist, routeGeom: result.geometry, lat: site.lat, lng: site.lng };
+                    const paths = await gensetFindTNBSilentFull(site.lat, site.lng);
+                    if (paths && paths.length) {
+                        found++;
+                        totalPathCount += paths.length;
+                        const best = paths[0];
+                        totalDistM += best.road_dist_m;
+                        const row = { siteId, status:'found', paths, bestPath:best, lat: site.lat, lng: site.lng };
                         gsBulkResults.push(row);
                         gensetBulkAppendRow(resultsEl, row, i);
-                        const coords = result.geometry.coordinates.map(c => [c[1], c[0]]);
-                        const line = L.polyline(coords, { color:'#f59e0b', weight:4, opacity:0.8, lineCap:'round', pane:'routePane' }).addTo(gensetMap);
-                        gsBulkRouteLines.push(line);
+                        // Draw best path solid, others dashed
+                        paths.forEach((p, pi) => {
+                            if (!p.route_coords || p.route_coords.length < 2) return;
+                            const line = L.polyline(p.route_coords, {
+                                color: pi===0?'#f59e0b':'#4ade80', weight: pi===0?4:2.5,
+                                opacity: pi===0?0.85:0.5, dashArray: pi===0?null:'7 4',
+                                lineCap:'round', pane:'routePane'
+                            }).addTo(gensetMap);
+                            gsBulkRouteLines.push(line);
+                        });
                     } else {
                         none++;
-                        const row = { siteId, status:'none', subName:'None within 2 km', distM:null, routeGeom:null, lat: site.lat, lng: site.lng };
+                        const row = { siteId, status:'none', paths:[], bestPath:null, lat: site.lat, lng: site.lng };
                         gsBulkResults.push(row); gensetBulkAppendRow(resultsEl, row, i);
                     }
                 } catch {
@@ -7505,7 +7552,7 @@ out center;`;
                     gsBulkResults.push(row); gensetBulkAppendRow(resultsEl, row, i);
                 }
             }
-            gensetBulkUpdateStats(total, found, none, totalDistM);
+            gensetBulkUpdateStats(total, found, none, totalDistM, totalPathCount);
             await new Promise(r => setTimeout(r, 700));
         }
         } finally {
@@ -7535,39 +7582,90 @@ out center;`;
     }
 
     async function gensetFindTNBSilentFull(lat, lng) {
-        const q = '[out:json][timeout:20];(node["power"="substation"](around:2000,' + lat + ',' + lng + ');way["power"="substation"](around:2000,' + lat + ',' + lng + ');relation["power"="substation"](around:2000,' + lat + ',' + lng + '););out center;';
+        // Step 1: Overpass (browser-direct)
+        const q = '[out:json][timeout:20];(node["power"="substation"](around:2000,'+lat+','+lng+');way["power"="substation"](around:2000,'+lat+','+lng+');relation["power"="substation"](around:2000,'+lat+','+lng+'););out center;';
         const ovData = await (await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:q })).json();
-        const subs = (ovData.elements||[]).map(el=>({ name:el.tags&&(el.tags.name||el.tags.operator)||'TNB Substation', lat:el.type==='node'?el.lat:el.center&&el.center.lat, lng:el.type==='node'?el.lon:el.center&&el.center.lon })).filter(s=>s.lat&&s.lng);
-        if (!subs.length) return null;
-        const routes = await Promise.all(subs.map(async sub => {
-            try {
-                const d = await (await fetch('https://router.project-osrm.org/route/v1/driving/' + lng + ',' + lat + ';' + sub.lng + ',' + sub.lat + '?overview=full&geometries=geojson')).json();
-                if (d.code!=='Ok'||!d.routes||!d.routes.length) return null;
-                return { sub, roadDist:d.routes[0].distance, geometry:d.routes[0].geometry };
-            } catch { return null; }
-        }));
-        const valid = routes.filter(r=>r&&r.roadDist<=2000).sort((a,b)=>a.roadDist-b.roadDist);
-        return valid[0]||null;
+        const substations = (ovData.elements||[]).map(el=>({
+            osm_id: String(el.id),
+            name:   el.tags&&(el.tags.name||el.tags['name:en']||el.tags.operator)||'TNB Substation',
+            lat:    el.type==='node'?el.lat:(el.center&&el.center.lat),
+            lng:    el.type==='node'?el.lon:(el.center&&el.center.lon)
+        })).filter(s=>s.lat&&s.lng);
+        if (!substations.length) return null;
+
+        // Step 2: OSMnx routing via backend (returns all paths)
+        const resp = await fetch('/api/genset/route', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ lat, lng, substations })
+        });
+        const data = await resp.json();
+        if (!resp.ok || data.error || !data.results || !data.results.length) return null;
+        // Returns all paths sorted by distance
+        return data.results;
     }
 
     function gensetBulkAppendRow(container, row, idx) {
         const bg    = idx%2===0 ? '#ffffff' : '#f9fafb';
         const color = row.status==='found' ? '#16a34a' : row.status==='none' ? '#dc2626' : '#9ca3af';
         const icon  = row.status==='found' ? 'fa-check-circle' : row.status==='none' ? 'fa-times-circle' : 'fa-question-circle';
-        const distStr = row.distM ? (row.distM/1000).toFixed(3)+' km' : '—';
-        const el = document.createElement('div');
-        el.style.cssText = 'display:grid;grid-template-columns:1fr 1.4fr 0.7fr;gap:4px;align-items:center;padding:5px 8px;background:'+bg+';border-bottom:1px solid #f3f4f6;cursor:'+(row.lat?'pointer':'default')+';';
-        el.title = row.lat ? 'Click to fly to site' : '';
-        if (row.lat) { const lat=row.lat, lng=row.lng; el.onclick = () => gensetMap.flyTo([lat, lng], 15, { animate:true, duration:1.2 }); }
-        el.innerHTML = '<span style="font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+row.siteId+'">'+row.siteId+'</span><span style="color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+row.subName+'">'+row.subName+'</span><span style="font-weight:700;color:'+(row.distM?'#d97706':color)+';display:flex;align-items:center;gap:3px;"><i class="fas '+icon+'" style="font-size:0.6rem;color:'+color+';"></i>'+distStr+'</span>';
-        container.appendChild(el);
+        const pathCount = row.paths ? row.paths.length : 0;
+        const bestDist  = row.bestPath ? row.bestPath.road_dist_km + ' km' : '—';
+        const rowId     = 'gsbr-' + idx;
+
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'border-bottom:1px solid #f3f4f6;background:'+bg+';';
+
+        // Main row
+        const mainRow = document.createElement('div');
+        mainRow.style.cssText = 'display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:5px 8px;cursor:pointer;';
+        mainRow.title = 'Click to expand / fly to site';
+        mainRow.innerHTML =
+            '<span style="font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.7rem;" title="'+row.siteId+'">'+row.siteId+'</span>'
+            + '<span style="font-weight:700;color:'+(row.bestPath?'#d97706':color)+';font-size:0.7rem;white-space:nowrap;">'
+            +   '<i class="fas '+icon+'" style="font-size:0.58rem;color:'+color+';margin-right:3px;"></i>'+bestDist
+            + '</span>'
+            + (pathCount > 0
+                ? '<span id="'+rowId+'-badge" style="background:#dbeafe;color:#1d4ed8;border-radius:8px;font-size:0.58rem;font-weight:800;padding:1px 6px;white-space:nowrap;">▸ '+pathCount+' path'+( pathCount>1?'s':'')+'</span>'
+                : '<span style="font-size:0.58rem;color:#9ca3af;">—</span>');
+
+        mainRow.onclick = () => {
+            if (row.lat) gensetMap.flyTo([row.lat, row.lng], 15, { animate:true, duration:1.0 });
+            if (!pathCount) return;
+            const detail = document.getElementById(rowId+'-detail');
+            const badge  = document.getElementById(rowId+'-badge');
+            const open   = detail.style.display !== 'none';
+            detail.style.display = open ? 'none' : 'block';
+            if (badge) badge.textContent = (open ? '▸ ' : '▾ ') + pathCount + ' path' + (pathCount>1?'s':'');
+        };
+
+        wrap.appendChild(mainRow);
+
+        // Expandable path detail
+        if (pathCount > 0) {
+            const detail = document.createElement('div');
+            detail.id = rowId + '-detail';
+            detail.style.cssText = 'display:none;background:#f0fdf4;border-top:1px solid #dcfce7;padding:4px 8px 6px 16px;';
+            detail.innerHTML = row.paths.map((p, pi) =>
+                '<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;font-size:0.65rem;border-bottom:1px solid #dcfce7;">'
+                + '<span style="color:#374151;font-weight:'+(pi===0?'700':'400')+';">'
+                + '<span style="background:'+(pi===0?'#d97706':'#16a34a')+';color:white;border-radius:6px;font-size:0.5rem;font-weight:800;padding:1px 4px;margin-right:4px;">#'+(pi+1)+'</span>'
+                + p.name+'</span>'
+                + '<span style="font-weight:800;color:'+(pi===0?'#d97706':'#16a34a')+';white-space:nowrap;">'+p.road_dist_km+' km</span>'
+                + '</div>'
+            ).join('');
+            wrap.appendChild(detail);
+        }
+
+        container.appendChild(wrap);
         container.scrollTop = container.scrollHeight;
     }
 
-    function gensetBulkUpdateStats(total, found, none, totalDistM) {
+    function gensetBulkUpdateStats(total, found, none, totalDistM, totalPaths) {
         document.getElementById('gsBulkStatTotal').textContent = total;
         document.getElementById('gsBulkStatFound').textContent = found;
         document.getElementById('gsBulkStatNone').textContent  = none;
+        document.getElementById('gsBulkStatPaths').textContent = totalPaths || 0;
         if (totalDistM > 0) {
             document.getElementById('gsBulkTotalRow').style.display = 'block';
             document.getElementById('gsBulkTotalDist').textContent  = (totalDistM/1000).toFixed(3) + ' km';
@@ -7576,11 +7674,18 @@ out center;`;
     }
 
     function gsBulkRecalcCost() {
-        const totalDistM = gsBulkResults.filter(r=>r.distM).reduce((s,r)=>s+r.distM, 0);
-        const per100m    = parseFloat(document.getElementById('gsBulkCostPer100m') && document.getElementById('gsBulkCostPer100m').value) || 0;
-        const cost       = (totalDistM / 100) * per100m;
-        const costEl     = document.getElementById('gsBulkTotalCost');
-        if (costEl) costEl.textContent = 'RM ' + cost.toLocaleString('en-MY', {minimumFractionDigits:2, maximumFractionDigits:2});
+        // Sum of best path per site
+        const totalDistM = gsBulkResults.filter(r=>r.bestPath).reduce((s,r)=>s+r.bestPath.road_dist_m, 0);
+        const perMat     = parseFloat(document.getElementById('gsBulkCostPer100m')?.value) || 0;
+        const perEng     = parseFloat(document.getElementById('gsBulkEngPer100m')?.value)  || 0;
+        const units      = totalDistM / 100;
+        const matCost    = units * perMat;
+        const engCost    = units * perEng;
+        const total      = matCost + engCost;
+        const fmt = v => 'RM ' + v.toLocaleString('en-MY', {minimumFractionDigits:2, maximumFractionDigits:2});
+        const matEl  = document.getElementById('gsBulkMatCost');  if (matEl)  matEl.textContent  = fmt(matCost);
+        const engEl  = document.getElementById('gsBulkEngCost');  if (engEl)  engEl.textContent  = fmt(engCost);
+        const totEl  = document.getElementById('gsBulkTotalCost'); if (totEl) totEl.textContent  = fmt(total);
     }
 
     function gensetStopBulk() { gsBulkAbort = true; }
@@ -7596,33 +7701,79 @@ out center;`;
         document.getElementById('gensetBulkResults').innerHTML = '';
         document.getElementById('gensetBulkProgressBar').style.width = '0%';
         const cpi = document.getElementById('gsBulkCostPer100m'); if(cpi) cpi.value = '';
-        const tce = document.getElementById('gsBulkTotalCost'); if(tce) tce.textContent = 'RM 0.00';
+        const epi = document.getElementById('gsBulkEngPer100m');  if(epi) epi.value  = '';
+        ['gsBulkMatCost','gsBulkEngCost','gsBulkTotalCost'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent='RM 0.00'; });
         const btn = document.getElementById('gensetBulkRunBtn');
         btn.disabled = true; btn.style.background='#d1d5db'; btn.style.color='#9ca3af'; btn.style.cursor='not-allowed';
         btn.style.display='inline-flex'; document.getElementById('gensetBulkStopBtn').style.display='none';
         gsSetStatus(null);
     }
 
-    function gensetBulkExport(format) {
-        const per100m = parseFloat(document.getElementById('gsBulkCostPer100m').value) || 0;
-        const applicable = gsBulkResults.filter(r => r.status === 'found' && r.distM);
-        const rows = applicable.map(r => ({
-            site_id: r.siteId,
-            substation: r.subName,
-            length_to_substation_km: (r.distM/1000).toFixed(3),
-            cost_rm: ((r.distM/100)*per100m).toFixed(2)
-        }));
-        const totalDistM = applicable.reduce((s,r)=>s+r.distM, 0);
-        rows.push({ site_id:'TOTAL', substation:'', length_to_substation_km:(totalDistM/1000).toFixed(3), cost_rm:((totalDistM/100)*per100m).toFixed(2) });
+    function gensetBulkExport(format, mode) {
+        const perMat = parseFloat(document.getElementById('gsBulkCostPer100m')?.value) || 0;
+        const perEng = parseFloat(document.getElementById('gsBulkEngPer100m')?.value)  || 0;
+        const applicable = gsBulkResults.filter(r => r.status === 'found' && r.bestPath);
+
+        if (mode === 'all') {
+            // ── All paths: one row per site×path, no totals ───────────────
+            const rows = [];
+            applicable.forEach(r => {
+                r.paths.forEach((p, pi) => {
+                    const units = p.road_dist_m / 100;
+                    rows.push({
+                        site_id:             r.siteId,
+                        rank:                pi + 1,
+                        substation:          p.name,
+                        osm_id:              p.osm_id || '',
+                        road_distance_km:    p.road_dist_km,
+                        material_cost_rm:    (units * perMat).toFixed(2),
+                        engineering_cost_rm: (units * perEng).toFixed(2),
+                        total_cost_rm:       (units * (perMat + perEng)).toFixed(2),
+                    });
+                });
+            });
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'All Paths');
+            XLSX.writeFile(wb, 'genset_all_paths.xlsx');
+            return;
+        }
+
+        // ── Best path: one row per site, totals row at bottom ─────────────
+        const rows = applicable.map(r => {
+            const p     = r.bestPath;
+            const units = p.road_dist_m / 100;
+            return {
+                site_id:             r.siteId,
+                substation:          p.name,
+                road_distance_km:    p.road_dist_km,
+                material_cost_rm:    (units * perMat).toFixed(2),
+                engineering_cost_rm: (units * perEng).toFixed(2),
+                total_cost_rm:       (units * (perMat + perEng)).toFixed(2),
+            };
+        });
+        const totalDistM = applicable.reduce((s,r) => s + r.bestPath.road_dist_m, 0);
+        const totalUnits = totalDistM / 100;
+        rows.push({
+            site_id:             'TOTAL',
+            substation:          '',
+            road_distance_km:    (totalDistM/1000).toFixed(3),
+            material_cost_rm:    (totalUnits * perMat).toFixed(2),
+            engineering_cost_rm: (totalUnits * perEng).toFixed(2),
+            total_cost_rm:       (totalUnits * (perMat + perEng)).toFixed(2),
+        });
+
         if (format === 'csv') {
-            const header = 'site_id,substation,length_to_substation_km,cost_rm\n';
-            const body   = rows.map(r => r.site_id+','+r.substation+','+r.length_to_substation_km+','+r.cost_rm).join('\n');
-            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([header+body],{type:'text/csv'})); a.download = 'genset_bulk_results.csv'; a.click();
+            const header = Object.keys(rows[0]).join(',') + '\n';
+            const body   = rows.map(r => Object.values(r).join(',')).join('\n');
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([header+body],{type:'text/csv'}));
+            a.download = 'genset_best_paths.csv'; a.click();
         } else {
             const ws = XLSX.utils.json_to_sheet(rows);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'TNB Results');
-            XLSX.writeFile(wb, 'genset_bulk_results.xlsx');
+            XLSX.utils.book_append_sheet(wb, ws, 'Best Paths');
+            XLSX.writeFile(wb, 'genset_best_paths.xlsx');
         }
     }
 
