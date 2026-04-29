@@ -2107,6 +2107,30 @@ def api_cctv_run():
         print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/genset/route', methods=['POST'])
+@login_required
+def api_genset_route():
+    """
+    Receives site coords + substations (fetched by browser via Overpass),
+    runs OSMnx road-network routing, returns distances + polylines.
+    Body: { lat, lng, substations: [{osm_id, name, lat, lng}, ...] }
+    """
+    from genset_pipeline import route_substations
+    data        = request.get_json(force=True)
+    lat         = data.get('lat')
+    lng         = data.get('lng')
+    substations = data.get('substations', [])
+    if lat is None or lng is None:
+        return jsonify({'error': 'lat and lng required'}), 400
+    if not substations:
+        return jsonify({'error': 'No substations provided'}), 400
+    try:
+        result = route_substations(float(lat), float(lng), substations)
+        return jsonify(result)
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/dashboard/embed')
 @api_login_required
 def get_metabase_embed():
