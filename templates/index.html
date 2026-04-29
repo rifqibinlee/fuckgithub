@@ -4093,6 +4093,7 @@
         }
         map.on('click', (e) => clearCoverage());
         map.on('boxzoomend', function(e) { siteDataCache.forEach(site => { if (e.boxZoomBounds.contains([site.lat, site.lng])) drawSiteCoverage(site, true); }); });
+        _attachCtxMenu(map);  // right-click → copy coordinates
 
         // ── Visible Site Count (viewport-driven, matching map.html) ──
         function updateVisibleSiteCount() {
@@ -7000,6 +7001,7 @@
     // ================================================================
     let gensetMap          = null;
     let gensetMapInited    = false;
+    let gensetRouteLines   = [];   // polylines for single-site result paths
     let gensetSitesData    = [];
     let gensetSiteMarkers  = {};
     let gensetSelectedSite = null;
@@ -7087,6 +7089,7 @@
         gensetMap.on('click', function(e) {
             if (gsGeoPickMode) gsSetGeoPoint(e.latlng.lat, e.latlng.lng, gsGeoPickMode);
         });
+        _attachCtxMenu(gensetMap);  // right-click → copy coordinates
 
         await gensetLoadSites();
     }
@@ -7210,6 +7213,32 @@
         gensetMap.flyTo([site.lat, site.lng], 14, { animate: true, duration: 1.2 });
     }
 
+    // ── Single-site path selector ──────────────────────────────────────────
+    window._gsActivePathIdx = 0;
+    window._gsValidPaths    = [];
+    function gsSelectPath(idx) {
+        if (!window._gsValidPaths || !gensetRouteLines) return;
+        window._gsActivePathIdx = idx;
+        // Re-style all rows
+        window._gsValidPaths.forEach((r, i) => {
+            const row = document.getElementById('gsPathRow-'+i);
+            if (row) row.style.background = i===idx ? '#fef3c7' : 'transparent';
+        });
+        // Re-style all polylines
+        gensetRouteLines.forEach((line, i) => {
+            line.setStyle({
+                color:     i===idx ? '#f59e0b' : '#4ade80',
+                weight:    i===idx ? 6 : 2.5,
+                opacity:   i===idx ? 0.95 : 0.35,
+                dashArray: i===idx ? null : '8 5',
+            });
+            if (i===idx) line.bringToFront();
+        });
+        // Pan to selected substation
+        const r = window._gsValidPaths[idx];
+        if (r && r.lat && r.lng) gensetMap.panTo([r.lat, r.lng]);
+    }
+
     function gensetClearResults() {
         gensetTnbMarkers.forEach(m => gensetMap.removeLayer(m));
         gensetTnbMarkers = [];
@@ -7285,45 +7314,52 @@ out center;`;
             const valid = routeData.results; // already sorted by road_dist_m
             if (!valid || valid.length === 0) { gensetShowNotFound(); return; }
 
-            // Draw all routes (nearest = solid amber, others = dashed green)
+            // Draw all routes, store polylines for interactive selection
+            gensetRouteLines = [];
             valid.forEach((r, i) => {
                 if (!r.route_coords || r.route_coords.length < 2) return;
                 const line = L.polyline(r.route_coords, {
                     color:     i === 0 ? '#f59e0b' : '#4ade80',
                     weight:    i === 0 ? 6 : 3,
-                    opacity:   i === 0 ? 0.95 : 0.55,
+                    opacity:   i === 0 ? 0.95 : 0.45,
                     dashArray: i === 0 ? null : '8 5',
                     lineCap: 'round', lineJoin: 'round', pane: 'routePane'
                 }).addTo(gensetMap);
-                gensetTnbMarkers.push(line); // store for cleanup
+                gensetRouteLines.push(line);
+                gensetTnbMarkers.push(line); // also store for cleanup
             });
             const allCoords = valid.flatMap(r => r.route_coords || []);
             if (allCoords.length) gensetMap.fitBounds(L.latLngBounds(allCoords).pad(0.12));
 
-            // ── Build result HTML ──────────────────────────────────────────
+            // ── Build result HTML with clickable path rows ─────────────────
             document.getElementById('gensetLoading').style.display = 'none';
             document.getElementById('gensetFound').style.display   = 'block';
 
-            const best = valid[0];
+            // Store valid paths for selection
+            window._gsValidPaths = valid;
+
             let pathsHtml = valid.map((r, i) => `
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #d1fae5;font-size:0.7rem;">
+                <div id="gsPathRow-${i}" onclick="gsSelectPath(${i})"
+                     style="display:flex;align-items:center;justify-content:space-between;padding:6px 7px;border-bottom:1px solid #d1fae5;font-size:0.7rem;cursor:pointer;border-radius:${i===0?'6px':'0'};background:${i===0?'#fef3c7':'transparent'};transition:background .12s;"
+                     onmouseover="if(${i}!==window._gsActivePathIdx)this.style.background='#f0fdf4'" onmouseout="if(${i}!==window._gsActivePathIdx)this.style.background='transparent'">
                     <div style="display:flex;align-items:center;gap:5px;">
                         <span style="background:${i===0?'#d97706':'#16a34a'};color:white;border-radius:8px;font-size:0.55rem;font-weight:800;padding:1px 5px;">#${i+1}</span>
                         <span style="color:#374151;font-weight:${i===0?'700':'400'};">${r.name}</span>
                     </div>
-                    <span style="font-weight:800;color:${i===0?'#d97706':'#16a34a'};white-space:nowrap;">${r.road_dist_km} km</span>
+                    <div style="text-align:right;">
+                        <div style="font-weight:800;color:${i===0?'#d97706':'#16a34a'};white-space:nowrap;">${r.road_dist_km} km</div>
+                        <div style="font-size:0.58rem;color:#9ca3af;">${r.road_dist_m.toFixed(0)} m</div>
+                    </div>
                 </div>`).join('');
 
+            window._gsActivePathIdx = 0;
             document.getElementById('gensetFoundContent').innerHTML = `
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
                     <i class="fas fa-bolt" style="color:#d97706;"></i>
                     <b style="color:#92400e;font-size:0.78rem;">${valid.length} path${valid.length>1?'s':''} within 2 km</b>
+                    ${valid.length>1?'<span style="font-size:0.6rem;color:#6b7280;margin-left:auto;">click to select</span>':''}
                 </div>
-                <div style="background:#fef3c7;border-radius:6px;padding:6px;text-align:center;margin-bottom:8px;">
-                    <div style="font-size:1.05rem;font-weight:900;color:#d97706;">${best.road_dist_km} km</div>
-                    <div style="font-size:0.6rem;color:#92400e;font-weight:600;text-transform:uppercase;">Nearest — ${best.name}</div>
-                </div>
-                <div style="max-height:160px;overflow-y:auto;padding-right:2px;">${pathsHtml}</div>
+                <div style="max-height:180px;overflow-y:auto;border:1px solid #d1fae5;border-radius:7px;padding:2px;">${pathsHtml}</div>
                 <div style="margin-top:6px;font-size:0.62rem;color:#6b7280;">
                     <i class="fas fa-info-circle" style="color:#16a34a;margin-right:3px;"></i>
                     Routed in ${routeData.elapsed_s}s via OSMnx road network
@@ -7533,7 +7569,7 @@ out center;`;
                         const row = { siteId, status:'found', paths, bestPath:best, lat: site.lat, lng: site.lng };
                         gsBulkResults.push(row);
                         gensetBulkAppendRow(resultsEl, row, i);
-                        // Draw best path solid, others dashed
+                        // Draw best path solid, others dashed + place substation markers
                         paths.forEach((p, pi) => {
                             if (!p.route_coords || p.route_coords.length < 2) return;
                             const line = L.polyline(p.route_coords, {
@@ -7542,6 +7578,13 @@ out center;`;
                                 lineCap:'round', pane:'routePane'
                             }).addTo(gensetMap);
                             gsBulkRouteLines.push(line);
+                            // Substation marker
+                            const subM = L.marker([p.lat, p.lng], { icon: GENSET_TNB_ICON })
+                                .bindPopup('<b style="color:#d97706;">'+p.name+'</b><br>'
+                                    +'<span style="font-size:0.72rem;color:#6b7280;">Road dist: <b>'+p.road_dist_km+' km</b><br>'
+                                    +'Site: '+siteId+'</span>')
+                                .addTo(gensetMap);
+                            gsBulkRouteLines.push(subM); // store for cleanup
                         });
                     } else {
                         none++;
@@ -7726,9 +7769,13 @@ out center;`;
                     const units = p.road_dist_m / 100;
                     rows.push({
                         site_id:             r.siteId,
+                        site_lat:            r.lat,
+                        site_lng:            r.lng,
                         rank:                pi + 1,
                         substation:          p.name,
                         osm_id:              p.osm_id || '',
+                        substation_lat:      p.lat,
+                        substation_lng:      p.lng,
                         road_distance_km:    p.road_dist_km,
                         material_cost_rm:    (units * perMat).toFixed(2),
                         engineering_cost_rm: (units * perEng).toFixed(2),
@@ -7749,7 +7796,12 @@ out center;`;
             const units = p.road_dist_m / 100;
             return {
                 site_id:             r.siteId,
+                site_lat:            r.lat,
+                site_lng:            r.lng,
                 substation:          p.name,
+                osm_id:              p.osm_id || '',
+                substation_lat:      p.lat,
+                substation_lng:      p.lng,
                 road_distance_km:    p.road_dist_km,
                 material_cost_rm:    (units * perMat).toFixed(2),
                 engineering_cost_rm: (units * perEng).toFixed(2),
@@ -7781,7 +7833,86 @@ out center;`;
         }
     }
 
+    // ── Right-click coord copy (coverage + genset maps) ──────────────────────
+    let _ctxLat = null, _ctxLng = null;
+
+    function _attachCtxMenu(leafletMap) {
+        leafletMap.on('contextmenu', function(e) {
+            e.originalEvent.preventDefault();
+            _ctxLat = e.latlng.lat;
+            _ctxLng = e.latlng.lng;
+            const label = _ctxLat.toFixed(6) + ', ' + _ctxLng.toFixed(6);
+            document.getElementById('ctxCoordLabel').textContent = label;
+            const menu = document.getElementById('mapContextMenu');
+            menu.style.display = 'block';
+            menu.style.left = e.originalEvent.clientX + 'px';
+            menu.style.top  = e.originalEvent.clientY + 'px';
+            requestAnimationFrame(() => {
+                const r = menu.getBoundingClientRect();
+                if (r.right  > window.innerWidth)  menu.style.left = (e.originalEvent.clientX - r.width)  + 'px';
+                if (r.bottom > window.innerHeight)  menu.style.top  = (e.originalEvent.clientY - r.height) + 'px';
+            });
+        });
+        leafletMap.on('mousedown', () => _hideCtxMenu());
+    }
+
+    function _hideCtxMenu() { document.getElementById('mapContextMenu').style.display = 'none'; }
+    document.addEventListener('click', _hideCtxMenu);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') _hideCtxMenu(); });
+
+    function _toDMS(deg) {
+        const d = Math.floor(Math.abs(deg)), m = Math.floor((Math.abs(deg)-d)*60);
+        const s = ((Math.abs(deg)-d-m/60)*3600).toFixed(1);
+        return d + '° ' + m + "' " + s + '"';
+    }
+    function ctxCopyLatLng() {
+        if (_ctxLat===null) return;
+        navigator.clipboard.writeText(_ctxLat.toFixed(6) + ', ' + _ctxLng.toFixed(6))
+            .then(() => _ctxToast('Copied: ' + _ctxLat.toFixed(5) + ', ' + _ctxLng.toFixed(5)));
+        _hideCtxMenu();
+    }
+    function ctxCopyLngLat() {
+        if (_ctxLat===null) return;
+        navigator.clipboard.writeText(_ctxLng.toFixed(6) + ', ' + _ctxLat.toFixed(6))
+            .then(() => _ctxToast('Copied: ' + _ctxLng.toFixed(5) + ', ' + _ctxLat.toFixed(5)));
+        _hideCtxMenu();
+    }
+    function ctxCopyDMS() {
+        if (_ctxLat===null) return;
+        const latH = _ctxLat >= 0 ? 'N' : 'S', lngH = _ctxLng >= 0 ? 'E' : 'W';
+        const txt = _toDMS(_ctxLat)+latH + ' ' + _toDMS(_ctxLng)+lngH;
+        navigator.clipboard.writeText(txt).then(() => _ctxToast('Copied: ' + txt));
+        _hideCtxMenu();
+    }
+    function _ctxToast(msg) {
+        let t = document.getElementById('ctxToast');
+        if (!t) { t = document.createElement('div'); t.id='ctxToast'; t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#14532d;color:#fff;padding:8px 18px;border-radius:20px;font-size:0.75rem;font-weight:700;z-index:99999;pointer-events:none;transition:opacity .3s;'; document.body.appendChild(t); }
+        t.textContent = msg; t.style.opacity = '1';
+        clearTimeout(t._tid);
+        t._tid = setTimeout(() => { t.style.opacity = '0'; }, 2000);
+    }
+
 
     </script>
+
+    <!-- ── Right-click coord copy menu (shared: coverage + genset) ── -->
+    <div id="mapContextMenu" style="display:none;position:fixed;z-index:99999;background:#fff;border:1px solid #e2e8f0;border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,0.18);padding:6px 0;min-width:210px;font-family:'Inter',sans-serif;">
+        <div style="padding:5px 14px 4px;font-size:0.6rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid #f1f5f9;margin-bottom:3px;">
+            <i class="fas fa-map-pin" style="margin-right:5px;color:#16a34a;"></i>
+            <span id="ctxCoordLabel">—</span>
+        </div>
+        <div onclick="ctxCopyLatLng()" style="padding:7px 14px;cursor:pointer;font-size:0.78rem;color:#1e293b;display:flex;align-items:center;gap:8px;"
+             onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
+            <i class="fas fa-copy" style="color:#16a34a;width:14px;"></i> Copy Lat, Lng
+        </div>
+        <div onclick="ctxCopyLngLat()" style="padding:7px 14px;cursor:pointer;font-size:0.78rem;color:#1e293b;display:flex;align-items:center;gap:8px;"
+             onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
+            <i class="fas fa-copy" style="color:#3b82f6;width:14px;"></i> Copy Lng, Lat
+        </div>
+        <div onclick="ctxCopyDMS()" style="padding:7px 14px;cursor:pointer;font-size:0.78rem;color:#1e293b;display:flex;align-items:center;gap:8px;"
+             onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
+            <i class="fas fa-drafting-compass" style="color:#8b5cf6;width:14px;"></i> Copy as DMS
+        </div>
+    </div>
 </body>
 </html>
