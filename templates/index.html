@@ -7277,8 +7277,10 @@ out center;`;
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ lat, lng, substations })
             });
-            const routeData = await routeResp.json();
-            if (!routeResp.ok || routeData.error) { gsSetStatus('Routing error', false); gensetShowNotFound(); return; }
+            let routeData;
+            try { routeData = await routeResp.json(); }
+            catch(e) { console.error('Route API returned non-JSON (is osmnx installed in Docker?)'); gsSetStatus('Routing error — check server logs', false); gensetShowNotFound(); return; }
+            if (!routeResp.ok || routeData.error) { gsSetStatus('Routing error: ' + (routeData?.error||routeResp.status), false); gensetShowNotFound(); return; }
 
             const valid = routeData.results; // already sorted by road_dist_m
             if (!valid || valid.length === 0) { gensetShowNotFound(); return; }
@@ -7599,7 +7601,9 @@ out center;`;
             headers:{'Content-Type':'application/json'},
             body: JSON.stringify({ lat, lng, substations })
         });
-        const data = await resp.json();
+        let data;
+        try { data = await resp.json(); }
+        catch(e) { console.error('Route API non-JSON response', e); return null; }
         if (!resp.ok || data.error || !data.results || !data.results.length) return null;
         // Returns all paths sorted by distance
         return data.results;
