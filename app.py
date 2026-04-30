@@ -2187,34 +2187,27 @@ def get_metabase_embed():
 def admin_athena_tables():
     """List all tables in the Athena analytics database with column info."""
     try:
-        tables_df = wr.athena.read_sql_query(
-            sql="SHOW TABLES",
+        # Use the Glue catalog API — avoids the fragile SHOW TABLES DDL path
+        tables_df = wr.catalog.tables(
             database=ATHENA_DATABASE,
-            s3_output=S3_STAGING_DIR,
             boto3_session=aws_session,
-            ctas_approach=False,
         )
-        table_names = tables_df.iloc[:, 0].tolist()
 
         result = []
-        for tbl in sorted(table_names):
+        for _, row in tables_df.iterrows():
+            tbl = str(row.get('Table', row.iloc[0]))
             try:
-                col_df = wr.athena.read_sql_query(
-                    sql=f"DESCRIBE \"{tbl}\"",
+                col_types = wr.catalog.get_table_types(
                     database=ATHENA_DATABASE,
-                    s3_output=S3_STAGING_DIR,
+                    table=tbl,
                     boto3_session=aws_session,
-                    ctas_approach=False,
                 )
-                columns = [
-                    {'name': str(row.iloc[0]), 'type': str(row.iloc[1])}
-                    for _, row in col_df.iterrows()
-                    if str(row.iloc[0]) not in ('', '#', '# col_name')
-                ]
+                columns = [{'name': k, 'type': v} for k, v in col_types.items()]
             except Exception:
                 columns = []
             result.append({'table': tbl, 'columns': columns})
 
+        result.sort(key=lambda x: x['table'])
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
