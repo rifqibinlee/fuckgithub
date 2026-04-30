@@ -899,6 +899,18 @@
                     <div class="layer-toggle-switch" id="toggle-noise"><div class="layer-toggle-knob"></div></div>
                 </label>
             </div>
+
+            <!-- Boundaries Section -->
+            <div style="padding:8px 0; border-top:1px solid #f3f4f6;">
+                <div style="padding:4px 14px 6px; font-size:0.62rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:0.08em;">Boundaries</div>
+                <label class="layer-menu-item" id="lyr-urban-kmc" onclick="toggleOverlayLayer('urban-kmc')">
+                    <div class="layer-menu-icon" style="background:linear-gradient(135deg,#4c1d95,#7c3aed);">
+                        <i class="fas fa-city" style="color:white;font-size:0.65rem;"></i>
+                    </div>
+                    <span class="layer-menu-label">Urban KMC</span>
+                    <div class="layer-toggle-switch" id="toggle-urban-kmc"><div class="layer-toggle-knob"></div></div>
+                </label>
+            </div>
         </div>
     </div>
 
@@ -3294,7 +3306,8 @@
             '2g':       false,
             mr:         true,   // added via .addTo(map)
             ookla:      true,   // added via .addTo(map)
-            noise:      false
+            noise:      false,
+            'urban-kmc': false
         };
 
         var layerMap = {}; // populated after layers are declared
@@ -3310,7 +3323,8 @@
                 '2g':       layer2G,
                 mr:         layerMRHoles,
                 ookla:      layerOoklaHoles,
-                noise:      layerNoise
+                noise:      layerNoise,
+                'urban-kmc': layerUrbanKMC
             };
         }
 
@@ -3381,6 +3395,7 @@
         var layerMRHoles = L.featureGroup().addTo(map);
         var layerOoklaHoles = L.featureGroup().addTo(map);
         var layerNoise = L.layerGroup();
+        var layerUrbanKMC = L.featureGroup();
         map.addLayer(markers);
 
         var overlayMaps = {
@@ -3411,6 +3426,37 @@
             loadAnnotations();
             loadNotes();
             loadTasks();
+            loadUrbanKMCLayer();
+        }
+
+        async function loadUrbanKMCLayer() {
+            try {
+                const res = await fetch('/api/geojson/urban_kmc');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const gj = await res.json();
+                L.geoJSON(gj, {
+                    style: {
+                        color: '#7c3aed',
+                        weight: 2,
+                        opacity: 0.85,
+                        fillColor: '#7c3aed',
+                        fillOpacity: 0.08
+                    },
+                    onEachFeature: function(feature, layer) {
+                        const props = feature.properties || {};
+                        const name  = props.name || props.NAME || props.Name || 'Urban KMC';
+                        layer.bindTooltip(name, { sticky: true, className: 'leaflet-tooltip' });
+                        layer.on('mouseover', function() {
+                            layer.setStyle({ fillOpacity: 0.22, weight: 3 });
+                        });
+                        layer.on('mouseout', function() {
+                            layer.setStyle({ fillOpacity: 0.08, weight: 2 });
+                        });
+                    }
+                }).addTo(layerUrbanKMC);
+            } catch (err) {
+                console.warn('Urban KMC GeoJSON failed to load:', err);
+            }
         }
 
         async function loadRegions() {
