@@ -2162,6 +2162,20 @@ def get_metabase_embed():
         traceback.print_exc()
         return jsonify({"error": "Failed to generate dashboard secure link"}), 500
 
+@app.route('/api/geojson/urban_kmc')
+@login_required
+def get_urban_kmc_geojson():
+    try:
+        s3_client = aws_session.client('s3')
+        response = s3_client.get_object(
+            Bucket='neo-advanced-analytics',
+            Key='MergeCo UrbanKMC/MergeCo Urban_KMC.geojson'
+        )
+        geojson_data = json.loads(response['Body'].read().decode('utf-8'))
+        return jsonify(geojson_data)
+    except Exception as e:
+        print(f"ERROR loading Urban KMC GeoJSON: {e}")
+        return jsonify({'error': str(e)}), 500
         
 if __name__ == '__main__':
     app.config.update(
