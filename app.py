@@ -1969,20 +1969,6 @@ def api_site_upgrade_details():
     except Exception as e:
         print(f"DEBUG: Internal Error: {traceback.format_exc()}")
         return jsonify({'error': str(e)}), 500
-@app.route('/api/geojson/urban-kmc')
-@api_login_required
-def get_urban_kmc_geojson():
-    try:
-        s3_client = aws_session.client('s3')
-        response = s3_client.get_object(
-            Bucket='neo-advanced-analytics',
-            Key='MergeCo UrbanKMC/MergeCo Urban_KMC.geojson'
-        )
-        data = response['Body'].read().decode('utf-8')
-        from flask import Response
-        return Response(data, mimetype='application/json')
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
         
 @app.route('/download/cd_file')
 def download_cd_file():
