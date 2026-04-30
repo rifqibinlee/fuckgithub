@@ -2243,7 +2243,8 @@ def admin_athena_query():
     offset = (page - 1) * limit
     where  = ''
     if search and col_filter and _re.match(r'^[A-Za-z0-9_]+$', col_filter):
-        where = f"WHERE LOWER(CAST(\"{col_filter}\" AS VARCHAR)) LIKE LOWER('%{search.replace(\"'\", \"''\")}%')"
+        safe_search = search.replace("'", "''")
+        where = f"WHERE LOWER(CAST(\"{col_filter}\" AS VARCHAR)) LIKE LOWER('%{safe_search}%')"
 
     try:
         count_sql = f'SELECT COUNT(*) as cnt FROM "{table}" {where}'
