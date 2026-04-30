@@ -8363,22 +8363,26 @@ out center;`;
             const data = await res.json();
             if (data.error) { preview.innerHTML = `<div style="color:#dc2626;padding:20px;">${data.error}</div>`; return; }
             if (data.type === 'table') {
-                let noteHtml = data.note ? `<div style="padding:6px 14px; background:#fef3c7; color:#92400e; font-size:.72rem; border-bottom:1px solid #fde68a;">${data.note}</div>` : '';
-                const shown  = data.total_shown || data.rows.length;
-                const cap    = `<div style="padding:6px 14px; background:#f8fafc; color:#64748b; font-size:.72rem; border-bottom:1px solid #e2e8f0;">Showing first ${shown} rows</div>`;
-                preview.innerHTML = noteHtml + cap;
-                const tableWrap = document.createElement('div');
-                tableWrap.style.overflow = 'auto';
-                preview.appendChild(tableWrap);
-                renderDataTable(data.columns, data.rows, preview.appendChild(tableWrap) && tableWrap.id);
-                // Since renderDataTable targets by ID, just do it manually:
-                const thead = `<tr>${data.columns.map(c => `<th style="padding:8px 12px; background:#f1f5f9; color:#475569; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; border-bottom:2px solid #e2e8f0; white-space:nowrap; position:sticky; top:0; z-index:1;">${c}</th>`).join('')}</tr>`;
+                const noteHtml = data.note ? `<div style="padding:6px 14px; background:#fef3c7; color:#92400e; font-size:.72rem; border-bottom:1px solid #fde68a;">${data.note}</div>` : '';
+                const shown = data.total_shown || data.rows.length;
+                const cap = `<div style="padding:6px 14px; background:#f8fafc; color:#64748b; font-size:.72rem; border-bottom:1px solid #e2e8f0;">Showing first ${shown} rows</div>`;
+                const thead = `<tr>${data.columns.map(c =>
+                    `<th style="padding:8px 12px; background:#f1f5f9; color:#475569; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; border-bottom:2px solid #e2e8f0; white-space:nowrap; position:sticky; top:0; z-index:1;">${c}</th>`
+                ).join('')}</tr>`;
                 const tbody = data.rows.map(row =>
                     `<tr style="border-bottom:1px solid #f8fafc;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-                        ${data.columns.map(c => { const v = row[c]; const d = v===null||v===undefined ? '<span style="color:#d1d5db;font-style:italic;font-size:.75rem;">null</span>' : String(v); return `<td style="padding:7px 12px; font-size:.78rem; color:#374151; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${v!==null&&v!==undefined ? String(v).replace(/"/g,'&quot;') : ''}">${d}</td>`; }).join('')}
+                        ${data.columns.map(c => {
+                            const v = row[c];
+                            const d = (v === null || v === undefined)
+                                ? '<span style="color:#d1d5db;font-style:italic;font-size:.75rem;">null</span>'
+                                : String(v);
+                            const title = (v !== null && v !== undefined) ? String(v).replace(/"/g, '&quot;') : '';
+                            return `<td style="padding:7px 12px; font-size:.78rem; color:#374151; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${title}">${d}</td>`;
+                        }).join('')}
                     </tr>`
                 ).join('');
-                tableWrap.innerHTML = `<table style="width:100%;border-collapse:collapse;"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+                preview.innerHTML = noteHtml + cap +
+                    `<div style="overflow:auto;"><table style="width:100%;border-collapse:collapse;"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>`;
             } else {
                 preview.innerHTML = `<pre style="padding:16px; font-size:.76rem; color:#374151; white-space:pre-wrap; word-break:break-all; line-height:1.5;">${data.content.replace(/</g,'&lt;')}</pre>`;
             }
