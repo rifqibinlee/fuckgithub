@@ -1969,7 +1969,7 @@ def api_site_upgrade_details():
     except Exception as e:
         print(f"DEBUG: Internal Error: {traceback.format_exc()}")
         return jsonify({'error': str(e)}), 500
-        
+
 @app.route('/download/cd_file')
 def download_cd_file():
     try:
@@ -2161,7 +2161,6 @@ def get_metabase_embed():
         print(f"Metabase Token Error: {e}")
         traceback.print_exc()
         return jsonify({"error": "Failed to generate dashboard secure link"}), 500
-
         
 if __name__ == '__main__':
     app.config.update(
