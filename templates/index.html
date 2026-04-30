@@ -898,14 +898,6 @@
                     <span class="layer-menu-label">Signal Noise (-1)</span>
                     <div class="layer-toggle-switch" id="toggle-noise"><div class="layer-toggle-knob"></div></div>
                 </label>
-
-                <label class="layer-menu-item" id="lyr-urban-kmc" onclick="toggleOverlayLayer('urban-kmc')">
-                  <div class="layer-menu-icon" style="background:linear-gradient(135deg,#0f2d52,#1e3a8a);">
-                      <i class="fas fa-city" style="color:white;font-size:13px;"></i>
-                  </div>
-                  <span class="layer-menu-label">Urban KMC</span>
-                  <div class="layer-toggle-switch" id="toggle-urban-kmc"><div class="layer-toggle-knob"></div></div>
-              </label>
             </div>
         </div>
     </div>
@@ -3302,8 +3294,7 @@
             '2g':       false,
             mr:         true,   // added via .addTo(map)
             ookla:      true,   // added via .addTo(map)
-            noise:      false,
-            'urban-kmc': false
+            noise:      false
         };
 
         var layerMap = {}; // populated after layers are declared
@@ -3319,8 +3310,7 @@
                 '2g':       layer2G,
                 mr:         layerMRHoles,
                 ookla:      layerOoklaHoles,
-                noise:      layerNoise,
-                'urban-kmc': layerUrbanKMC
+                noise:      layerNoise
             };
         }
 
@@ -3391,7 +3381,6 @@
         var layerMRHoles = L.featureGroup().addTo(map);
         var layerOoklaHoles = L.featureGroup().addTo(map);
         var layerNoise = L.layerGroup();
-        var layerUrbanKMC = L.layerGroup();
         map.addLayer(markers);
 
         var overlayMaps = {
@@ -3422,7 +3411,6 @@
             loadAnnotations();
             loadNotes();
             loadTasks();
-            loadUrbanKMC();   // ← add this
         }
 
         async function loadRegions() {
@@ -7903,32 +7891,7 @@ out center;`;
         clearTimeout(t._tid);
         t._tid = setTimeout(() => { t.style.opacity = '0'; }, 2000);
     }
-                              
-    async function loadUrbanKMC() {
-        try {
-            const res = await fetch('/api/geojson/urban-kmc');
-            const geojson = await res.json();
-            layerUrbanKMC.clearLayers();
-            L.geoJSON(geojson, {
-                style: {
-                    color: '#0f2d52',
-                    weight: 1.5,
-                    fillColor: '#1e3a8a',
-                    fillOpacity: 0.15
-                },
-                onEachFeature: function(feature, layer) {
-                    if (feature.properties) {
-                        const props = Object.entries(feature.properties)
-                            .map(([k, v]) => `<b>${k}:</b> ${v}`)
-                            .join('<br>');
-                        layer.bindPopup(props);
-                    }
-                }
-            }).addTo(layerUrbanKMC);
-        } catch (e) {
-            console.warn('Urban KMC GeoJSON load failed:', e);
-        }
-    }
+
 
     </script>
 
