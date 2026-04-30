@@ -2161,6 +2161,7 @@ def get_metabase_embed():
         print(f"Metabase Token Error: {e}")
         traceback.print_exc()
         return jsonify({"error": "Failed to generate dashboard secure link"}), 500
+
         
 if __name__ == '__main__':
     app.config.update(
